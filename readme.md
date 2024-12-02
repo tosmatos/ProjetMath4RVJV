@@ -10,6 +10,7 @@ Découpage et remplissage de polygones
     - Ces deux derniers sont inclus par défaut avec Visual Studio et l'option "Desktop Development with C++"
 - Avoir la variable d'environment "VCPKG_ROOT" pointant vers l'install de vcpkg
     - Celle ci ce trouve dans "Program Files/Microsoft Visual Studio/2022/Community/VC/vcpkg"
+    - Pas nécessaire si vous utilisez Visual Studio pour ouvrir le projet.
 
 ## Build
 
