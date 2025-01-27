@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include "Polygon.h"
+#include "InputHandler.h"
 
 // Window resize callback
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -51,11 +52,13 @@ int main() {
 	// Of course in practice we will actually use functions and events from the mouse to have a polygon's vertices.
 	Polygon myPolygon;
 
-	myPolygon.addVertex(0.5f, 0.5f);    // Add a vertex
+	myPolygon.addVertex(-0.5f, 0.5f);    // Add a vertex
 	myPolygon.addVertex(0.7f, 0.3f);    // Add another
 	myPolygon.addVertex(0.3f, 0.2f);    // And another
 
 	myPolygon.updateBuffers();
+
+	InputHandler inputHandler = InputHandler(window);
 
 	// Render loop
 	while (!glfwWindowShouldClose(window)) {
