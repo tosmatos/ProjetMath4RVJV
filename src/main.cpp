@@ -2,20 +2,43 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include "Polygon.h"
-#include "InputHandler.h"
 
 // Window resize callback
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
 	glViewport(0, 0, width, height);
 }
 
-// Input processing
-void processInput(GLFWwindow *window) {
-	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+/* I've learned the hard way that the glfwSetCallback functions expect a global function.
+** You cannot use a function in a class at all, except using some funky middle function...
+** So I'm guessing we set up these callbacks here, and then call our class functions 
+** in the callbacks themselves. */
+
+static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) // Quit app
 		glfwSetWindowShouldClose(window, true);
 }
 
-int main() {
+static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+{
+	// TODO : Something for building polygons on left clicks
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	{
+		double xPos, yPos;
+		glfwGetCursorPos(window, &xPos, &yPos);
+		std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
+	}	
+}
+
+static void setupCallbacks(GLFWwindow* window)
+{
+	glfwSetKeyCallback(window, KeyCallback);
+	glfwSetMouseButtonCallback(window, MouseButtonCallback);
+}
+
+int main()
+{
 	// Initialize GLFW
 	if (!glfwInit()) {
 		std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -38,6 +61,9 @@ int main() {
 	// Make the window's context current
 	glfwMakeContextCurrent(window);
 
+	// Setup input callbacks
+	setupCallbacks(window);
+
 	// Load OpenGL functions with GLAD
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cerr << "Failed to initialize GLAD" << std::endl;
@@ -58,12 +84,9 @@ int main() {
 
 	myPolygon.updateBuffers();
 
-	InputHandler inputHandler = InputHandler(window);
 
 	// Render loop
 	while (!glfwWindowShouldClose(window)) {
-		// Input
-		processInput(window);
 
 		// Rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
