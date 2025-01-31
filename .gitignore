@@ -32,5 +32,8 @@
 *.app
 
 build/
+
+# IDEs
 .vs/
 .vscode/
+.idea/

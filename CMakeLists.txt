@@ -17,7 +17,7 @@ find_package(glad CONFIG REQUIRED)
 # Add executable, builds exe from src/main.cpp
 add_executable(ProjetMath4RVJV 
     src/main.cpp
-)
+ "include/Vertex.h" "include/Polygon.h" "src/Polygon.cpp" )
 
 # Link libraries
 target_link_libraries(ProjetMath4RVJV 
