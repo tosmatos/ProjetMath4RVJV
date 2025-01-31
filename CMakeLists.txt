@@ -13,6 +13,7 @@ endif()
 # Find required packages
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 # Add executable, builds exe from src/main.cpp
 add_executable(ProjetMath4RVJV 
@@ -24,6 +25,7 @@ target_link_libraries(ProjetMath4RVJV
     PRIVATE 
     glfw 
     glad::glad
+    imgui::imgui
 )
 
 # Include directories (if needed)

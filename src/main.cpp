@@ -1,5 +1,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 #include <iostream>
 #include "Polygon.h"
 
@@ -74,6 +77,14 @@ int main()
 	glViewport(0, 0, 800, 600);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+
+	//// Setup Platform/Renderer backends
+	ImGui_ImplGlfw_InitForOpenGL(window, true);	// Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+	ImGui_ImplOpenGL3_Init();
+
 	// Example usage for the Polygon class
 	// Of course in practice we will actually use functions and events from the mouse to have a polygon's vertices.
 	Polygon myPolygon;
@@ -84,9 +95,16 @@ int main()
 
 	myPolygon.updateBuffers();
 
-
 	// Render loop
 	while (!glfwWindowShouldClose(window)) {
+		// Poll events (keyboard, mouse)
+		glfwPollEvents();
+
+		// Start the ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		ImGui::ShowDemoWindow();
 
 		// Rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -95,12 +113,20 @@ int main()
 		// Example poly draw 
 		myPolygon.draw();
 
-		// Swap buffers and poll events
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+		// ImGui Rendering
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		// Swap buffers
+		glfwSwapBuffers(window);		
 	}
 
-	// Clean up
+	// Clean up ImGui
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	// Clean up glfw
 	glfwTerminate();
 	return 0;
 }
