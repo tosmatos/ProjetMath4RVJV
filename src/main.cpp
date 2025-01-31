@@ -6,6 +6,8 @@
 #include <iostream>
 #include "Polygon.h"
 
+bool openContextMenu;
+
 // Window resize callback
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -31,7 +33,12 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 		double xPos, yPos;
 		glfwGetCursorPos(window, &xPos, &yPos);
 		std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
-	}	
+	}
+
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+	{
+		openContextMenu = true;
+	}
 }
 
 static void setupCallbacks(GLFWwindow* window)
@@ -41,7 +48,7 @@ static void setupCallbacks(GLFWwindow* window)
 }
 
 int main()
-{
+{	
 	// Initialize GLFW
 	if (!glfwInit()) {
 		std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -80,8 +87,9 @@ int main()
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-	//// Setup Platform/Renderer backends
+	// Setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForOpenGL(window, true);	// Second param install_callback=true will install GLFW callbacks and chain to existing ones.
 	ImGui_ImplOpenGL3_Init();
 
@@ -95,6 +103,8 @@ int main()
 
 	myPolygon.updateBuffers();
 
+	double mouseX, mouseY;
+
 	// Render loop
 	while (!glfwWindowShouldClose(window)) {
 		// Poll events (keyboard, mouse)
@@ -104,7 +114,30 @@ int main()
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-		ImGui::ShowDemoWindow();
+
+		if (openContextMenu)
+		{
+			ImGui::OpenPopup("ContextMenu");  // This tells ImGui to open our popup
+			openContextMenu = false;  // Reset the flag
+		}
+
+		if (ImGui::BeginPopup("ContextMenu"))
+		{
+			if (ImGui::MenuItem("Option 1"))
+			{
+				// Handle option 1
+			}
+			if (ImGui::MenuItem("Option 2"))
+			{
+				// Handle option 2
+			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Close"))
+			{
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::EndPopup();
+		}
 
 		// Rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);

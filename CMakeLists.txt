@@ -28,7 +28,7 @@ target_link_libraries(ProjetMath4RVJV
     imgui::imgui
 )
 
-# Include directories (if needed)
+# Include directories
 target_include_directories(ProjetMath4RVJV 
     PRIVATE 
     ${CMAKE_SOURCE_DIR}/include
