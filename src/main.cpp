@@ -5,6 +5,7 @@
 #include <imgui_impl_opengl3.h>
 #include <iostream>
 #include "Polygon.h"
+#include "PolyBuilder.cpp"
 
 bool openContextMenu;
 
@@ -32,7 +33,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 	{
 		double xPos, yPos;
 		glfwGetCursorPos(window, &xPos, &yPos);
-		std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
+		std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;		
 	}
 
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
@@ -103,8 +104,6 @@ int main()
 
 	myPolygon.updateBuffers();
 
-	double mouseX, mouseY;
-
 	// Render loop
 	while (!glfwWindowShouldClose(window)) {
 		// Poll events (keyboard, mouse)
@@ -123,19 +122,19 @@ int main()
 
 		if (ImGui::BeginPopup("ContextMenu"))
 		{
-			if (ImGui::MenuItem("Option 1"))
+			if (ImGui::MenuItem("Create Polygon"))
 			{
 				// Handle option 1
 			}
-			if (ImGui::MenuItem("Option 2"))
+			if (ImGui::MenuItem("Create Window"))
 			{
 				// Handle option 2
 			}
-			ImGui::Separator();
+			/*ImGui::Separator();
 			if (ImGui::MenuItem("Close"))
 			{
 				ImGui::CloseCurrentPopup();
-			}
+			}*/
 			ImGui::EndPopup();
 		}
 
