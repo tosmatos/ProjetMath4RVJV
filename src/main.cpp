@@ -5,7 +5,7 @@
 #include <imgui_impl_opengl3.h>
 #include <iostream>
 #include "Polygon.h"
-#include "PolyBuilder.cpp"
+#include "PolyBuilder.h"
 
 bool openContextMenu;
 
@@ -24,6 +24,9 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) // Quit app
 		glfwSetWindowShouldClose(window, true);
+
+	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+		PolyBuilder::Finish();
 }
 
 static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
@@ -33,7 +36,8 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 	{
 		double xPos, yPos;
 		glfwGetCursorPos(window, &xPos, &yPos);
-		std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;		
+		std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
+		PolyBuilder::AppendVertex(xPos, yPos);
 	}
 
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
@@ -98,6 +102,8 @@ int main()
 	// Of course in practice we will actually use functions and events from the mouse to have a polygon's vertices.
 	Polygon myPolygon;
 
+	myPolygon.updateBuffers();
+
 	myPolygon.addVertex(-0.5f, 0.5f);    // Add a vertex
 	myPolygon.addVertex(0.7f, 0.3f);    // Add another
 	myPolygon.addVertex(0.3f, 0.2f);    // And another
@@ -124,17 +130,20 @@ int main()
 		{
 			if (ImGui::MenuItem("Create Polygon"))
 			{
-				// Handle option 1
+				PolyBuilder::StartPolygon(PolyBuilder::POLYGON);
 			}
 			if (ImGui::MenuItem("Create Window"))
 			{
-				// Handle option 2
+				PolyBuilder::StartPolygon(PolyBuilder::WINDOW);
 			}
-			/*ImGui::Separator();
-			if (ImGui::MenuItem("Close"))
+			ImGui::Separator();
+			if (PolyBuilder::buildingPoly)
 			{
-				ImGui::CloseCurrentPopup();
-			}*/
+				if (ImGui::MenuItem("Cancel Current Build"))
+				{
+					PolyBuilder::Cancel();
+				}
+			}
 			ImGui::EndPopup();
 		}
 
@@ -143,7 +152,13 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		// Example poly draw 
-		myPolygon.draw();
+		//myPolygon.draw();
+
+		for each (const Polygon& poly in PolyBuilder::finishedPolygons)
+		{
+			poly.draw();
+		}
+
 
 		// ImGui Rendering
 		ImGui::Render();

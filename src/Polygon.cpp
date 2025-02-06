@@ -3,23 +3,43 @@
 #include <iostream>
 
 // I've left Claude's explanation because I need to be reminded every time I look at the code
-// This shit feels like black magic to me for now. 
+// This shit feels like black magic to me for now.
 
 Polygon::Polygon()
 {
-	// Create OpenGL buffer objects that we'll need for rendering
-	// VAO (Vertex Array Object) stores the format of our vertex data
-	// VBO (Vertex Buffer Object) stores the actual vertex data
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
+
+}
+
+Polygon::Polygon(const Polygon& other) : vertices(other.vertices), buffersInitialized(false) {
+	if (other.buffersInitialized) {
+		updateBuffers();
+	}
+}
+
+Polygon& Polygon::operator=(const Polygon& other) {
+	if (this != &other) {
+		if (buffersInitialized) {
+			glDeleteVertexArrays(1, &VAO);
+			glDeleteBuffers(1, &VBO);
+			buffersInitialized = false;
+		}
+		vertices = other.vertices;
+		if (other.buffersInitialized) {
+			updateBuffers();
+		}
+	}
+	return *this;
 }
 
 Polygon::~Polygon()
 {
-	// When polygon is destroyed, clean up the OpenGL buffers
-	// This prevents memory leaks in the GPU
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
+	if (buffersInitialized)
+	{
+		// When polygon is destroyed, clean up the OpenGL buffers
+		// This prevents memory leaks in the GPU
+		glDeleteVertexArrays(1, &VAO);
+		glDeleteBuffers(1, &VBO);
+	}	
 }
 
 void Polygon::addVertex(float x, float y)
@@ -32,6 +52,12 @@ void Polygon::addVertex(float x, float y)
 
 void Polygon::updateBuffers()
 {
+	if (!buffersInitialized) {
+		glGenVertexArrays(1, &VAO);
+		glGenBuffers(1, &VBO);
+		buffersInitialized = true;
+	}
+
 	// Step 1: Bind the VAO - this records all subsequent buffer settings
 	glBindVertexArray(VAO);
 
@@ -55,7 +81,7 @@ void Polygon::updateBuffers()
 	glEnableVertexAttribArray(0);
 }
 
-void Polygon::draw()
+const void Polygon::draw() const
 {
 	// We need to bind the VAO again because:
 	// 1. Other objects might have bound their VAO since our last draw
@@ -67,6 +93,20 @@ void Polygon::draw()
 	glDrawArrays(GL_LINE_LOOP,        // Drawing mode
 		0,                    // Start vertex
 		vertices.size());     // Number of vertices to draw
+
+	// Debug: check for OpenGL errors
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR) {
+		std::cout << "OpenGL error before drawing: " << error << std::endl;
+	}
+
+	glDrawArrays(GL_LINE_LOOP, 0, vertices.size());
+
+	// Check for errors after drawing
+	error = glGetError();
+	if (error != GL_NO_ERROR) {
+		std::cout << "OpenGL error after drawing: " << error << std::endl;
+	}
 }
 
 const std::vector<Vertex>& Polygon::getVertices() const
