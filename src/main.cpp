@@ -1,7 +1,13 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 #include <iostream>
 #include "Polygon.h"
+#include "PolyBuilder.h"
+
+bool openContextMenu;
 
 // Window resize callback
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -18,6 +24,9 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) // Quit app
 		glfwSetWindowShouldClose(window, true);
+
+	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+		PolyBuilder::Finish();
 }
 
 static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
@@ -28,7 +37,13 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 		double xPos, yPos;
 		glfwGetCursorPos(window, &xPos, &yPos);
 		std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
-	}	
+		PolyBuilder::AppendVertex(xPos, yPos);
+	}
+
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+	{
+		openContextMenu = true;
+	}
 }
 
 static void setupCallbacks(GLFWwindow* window)
@@ -38,7 +53,7 @@ static void setupCallbacks(GLFWwindow* window)
 }
 
 int main()
-{
+{	
 	// Initialize GLFW
 	if (!glfwInit()) {
 		std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -74,9 +89,20 @@ int main()
 	glViewport(0, 0, 800, 600);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+	// Setup Platform/Renderer backends
+	ImGui_ImplGlfw_InitForOpenGL(window, true);	// Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+	ImGui_ImplOpenGL3_Init();
+
 	// Example usage for the Polygon class
 	// Of course in practice we will actually use functions and events from the mouse to have a polygon's vertices.
 	Polygon myPolygon;
+
+	myPolygon.updateBuffers();
 
 	myPolygon.addVertex(-0.5f, 0.5f);    // Add a vertex
 	myPolygon.addVertex(0.7f, 0.3f);    // Add another
@@ -84,23 +110,70 @@ int main()
 
 	myPolygon.updateBuffers();
 
-
 	// Render loop
 	while (!glfwWindowShouldClose(window)) {
+		// Poll events (keyboard, mouse)
+		glfwPollEvents();
+
+		// Start the ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		if (openContextMenu)
+		{
+			ImGui::OpenPopup("ContextMenu");  // This tells ImGui to open our popup
+			openContextMenu = false;  // Reset the flag
+		}
+
+		if (ImGui::BeginPopup("ContextMenu"))
+		{
+			if (ImGui::MenuItem("Create Polygon"))
+			{
+				PolyBuilder::StartPolygon(PolyBuilder::POLYGON);
+			}
+			if (ImGui::MenuItem("Create Window"))
+			{
+				PolyBuilder::StartPolygon(PolyBuilder::WINDOW);
+			}
+			ImGui::Separator();
+			if (PolyBuilder::buildingPoly)
+			{
+				if (ImGui::MenuItem("Cancel Current Build"))
+				{
+					PolyBuilder::Cancel();
+				}
+			}
+			ImGui::EndPopup();
+		}
 
 		// Rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		// Example poly draw 
-		myPolygon.draw();
+		//myPolygon.draw();
 
-		// Swap buffers and poll events
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+		for each (const Polygon& poly in PolyBuilder::finishedPolygons)
+		{
+			poly.draw();
+		}
+
+
+		// ImGui Rendering
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		// Swap buffers
+		glfwSwapBuffers(window);		
 	}
 
-	// Clean up
+	// Clean up ImGui
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	// Clean up glfw
 	glfwTerminate();
 	return 0;
 }

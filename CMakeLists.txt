@@ -13,20 +13,22 @@ endif()
 # Find required packages
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 # Add executable, builds exe from src/main.cpp
 add_executable(ProjetMath4RVJV 
     src/main.cpp
- "include/Vertex.h" "include/Polygon.h" "src/Polygon.cpp" )
+ "include/Vertex.h" "include/Polygon.h" "src/Polygon.cpp"  "src/PolyBuilder.cpp" "include/PolyBuilder.h")
 
 # Link libraries
 target_link_libraries(ProjetMath4RVJV 
     PRIVATE 
     glfw 
     glad::glad
+    imgui::imgui
 )
 
-# Include directories (if needed)
+# Include directories
 target_include_directories(ProjetMath4RVJV 
     PRIVATE 
     ${CMAKE_SOURCE_DIR}/include
