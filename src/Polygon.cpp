@@ -10,13 +10,13 @@ Polygon::Polygon()
 
 }
 
-Polygon::Polygon(const Polygon& other) : vertices(other.vertices), buffersInitialized(false) {
+Polygon::Polygon(const Polygon& other) : vertices(other.vertices), buffersInitialized(false) { // Copy constructor
 	if (other.buffersInitialized) {
 		updateBuffers();
 	}
 }
 
-Polygon& Polygon::operator=(const Polygon& other) {
+Polygon& Polygon::operator=(const Polygon& other) { // Copy operator
 	if (this != &other) {
 		if (buffersInitialized) {
 			glDeleteVertexArrays(1, &VAO);
