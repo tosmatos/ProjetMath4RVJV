@@ -18,7 +18,13 @@ find_package(imgui CONFIG REQUIRED)
 # Add executable, builds exe from src/main.cpp
 add_executable(ProjetMath4RVJV 
     src/main.cpp
- "include/Vertex.h" "include/Polygon.h" "src/Polygon.cpp"  "src/PolyBuilder.cpp" "include/PolyBuilder.h")
+ "include/Vertex.h" "include/Polygon.h" "src/Polygon.cpp"  "src/PolyBuilder.cpp" "include/PolyBuilder.h" "include/Shader.h" "src/Shader.cpp")
+
+# Copy shaders to build directory
+add_custom_command(TARGET ProjetMath4RVJV POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/shaders $<TARGET_FILE_DIR:ProjetMath4RVJV>/shaders
+)
 
 # Link libraries
 target_link_libraries(ProjetMath4RVJV 

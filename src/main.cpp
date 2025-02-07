@@ -6,6 +6,7 @@
 #include <iostream>
 #include "Polygon.h"
 #include "PolyBuilder.h"
+#include "Shader.h"
 
 bool openContextMenu;
 
@@ -17,7 +18,7 @@ static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 /* I've learned the hard way that the glfwSetCallback functions expect a global function.
 ** You cannot use a function in a class at all, except using some funky middle function...
-** So I'm guessing we set up these callbacks here, and then call our class functions 
+** So I'm guessing we set up these callbacks here, and then call our class functions
 ** in the callbacks themselves. */
 
 static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -98,8 +99,13 @@ int main()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);	// Second param install_callback=true will install GLFW callbacks and chain to existing ones.
 	ImGui_ImplOpenGL3_Init();
 
+	const char* vertexShaderPath = "shaders/vertex.glsl";
+	const char* fragmentShaderPath = "shaders/fragment.glsl";
+
+	Shader shader = Shader(vertexShaderPath, fragmentShaderPath);
+
 	// Example usage for the Polygon class
-	// Of course in practice we will actually use functions and events from the mouse to have a polygon's vertices.
+	// Of course in practice we will actually use functions and events from the mouse to have a polygon's verticmakeces.
 	Polygon myPolygon;
 
 	myPolygon.updateBuffers();

@@ -90,16 +90,16 @@ const void Polygon::draw() const
 
 	// Draw the polygon as a line loop
 	// GL_LINE_LOOP connects all points with lines and closes the shape
-	glDrawArrays(GL_LINE_LOOP,        // Drawing mode
-		0,                    // Start vertex
-		vertices.size());     // Number of vertices to draw
+	//glDrawArrays(GL_LINE_LOOP,        // Drawing mode
+	//	0,                    // Start vertex
+	//	vertices.size());     // Number of vertices to draw
 
 	// Debug: check for OpenGL errors
 	GLenum error = glGetError();
 	if (error != GL_NO_ERROR) {
 		std::cout << "OpenGL error before drawing: " << error << std::endl;
 	}
-
+	
 	glDrawArrays(GL_LINE_LOOP, 0, vertices.size());
 
 	// Check for errors after drawing
