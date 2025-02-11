@@ -126,6 +126,9 @@ int main()
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
+		// TODO : Find a way to put this somewhere else for the code to be cleaner
+		// TODO : Add a simple overlay displaying the current polygon being built or not
+
 		if (openContextMenu)
 		{
 			ImGui::OpenPopup("ContextMenu");  // This tells ImGui to open our popup
@@ -159,6 +162,9 @@ int main()
 
 		// Example poly draw 
 		//myPolygon.draw();
+
+		shader.Use();
+		shader.SetColor("uColor", 1.0, 0.0, 0.0, 1.0);
 
 		for each (const Polygon& poly in PolyBuilder::finishedPolygons)
 		{
