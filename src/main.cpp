@@ -86,6 +86,9 @@ int main()
 		return -1;
 	}
 
+	// Set flag for the "gl_Pointsize = float" line in the vertex shader to work
+	glEnable(GL_PROGRAM_POINT_SIZE);
+
 	// Set viewport and resize callback
 	glViewport(0, 0, 800, 600);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -104,17 +107,10 @@ int main()
 
 	Shader shader = Shader(vertexShaderPath, fragmentShaderPath);
 
-	// Example usage for the Polygon class
-	// Of course in practice we will actually use functions and events from the mouse to have a polygon's verticmakeces.
-	Polygon myPolygon;
-
-	myPolygon.updateBuffers();
-
-	myPolygon.addVertex(-0.5f, 0.5f);    // Add a vertex
-	myPolygon.addVertex(0.7f, 0.3f);    // Add another
-	myPolygon.addVertex(0.3f, 0.2f);    // And another
-
-	myPolygon.updateBuffers();
+	
+	float maxPointSize[2];
+	glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, maxPointSize);
+	std::cout << "Max point size supported: " << maxPointSize[1] << std::endl;
 
 	// Render loop
 	while (!glfwWindowShouldClose(window)) {
@@ -191,11 +187,9 @@ int main()
 		// Rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-
-		// Example poly draw 
-		//myPolygon.draw();
-
 		
+
+		// Draw finished polygons
 		for each (const Polygon & poly in PolyBuilder::finishedPolygons)
 		{
 			shader.Use();
@@ -208,8 +202,10 @@ int main()
 				break;
 			}
 			poly.draw();
+			shader.SetColor("uColor", 1.0f, 1.0f, 1.0f, 1.0f);
+			poly.drawPoints();
+			// Same drawPoints Logic could be used for when points cross between the window and the polygon
 		}
-
 
 		// ImGui Rendering
 		ImGui::Render();
