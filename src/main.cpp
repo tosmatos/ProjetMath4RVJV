@@ -33,7 +33,6 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 
 static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-	// TODO : Something for building polygons on left clicks
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
 		double xPos, yPos;
@@ -123,9 +122,7 @@ int main()
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		// TODO : Find a way to put this somewhere else for the code to be cleaner
-
-
+		// Draw all the ImGui part (in GUI namespace)
 		GUI::DrawVertexInfoPanel(); // Top left panel
 		GUI::HandleContextMenu(&openContextMenu); // Right click menu
 		GUI::DrawHoverTooltip(window); // Tooltip when hovering vertices
