@@ -7,6 +7,7 @@
 #include "Polygon.h"
 #include "PolyBuilder.h"
 #include "Shader.h"
+#include "GUI.h"
 
 bool openContextMenu;
 
@@ -125,95 +126,9 @@ int main()
 		// TODO : Find a way to put this somewhere else for the code to be cleaner
 
 
-		// Top left info panel
-		ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
-		static ImVec4 red(1.0f, 0.0f, 0.0f, 1.0f);
-		static ImVec4 green(0.0f, 1.0f, 0.0f, 1.0f);
-		ImGui::SetNextWindowBgAlpha(0.3f); // Transparent background
-		if (ImGui::Begin("Vertex Info", nullptr,
-			ImGuiWindowFlags_NoResize |
-			ImGuiWindowFlags_AlwaysAutoResize))
-		{
-			if (PolyBuilder::finishedPolygons.empty())
-			{
-				ImGui::Text("No polygons.");
-			}
-			for (const auto& poly : PolyBuilder::finishedPolygons)
-			{
-				const auto& verts = poly.getVertices();
-
-				ImGui::ColorButton("Couleur", (poly.type == PolyBuilder::POLYGON) ?	red : green);
-				ImGui::SameLine(); //
-				ImGui::Text("%s:", (poly.type == PolyBuilder::POLYGON) ? "Polygon" : "Window");
-
-				for (size_t i = 0; i < verts.size(); ++i)
-				{
-
-					ImGui::Text("  Vertex %d: (%.2f, %.2f)",
-						static_cast<int>(i + 1),
-						verts[i].x,
-						verts[i].y);
-				}
-				ImGui::Separator();
-			}
-		}
-		ImGui::End();
-
-		// Right click menu
-		if (openContextMenu)
-		{
-			ImGui::OpenPopup("ContextMenu");
-			openContextMenu = false;  // Reset the flag
-		}
-
-		if (ImGui::BeginPopup("ContextMenu"))
-		{
-			if (ImGui::MenuItem("Create Polygon"))
-			{
-				PolyBuilder::StartPolygon(PolyBuilder::POLYGON);
-			}
-			if (ImGui::MenuItem("Create Window"))
-			{
-				PolyBuilder::StartPolygon(PolyBuilder::WINDOW);
-			}
-			ImGui::Separator();
-			if (PolyBuilder::buildingPoly)
-			{
-				if (ImGui::MenuItem("Cancel Current Build"))
-				{
-					PolyBuilder::Cancel();
-				}
-			}
-			ImGui::EndPopup();
-		}
-
-		// Hover detection
-		ImVec2 mousePos = ImGui::GetMousePos();
-		int displayW, displayH;
-		glfwGetFramebufferSize(window, &displayW, &displayH);
-
-		// Convert mouse pos to NDC
-		float ndcX = (2.0f * mousePos.x) / displayW - 1.0f;
-		float ndcY = 1.0f - (2.0f * mousePos.y) / displayH;
-
-		// Check proximity to vertices
-		const float hoverRadius = 0.02f;
-		bool hovered = false;
-		for (const auto& poly : PolyBuilder::finishedPolygons) {
-			for (const auto& vert : poly.getVertices()) {
-				float dx = vert.x - ndcX;
-				float dy = vert.y - ndcY;
-				if (dx * dx + dy * dy < hoverRadius * hoverRadius) {
-					ImGui::BeginTooltip();
-					ImGui::Text("Position: (%.2f, %.2f)", vert.x, vert.y);
-					ImGui::EndTooltip();
-					hovered = true;
-					break;
-				}
-			}
-			if (hovered) break;
-		}
-
+		GUI::DrawVertexInfoPanel(); // Top left panel
+		GUI::HandleContextMenu(&openContextMenu); // Right click menu
+		GUI::DrawHoverTooltip(window); // Tooltip when hovering vertices
 
 		// Rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
