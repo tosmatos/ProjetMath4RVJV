@@ -127,7 +127,39 @@ int main()
 		ImGui::NewFrame();
 
 		// TODO : Find a way to put this somewhere else for the code to be cleaner
-		// TODO : Add a simple overlay displaying the current polygon being built or not
+
+		ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
+		static ImVec4 red(1.0f, 0.0f, 0.0f, 1.0f);
+		static ImVec4 green(0.0f, 1.0f, 0.0f, 1.0f);
+		ImGui::SetNextWindowBgAlpha(0.3f); // Transparent background
+		if (ImGui::Begin("Vertex Info", nullptr,
+			ImGuiWindowFlags_NoResize |
+			ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			if (PolyBuilder::finishedPolygons.empty())
+			{
+				ImGui::Text("No polygons.");
+			}
+			for (const auto& poly : PolyBuilder::finishedPolygons)
+			{
+				const auto& verts = poly.getVertices();
+
+				ImGui::ColorButton("Couleur", (poly.type == PolyBuilder::POLYGON) ?	red : green);
+				ImGui::SameLine(); //
+				ImGui::Text("%s:", (poly.type == PolyBuilder::POLYGON) ? "Polygon" : "Window");
+
+				for (size_t i = 0; i < verts.size(); ++i)
+				{
+
+					ImGui::Text("  Vertex %d: (%.2f, %.2f)",
+						static_cast<int>(i + 1),
+						verts[i].x,
+						verts[i].y);
+				}
+				ImGui::Separator();
+			}
+		}
+		ImGui::End();
 
 		if (openContextMenu)
 		{
