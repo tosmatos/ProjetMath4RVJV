@@ -49,12 +49,14 @@ namespace PolyBuilder
 		{
 			case (POLYGON):
 				polygon = tempPolygon;
+				polygon.type = POLYGON;
 				polygon.updateBuffers();
 				finishedPolygons.push_back(polygon);
 				break;
 
 			case (WINDOW):
 				window = tempPolygon;
+				window.type = WINDOW;
 				window.updateBuffers();
 				finishedPolygons.push_back(window);
 				break;

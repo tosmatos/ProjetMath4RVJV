@@ -54,7 +54,7 @@ static void setupCallbacks(GLFWwindow* window)
 }
 
 int main()
-{	
+{
 	// Initialize GLFW
 	if (!glfwInit()) {
 		std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -131,7 +131,7 @@ int main()
 
 		if (openContextMenu)
 		{
-			ImGui::OpenPopup("ContextMenu");  // This tells ImGui to open our popup
+			ImGui::OpenPopup("ContextMenu");
 			openContextMenu = false;  // Reset the flag
 		}
 
@@ -163,11 +163,18 @@ int main()
 		// Example poly draw 
 		//myPolygon.draw();
 
-		shader.Use();
-		shader.SetColor("uColor", 1.0, 0.0, 0.0, 1.0);
-
-		for each (const Polygon& poly in PolyBuilder::finishedPolygons)
+		
+		for each (const Polygon & poly in PolyBuilder::finishedPolygons)
 		{
+			shader.Use();
+			switch (poly.type) { // Use the polygon's own type
+			case PolyBuilder::POLYGON:
+				shader.SetColor("uColor", 1.0f, 0.0f, 0.0f, 1.0f);
+				break;
+			case PolyBuilder::WINDOW:
+				shader.SetColor("uColor", 0.0f, 1.0f, 0.0f, 1.0f); 
+				break;
+			}
 			poly.draw();
 		}
 
@@ -177,7 +184,7 @@ int main()
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		// Swap buffers
-		glfwSwapBuffers(window);		
+		glfwSwapBuffers(window);
 	}
 
 	// Clean up ImGui

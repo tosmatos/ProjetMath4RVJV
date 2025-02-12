@@ -11,6 +11,8 @@ Polygon::Polygon()
 }
 
 Polygon::Polygon(const Polygon& other) : vertices(other.vertices), buffersInitialized(false) { // Copy constructor
+	vertices = other.vertices;
+	type = other.type;
 	if (other.buffersInitialized) {
 		updateBuffers();
 	}
@@ -24,6 +26,7 @@ Polygon& Polygon::operator=(const Polygon& other) { // Copy operator
 			buffersInitialized = false;
 		}
 		vertices = other.vertices;
+		type = other.type;
 		if (other.buffersInitialized) {
 			updateBuffers();
 		}

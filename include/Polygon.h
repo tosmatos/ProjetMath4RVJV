@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "Vertex.h"
+#include "PolyTypes.h"
 
 class Polygon
 {
@@ -11,6 +12,8 @@ private:
 	bool buffersInitialized = false;
 
 public:
+	PolyBuilder::Type type;
+
 	Polygon();
 	Polygon(const Polygon& other); // Copy constructor
 	Polygon& operator=(const Polygon& other); // Assignment operator

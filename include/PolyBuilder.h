@@ -1,10 +1,9 @@
 #pragma once
 
+#include "PolyTypes.h"
 #include "Polygon.h"
 
 namespace PolyBuilder {
-    enum Type { POLYGON, WINDOW };
-
     // Declare variables as external
     extern Type polyType;
     extern bool buildingPoly;
