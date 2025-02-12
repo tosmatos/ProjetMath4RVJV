@@ -124,6 +124,8 @@ int main()
 
 		// TODO : Find a way to put this somewhere else for the code to be cleaner
 
+
+		// Top left info panel
 		ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
 		static ImVec4 red(1.0f, 0.0f, 0.0f, 1.0f);
 		static ImVec4 green(0.0f, 1.0f, 0.0f, 1.0f);
@@ -157,6 +159,7 @@ int main()
 		}
 		ImGui::End();
 
+		// Right click menu
 		if (openContextMenu)
 		{
 			ImGui::OpenPopup("ContextMenu");
@@ -184,10 +187,37 @@ int main()
 			ImGui::EndPopup();
 		}
 
+		// Hover detection
+		ImVec2 mousePos = ImGui::GetMousePos();
+		int displayW, displayH;
+		glfwGetFramebufferSize(window, &displayW, &displayH);
+
+		// Convert mouse pos to NDC
+		float ndcX = (2.0f * mousePos.x) / displayW - 1.0f;
+		float ndcY = 1.0f - (2.0f * mousePos.y) / displayH;
+
+		// Check proximity to vertices
+		const float hoverRadius = 0.02f;
+		bool hovered = false;
+		for (const auto& poly : PolyBuilder::finishedPolygons) {
+			for (const auto& vert : poly.getVertices()) {
+				float dx = vert.x - ndcX;
+				float dy = vert.y - ndcY;
+				if (dx * dx + dy * dy < hoverRadius * hoverRadius) {
+					ImGui::BeginTooltip();
+					ImGui::Text("Position: (%.2f, %.2f)", vert.x, vert.y);
+					ImGui::EndTooltip();
+					hovered = true;
+					break;
+				}
+			}
+			if (hovered) break;
+		}
+
+
 		// Rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		
+		glClear(GL_COLOR_BUFFER_BIT);		
 
 		// Draw finished polygons
 		for each (const Polygon & poly in PolyBuilder::finishedPolygons)
