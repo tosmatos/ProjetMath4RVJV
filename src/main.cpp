@@ -6,6 +6,7 @@
 #include <iostream>
 #include "Polygon.h"
 #include "PolyBuilder.h"
+#include "Shader.h"
 
 bool openContextMenu;
 
@@ -17,7 +18,7 @@ static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 /* I've learned the hard way that the glfwSetCallback functions expect a global function.
 ** You cannot use a function in a class at all, except using some funky middle function...
-** So I'm guessing we set up these callbacks here, and then call our class functions 
+** So I'm guessing we set up these callbacks here, and then call our class functions
 ** in the callbacks themselves. */
 
 static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -53,7 +54,7 @@ static void setupCallbacks(GLFWwindow* window)
 }
 
 int main()
-{	
+{
 	// Initialize GLFW
 	if (!glfwInit()) {
 		std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -98,8 +99,13 @@ int main()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);	// Second param install_callback=true will install GLFW callbacks and chain to existing ones.
 	ImGui_ImplOpenGL3_Init();
 
+	const char* vertexShaderPath = "shaders/vertex.glsl";
+	const char* fragmentShaderPath = "shaders/fragment.glsl";
+
+	Shader shader = Shader(vertexShaderPath, fragmentShaderPath);
+
 	// Example usage for the Polygon class
-	// Of course in practice we will actually use functions and events from the mouse to have a polygon's vertices.
+	// Of course in practice we will actually use functions and events from the mouse to have a polygon's verticmakeces.
 	Polygon myPolygon;
 
 	myPolygon.updateBuffers();
@@ -120,9 +126,12 @@ int main()
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
+		// TODO : Find a way to put this somewhere else for the code to be cleaner
+		// TODO : Add a simple overlay displaying the current polygon being built or not
+
 		if (openContextMenu)
 		{
-			ImGui::OpenPopup("ContextMenu");  // This tells ImGui to open our popup
+			ImGui::OpenPopup("ContextMenu");
 			openContextMenu = false;  // Reset the flag
 		}
 
@@ -154,8 +163,18 @@ int main()
 		// Example poly draw 
 		//myPolygon.draw();
 
-		for each (const Polygon& poly in PolyBuilder::finishedPolygons)
+		
+		for each (const Polygon & poly in PolyBuilder::finishedPolygons)
 		{
+			shader.Use();
+			switch (poly.type) { // Use the polygon's own type
+			case PolyBuilder::POLYGON:
+				shader.SetColor("uColor", 1.0f, 0.0f, 0.0f, 1.0f);
+				break;
+			case PolyBuilder::WINDOW:
+				shader.SetColor("uColor", 0.0f, 1.0f, 0.0f, 1.0f); 
+				break;
+			}
 			poly.draw();
 		}
 
@@ -165,7 +184,7 @@ int main()
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		// Swap buffers
-		glfwSwapBuffers(window);		
+		glfwSwapBuffers(window);
 	}
 
 	// Clean up ImGui
