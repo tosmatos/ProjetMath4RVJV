@@ -21,5 +21,6 @@ public:
 	void addVertex(float x, float y);
 	void updateBuffers();
 	const void draw() const;
+	void drawPoints() const;
 	const std::vector<Vertex>& getVertices() const;
 };

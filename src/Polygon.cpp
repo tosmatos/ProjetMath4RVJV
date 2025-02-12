@@ -112,6 +112,12 @@ const void Polygon::draw() const
 	}
 }
 
+void Polygon::drawPoints() const
+{
+	glBindVertexArray(VAO);
+	glDrawArrays(GL_POINTS, 0, vertices.size());
+}
+
 const std::vector<Vertex>& Polygon::getVertices() const
 {
 	// Provide read-only access to our vertices

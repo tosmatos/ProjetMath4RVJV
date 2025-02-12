@@ -7,6 +7,7 @@
 #include "Polygon.h"
 #include "PolyBuilder.h"
 #include "Shader.h"
+#include "GUI.h"
 
 bool openContextMenu;
 
@@ -86,6 +87,9 @@ int main()
 		return -1;
 	}
 
+	// Set flag for the "gl_Pointsize = float" line in the vertex shader to work
+	glEnable(GL_PROGRAM_POINT_SIZE);
+
 	// Set viewport and resize callback
 	glViewport(0, 0, 800, 600);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -104,17 +108,10 @@ int main()
 
 	Shader shader = Shader(vertexShaderPath, fragmentShaderPath);
 
-	// Example usage for the Polygon class
-	// Of course in practice we will actually use functions and events from the mouse to have a polygon's verticmakeces.
-	Polygon myPolygon;
-
-	myPolygon.updateBuffers();
-
-	myPolygon.addVertex(-0.5f, 0.5f);    // Add a vertex
-	myPolygon.addVertex(0.7f, 0.3f);    // Add another
-	myPolygon.addVertex(0.3f, 0.2f);    // And another
-
-	myPolygon.updateBuffers();
+	
+	float maxPointSize[2];
+	glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, maxPointSize);
+	std::cout << "Max point size supported: " << maxPointSize[1] << std::endl;
 
 	// Render loop
 	while (!glfwWindowShouldClose(window)) {
@@ -127,43 +124,17 @@ int main()
 		ImGui::NewFrame();
 
 		// TODO : Find a way to put this somewhere else for the code to be cleaner
-		// TODO : Add a simple overlay displaying the current polygon being built or not
 
-		if (openContextMenu)
-		{
-			ImGui::OpenPopup("ContextMenu");
-			openContextMenu = false;  // Reset the flag
-		}
 
-		if (ImGui::BeginPopup("ContextMenu"))
-		{
-			if (ImGui::MenuItem("Create Polygon"))
-			{
-				PolyBuilder::StartPolygon(PolyBuilder::POLYGON);
-			}
-			if (ImGui::MenuItem("Create Window"))
-			{
-				PolyBuilder::StartPolygon(PolyBuilder::WINDOW);
-			}
-			ImGui::Separator();
-			if (PolyBuilder::buildingPoly)
-			{
-				if (ImGui::MenuItem("Cancel Current Build"))
-				{
-					PolyBuilder::Cancel();
-				}
-			}
-			ImGui::EndPopup();
-		}
+		GUI::DrawVertexInfoPanel(); // Top left panel
+		GUI::HandleContextMenu(&openContextMenu); // Right click menu
+		GUI::DrawHoverTooltip(window); // Tooltip when hovering vertices
 
 		// Rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);		
 
-		// Example poly draw 
-		//myPolygon.draw();
-
-		
+		// Draw finished polygons
 		for each (const Polygon & poly in PolyBuilder::finishedPolygons)
 		{
 			shader.Use();
@@ -176,8 +147,10 @@ int main()
 				break;
 			}
 			poly.draw();
+			shader.SetColor("uColor", 1.0f, 1.0f, 1.0f, 1.0f);
+			poly.drawPoints();
+			// Same drawPoints Logic could be used for when points cross between the window and the polygon
 		}
-
 
 		// ImGui Rendering
 		ImGui::Render();
