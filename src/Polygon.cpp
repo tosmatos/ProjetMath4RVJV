@@ -140,3 +140,5 @@ bool Polygon::isClockwise() const
 	else
 		return false;
 }
+
+void Polygon::reverseOrientation() { std::reverse(vertices.begin(), vertices.end()); }
