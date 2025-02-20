@@ -19,6 +19,7 @@ public:
 	Polygon& operator=(const Polygon& other); // Assignment operator
 	~Polygon();
 	void addVertex(float x, float y);
+	void addVertex(Vertex vertex);
 	void updateBuffers();
 	const void draw() const;
 	void drawPoints() const;

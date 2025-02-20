@@ -53,6 +53,11 @@ void Polygon::addVertex(float x, float y)
 	vertices.push_back(Vertex(x, y));
 }
 
+void Polygon::addVertex(Vertex vertex)
+{
+	vertices.push_back(vertex);
+}
+
 void Polygon::updateBuffers()
 {
 	if (!buffersInitialized) {

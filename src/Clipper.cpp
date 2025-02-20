@@ -15,6 +15,34 @@ static float dot2D(float x1, float y1, float x2, float y2)
     return x1*x2 + y1*y2;
 }
 
+static float dot2D(Vertex a, Vertex b)
+{
+    return a.x * b.x + a.y * b.y;
+}
+
+// a.k.a. Produit vectoriel
+static float cross2D(float x1, float y1, float x2, float y2)
+{
+    return x1 * y2 - x2 * y1;
+}
+
+static float cross2D(Vertex a, Vertex b)
+{
+    return a.x * b.y - b.x * a.y;
+}
+
+// Check if point is on the left side of an edge
+static bool is_inside(Vertex point, Vertex a, Vertex b)
+{
+    return (cross2D(a - b, point) + cross2D(b, a)) < 0.0f;
+}
+
+// Get intersection point
+static Vertex intersection(Vertex a1, Vertex a2, Vertex b1, Vertex b2)
+{
+    return ((b1 - b2) * cross2D(a1, a2) - (a1 - a2) * cross2D(b1, b2)) * (1.0f / cross2D(a1 - a2, b1 - b2));
+}
+
 static void clipLineCyrusBeck(const Vertex& A,
                               const Vertex& B,
                               const Vertex& edgeP1,
@@ -102,4 +130,10 @@ Polygon clipPolygonCyrusBeck(const Polygon& subject, const Polygon& windowPolygo
 
     resultPoly.updateBuffers();
     return resultPoly;
+}
+
+Polygon clipPolygonSutherlandHodgman(const Polygon& subject, const Polygon& windowPolygon)
+{
+
+    return subject;
 }
