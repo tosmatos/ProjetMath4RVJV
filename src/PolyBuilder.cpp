@@ -1,6 +1,5 @@
 #include "PolyBuilder.h"
 #include "GLFW/glfw3.h"
-#include "GLFW/glfw3.h"
 #include <iostream>
 #include <string>
 
@@ -61,6 +60,8 @@ namespace PolyBuilder
 				finishedPolygons.push_back(window);
 				break;
 		}
+
+		std::cout << "Polygon is " << (tempPolygon.isClockwise() ? "clockwise" : "counter-clockwise.");
 
 		buildingPoly = false;
 		tempPolygon = Polygon();

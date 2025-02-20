@@ -23,4 +23,5 @@ public:
 	const void draw() const;
 	void drawPoints() const;
 	const std::vector<Vertex>& getVertices() const;
+	bool isClockwise() const;
 };
