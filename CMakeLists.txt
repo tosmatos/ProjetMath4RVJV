@@ -18,7 +18,7 @@ find_package(imgui CONFIG REQUIRED)
 # Add executable, builds exe from src/main.cpp
 add_executable(ProjetMath4RVJV 
     src/main.cpp
- "include/Vertex.h" "include/Polygon.h" "src/Polygon.cpp"  "src/PolyBuilder.cpp" "include/PolyBuilder.h" "include/Shader.h" "src/Shader.cpp" "include/PolyTypes.h" "include/GUI.h" "src/GUI.cpp")
+ "include/Vertex.h" "include/Polygon.h" "src/Polygon.cpp"  "src/PolyBuilder.cpp" "include/PolyBuilder.h" "include/Shader.h" "src/Shader.cpp" "include/PolyTypes.h" "include/GUI.h" "src/GUI.cpp" "include/Clipper.h" "src/Clipper.cpp" )
 
 # Copy shaders to build directory
 add_custom_command(TARGET ProjetMath4RVJV POST_BUILD

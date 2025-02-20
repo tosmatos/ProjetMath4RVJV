@@ -1,5 +1,9 @@
 #include "GUI.h"
 
+#include <iostream>
+
+#include "Clipper.h"
+
 void GUI::DrawVertexInfoPanel(bool* open) {
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.3f);
@@ -18,6 +22,7 @@ void GUI::DrawVertexInfoPanel(bool* open) {
         for (const auto& poly : PolyBuilder::finishedPolygons) {
             const auto& verts = poly.getVertices();
 
+            // Show color swatch
             ImGui::ColorButton("##Color",
                 (poly.type == PolyBuilder::POLYGON) ? red : green);
             ImGui::SameLine();
@@ -53,6 +58,39 @@ void GUI::HandleContextMenu(bool* openContextMenu) {
                 PolyBuilder::Cancel();
             }
         }
+
+        if (ImGui::MenuItem("Cyrus–Beck Clip All Polygons"))
+        {
+            Polygon windowPoly;
+            bool foundWindow = false;
+            for (auto& poly : PolyBuilder::finishedPolygons) {
+                if (poly.type == PolyBuilder::WINDOW) {
+                    windowPoly = poly;
+                    foundWindow = true;
+                    break;
+                }
+            }
+            if (!foundWindow) {
+                std::cout << "No window polygon to clip against!\n";
+            } else {
+                std::vector<Polygon> newPolygons;
+                for (auto& poly : PolyBuilder::finishedPolygons) {
+                    if (poly.type == PolyBuilder::POLYGON) {
+                        // Clip the polygon
+                        Polygon clipped = clipPolygonCyrusBeck(poly, windowPoly);
+                        clipped.type = PolyBuilder::POLYGON;
+                        clipped.updateBuffers();
+                        newPolygons.push_back(clipped);
+                    }
+                    else {
+                        newPolygons.push_back(poly);
+                    }
+                }
+                // Replace old collection
+                PolyBuilder::finishedPolygons = newPolygons;
+            }
+        }
+
         ImGui::EndPopup();
     }
 }
@@ -76,7 +114,7 @@ void GUI::DrawHoverTooltip(GLFWwindow* window) {
                 ImGui::BeginTooltip();
                 ImGui::Text("Position: (%.2f, %.2f)", vert.x, vert.y);
                 ImGui::EndTooltip();
-                return; // Only show first match
+                return; // Only show the first match
             }
         }
     }
