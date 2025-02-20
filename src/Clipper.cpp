@@ -134,6 +134,59 @@ Polygon clipPolygonCyrusBeck(const Polygon& subject, const Polygon& windowPolygo
 
 Polygon clipPolygonSutherlandHodgman(const Polygon& subject, const Polygon& windowPolygon)
 {
+    Polygon clippedPoly = Polygon();
 
-    return subject;
+    if (subject.getVertices().size() < 3 || windowPolygon.getVertices().size() < 3)
+        return clippedPoly; // Early exit
+
+    std::vector<Vertex> windowVertices = windowPolygon.getVertices();
+    std::vector<Vertex> buildingVertices{ subject.getVertices().begin(), subject.getVertices().end() };    
+    std::vector<Vertex> input;
+
+    Vertex p1 = windowVertices[windowVertices.size() - 1];
+
+    for (Vertex p2 : windowVertices)
+    {
+        input.clear();
+        input.insert(input.end(), buildingVertices.begin(), buildingVertices.end());
+
+        // Check if input is empty before accessing it
+        if (input.empty())
+        {
+            buildingVertices.clear(); // Clear buildingVertices as it's no longer needed for this edge
+            p1 = p2;
+            continue; // Skip to the next window edge if input is empty
+        }
+
+        Vertex previousVertex = input[input.size() - 1];
+
+        // Use a temporary vector for the next building vertices
+        // Necessary as Sutherland-Hodgman is sequential
+        std::vector<Vertex> nextBuildingVertices; 
+
+        for (Vertex currentVertex : input)
+        {
+            if (is_inside(currentVertex, p1, p2))
+            {
+                if (!is_inside(previousVertex, p1, p2))
+                {
+                    nextBuildingVertices.push_back(intersection(p1, p2, previousVertex, currentVertex));
+                }
+                nextBuildingVertices.push_back(currentVertex);
+            }
+            else if (is_inside(previousVertex, p1, p2))
+            {
+                nextBuildingVertices.push_back(intersection(p1, p2, previousVertex, currentVertex));
+            }
+
+            previousVertex = currentVertex;
+        }
+
+        buildingVertices = nextBuildingVertices;
+        p1 = p2;
+    }
+
+    clippedPoly.setVertices(buildingVertices);
+    clippedPoly.updateBuffers();
+    return clippedPoly;
 }

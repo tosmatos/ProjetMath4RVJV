@@ -33,7 +33,7 @@ namespace PolyBuilder
 		float normalizedX = (2.0f * xPos / width) - 1.0f;
 		float normalizedY = 1.0f - (2.0f * yPos / height);  // Flip Y coordinate
 
-		std::cout << "Added a vertex at X : " << std::to_string(normalizedX) << ", Y : " << std::to_string(normalizedY);
+		std::cout << "Added a vertex at X : " << std::to_string(normalizedX) << ", Y : " << std::to_string(normalizedY) << std::endl;
 
 		tempPolygon.addVertex(normalizedX, normalizedY);
 	}

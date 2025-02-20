@@ -128,3 +128,8 @@ const std::vector<Vertex>& Polygon::getVertices() const
 	// Provide read-only access to our vertices
 	return vertices;
 }
+
+void Polygon::setVertices(std::vector<Vertex> vertexVector)
+{
+	vertices = vertexVector;
+}

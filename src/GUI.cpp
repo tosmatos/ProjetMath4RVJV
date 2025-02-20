@@ -91,6 +91,46 @@ void GUI::HandleContextMenu(bool* openContextMenu) {
             }
         }
 
+        if (ImGui::MenuItem("Sutherland-Hodgman Clip All Polygons"))
+        {
+            Polygon windowPoly;
+            bool foundWindow = false;
+            for (auto& poly : PolyBuilder::finishedPolygons)
+            {
+                if (poly.type == PolyBuilder::WINDOW)
+                {
+                    windowPoly = poly;
+                    foundWindow = true;
+                    break;
+                }
+            }
+            if (!foundWindow)
+            {
+                std::cout << "No window polygon to clip against!\n";
+            }
+            else
+            {
+                std::vector<Polygon> newPolygons;
+                for (auto& poly : PolyBuilder::finishedPolygons)
+                {
+                    if (poly.type == PolyBuilder::POLYGON)
+                    {
+                        // Clip the polygon
+                        Polygon clipped = clipPolygonSutherlandHodgman(poly, windowPoly);
+                        clipped.type = PolyBuilder::POLYGON;
+                        clipped.updateBuffers();
+                        newPolygons.push_back(clipped);
+                    }
+                    else
+                    {
+                        newPolygons.push_back(poly);
+                    }
+                }
+                // Replace old collection
+                PolyBuilder::finishedPolygons = newPolygons;
+            }
+        }
+
         ImGui::EndPopup();
     }
 }

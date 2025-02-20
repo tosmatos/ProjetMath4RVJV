@@ -24,4 +24,5 @@ public:
 	const void draw() const;
 	void drawPoints() const;
 	const std::vector<Vertex>& getVertices() const;
+	void setVertices(std::vector<Vertex> vertexVector);
 };
