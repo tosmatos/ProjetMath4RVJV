@@ -133,3 +133,22 @@ void Polygon::setVertices(std::vector<Vertex> vertexVector)
 {
 	vertices = vertexVector;
 }
+
+bool Polygon::isClockwise() const
+{
+	double area = 0.0;
+
+	for (int i = 0; i < vertices.size(); i++)
+	{
+		int j = (i + 1) % vertices.size();
+		area += (vertices[j].x - vertices[i].x) * (vertices[j].y + vertices[i].y);
+	}
+	area /= 2.0;
+
+	if (area > 0.0)
+		return true;
+	else
+		return false;
+}
+
+void Polygon::reverseOrientation() { std::reverse(vertices.begin(), vertices.end()); }

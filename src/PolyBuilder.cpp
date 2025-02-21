@@ -1,6 +1,5 @@
 #include "PolyBuilder.h"
 #include "GLFW/glfw3.h"
-#include "GLFW/glfw3.h"
 #include <iostream>
 #include <string>
 
@@ -40,10 +39,19 @@ namespace PolyBuilder
 
 	void Finish()
 	{
-		std::cout << "Finishing polygon ...";
+		std::cout << "Finishing polygon ..." << std::endl;		
 
 		if (!buildingPoly)
 			return;
+
+		std::cout << "Polygon is " << (tempPolygon.isClockwise() ? "clockwise" : "counter-clockwise.") << std::endl;
+		// if not clockwise, reverse the orientation
+		// WARNING : Maybe not the best thing to do, don't really know.
+		if (!tempPolygon.isClockwise())
+		{
+			tempPolygon.reverseOrientation();
+			std::cout << "Reverse polygon orientation to clockwise." << std::endl;
+		}
 
 		switch (polyType)
 		{
@@ -61,6 +69,8 @@ namespace PolyBuilder
 				finishedPolygons.push_back(window);
 				break;
 		}
+
+		
 
 		buildingPoly = false;
 		tempPolygon = Polygon();

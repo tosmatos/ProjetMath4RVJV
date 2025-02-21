@@ -25,4 +25,6 @@ public:
 	void drawPoints() const;
 	const std::vector<Vertex>& getVertices() const;
 	void setVertices(std::vector<Vertex> vertexVector);
+	bool isClockwise() const;
+	void reverseOrientation(); // Makes polygon clockwise if counter clockwise and the opposite
 };
