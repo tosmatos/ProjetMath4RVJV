@@ -77,7 +77,7 @@ void GUI::HandleContextMenu(bool* openContextMenu) {
                 for (auto& poly : PolyBuilder::finishedPolygons) {
                     if (poly.type == PolyBuilder::POLYGON) {
                         // Clip the polygon
-                        Polygon clipped = clipPolygonCyrusBeck(poly, windowPoly);
+                        Polygon clipped = Clipper::clipPolygonCyrusBeck(poly, windowPoly);
                         clipped.type = PolyBuilder::POLYGON;
                         clipped.updateBuffers();
                         newPolygons.push_back(clipped);
@@ -116,7 +116,7 @@ void GUI::HandleContextMenu(bool* openContextMenu) {
                     if (poly.type == PolyBuilder::POLYGON)
                     {
                         // Clip the polygon
-                        Polygon clipped = clipPolygonSutherlandHodgman(poly, windowPoly);
+                        Polygon clipped = Clipper::clipPolygonSutherlandHodgman(poly, windowPoly);
                         clipped.type = PolyBuilder::POLYGON;
                         clipped.updateBuffers();
                         newPolygons.push_back(clipped);

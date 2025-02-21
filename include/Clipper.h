@@ -1,10 +1,8 @@
-﻿#ifndef CLIPPER_H
-#define CLIPPER_H
-
-#pragma once
+﻿#pragma once
 #include "Polygon.h"
 
-Polygon clipPolygonCyrusBeck(const Polygon& subject, const Polygon& windowPolygon);
-Polygon clipPolygonSutherlandHodgman(const Polygon& subject, const Polygon& windowPolygon);
-
-#endif //CLIPPER_H
+namespace Clipper
+{
+	Polygon clipPolygonCyrusBeck(const Polygon& subject, const Polygon& windowPolygon);
+	Polygon clipPolygonSutherlandHodgman(const Polygon& subject, const Polygon& windowPolygon);
+}
