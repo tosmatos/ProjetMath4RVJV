@@ -5,5 +5,6 @@
 #include "Polygon.h"
 
 Polygon clipPolygonCyrusBeck(const Polygon& subject, const Polygon& windowPolygon);
+Polygon clipPolygonSutherlandHodgman(const Polygon& subject, const Polygon& windowPolygon);
 
-#endif // CLIPPER_H
+#endif //CLIPPER_H

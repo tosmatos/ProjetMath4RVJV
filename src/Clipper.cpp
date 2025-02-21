@@ -15,6 +15,34 @@ static float dot2D(float x1, float y1, float x2, float y2)
     return x1 * x2 + y1 * y2;
 }
 
+static float dot2D(Vertex a, Vertex b)
+{
+    return a.x * b.x + a.y * b.y;
+}
+
+// a.k.a. Produit vectoriel
+static float cross2D(float x1, float y1, float x2, float y2)
+{
+    return x1 * y2 - x2 * y1;
+}
+
+static float cross2D(Vertex a, Vertex b)
+{
+    return a.x * b.y - b.x * a.y;
+}
+
+// Check if point is on the left side of an edge
+static bool is_inside(Vertex point, Vertex a, Vertex b)
+{
+    return (cross2D(a - b, point) + cross2D(b, a)) < 0.0f;
+}
+
+// Get intersection point
+static Vertex intersection(Vertex a1, Vertex a2, Vertex b1, Vertex b2)
+{
+    return ((b1 - b2) * cross2D(a1, a2) - (a1 - a2) * cross2D(b1, b2)) * (1.0f / cross2D(a1 - a2, b1 - b2));
+}
+
 // The extra parameter 'isWindowCW' tells whether the window polygon is clockwise.
 // For clockwise windows, the outward normal is (ey, -ex); for counterclockwise, it's reversed.
 static void clipLineCyrusBeck(const Vertex& A,
@@ -134,4 +162,63 @@ Polygon clipPolygonCyrusBeck(const Polygon& subject, const Polygon& windowPolygo
 
     resultPoly.updateBuffers();
     return resultPoly;
+}
+
+Polygon clipPolygonSutherlandHodgman(const Polygon& subject, const Polygon& windowPolygon)
+{
+    Polygon clippedPoly = Polygon();
+
+    if (subject.getVertices().size() < 3 || windowPolygon.getVertices().size() < 3)
+        return clippedPoly; // Early exit
+
+    std::vector<Vertex> windowVertices = windowPolygon.getVertices();
+    std::vector<Vertex> buildingVertices{ subject.getVertices().begin(), subject.getVertices().end() };    
+    std::vector<Vertex> input;
+
+    Vertex p1 = windowVertices[windowVertices.size() - 1];
+
+    for (Vertex p2 : windowVertices)
+    {
+        input.clear();
+        input.insert(input.end(), buildingVertices.begin(), buildingVertices.end());
+
+        // Check if input is empty before accessing it
+        if (input.empty())
+        {
+            buildingVertices.clear(); // Clear buildingVertices as it's no longer needed for this edge
+            p1 = p2;
+            continue; // Skip to the next window edge if input is empty
+        }
+
+        Vertex previousVertex = input[input.size() - 1];
+
+        // Use a temporary vector for the next building vertices
+        // Necessary as Sutherland-Hodgman is sequential
+        std::vector<Vertex> nextBuildingVertices; 
+
+        for (Vertex currentVertex : input)
+        {
+            if (is_inside(currentVertex, p1, p2))
+            {
+                if (!is_inside(previousVertex, p1, p2))
+                {
+                    nextBuildingVertices.push_back(intersection(p1, p2, previousVertex, currentVertex));
+                }
+                nextBuildingVertices.push_back(currentVertex);
+            }
+            else if (is_inside(previousVertex, p1, p2))
+            {
+                nextBuildingVertices.push_back(intersection(p1, p2, previousVertex, currentVertex));
+            }
+
+            previousVertex = currentVertex;
+        }
+
+        buildingVertices = nextBuildingVertices;
+        p1 = p2;
+    }
+
+    clippedPoly.setVertices(buildingVertices);
+    clippedPoly.updateBuffers();
+    return clippedPoly;
 }

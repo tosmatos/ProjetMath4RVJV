@@ -19,10 +19,12 @@ public:
 	Polygon& operator=(const Polygon& other); // Assignment operator
 	~Polygon();
 	void addVertex(float x, float y);
+	void addVertex(Vertex vertex);
 	void updateBuffers();
 	const void draw() const;
 	void drawPoints() const;
 	const std::vector<Vertex>& getVertices() const;
+	void setVertices(std::vector<Vertex> vertexVector);
 	bool isClockwise() const;
 	void reverseOrientation(); // Makes polygon clockwise if counter clockwise and the opposite
 };
