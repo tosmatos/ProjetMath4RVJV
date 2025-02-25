@@ -225,4 +225,98 @@ namespace Clipper
         clippedPoly.updateBuffers();
         return clippedPoly;
     }
+
+    // Helper function to check if a point is inside a triangle
+    static bool isPointInsideTriangle(const Vertex& p, const Vertex& a, const Vertex& b, const Vertex& c)
+    {
+        float cross1 = cross2D(b - a, p - a);
+        float cross2 = cross2D(c - b, p - b);
+        float cross3 = cross2D(a - c, p - c);
+
+        bool hasNeg = (cross1 < 0) || (cross2 < 0) || (cross3 < 0);
+        bool hasPos = (cross1 > 0) || (cross2 > 0) || (cross3 > 0);
+
+        return !(hasNeg && hasPos);
+    }
+
+    // Helper function to check if a vertex is an ear
+    static bool isEar(const Vertex& prev, const Vertex& curr, const Vertex& next, const std::vector<Vertex>& polygon)
+    {
+        // Check if the triangle is convex
+        float cross = cross2D(curr - prev, next - curr);
+        if (cross <= 0) // Not convex (concave or colinear)
+            return false;
+
+        // Check if any other vertex is inside the triangle
+        for (const Vertex& v : polygon)
+        {
+            if (&v == &prev || &v == &curr || &v == &next)
+                continue;
+
+            if (isPointInsideTriangle(v, prev, curr, next))
+                return false;
+        }
+
+        return true;
+    }
+
+    // Ear Cutting algorithm to decompose a concave polygon into triangles
+    std::vector<Polygon> earCutting(const Polygon& concavePolygon)
+    {
+        std::vector<Polygon> triangles;
+        std::vector<Vertex> vertices = concavePolygon.getVertices();
+
+        // Early exit if the polygon is already a triangle
+        if (vertices.size() == 3)
+        {
+            triangles.push_back(concavePolygon);
+            return triangles;
+        }
+
+        // Make sure the polygon is counterclockwise
+        if (concavePolygon.isClockwise())
+        {
+            std::reverse(vertices.begin(), vertices.end());
+        }
+
+        // Iterate until the polygon is fully decomposed
+        while (vertices.size() >= 3)
+        {
+            bool earFound = false;
+
+            for (size_t i = 0; i < vertices.size(); i++)
+            {
+                size_t prevIndex = (i == 0) ? vertices.size() - 1 : i - 1;
+                size_t nextIndex = (i + 1) % vertices.size();
+
+                const Vertex& prev = vertices[prevIndex];
+                const Vertex& curr = vertices[i];
+                const Vertex& next = vertices[nextIndex];
+
+                if (isEar(prev, curr, next, vertices))
+                {
+                    // Create a triangle from the ear
+                    Polygon triangle;
+                    triangle.addVertex(prev);
+                    triangle.addVertex(curr);
+                    triangle.addVertex(next);
+                    triangles.push_back(triangle);
+
+                    // Remove the ear vertex from the polygon
+                    vertices.erase(vertices.begin() + i);
+                    earFound = true;
+                    break;
+                }
+            }
+
+            // If no ear is found, the polygon may be degenerate
+            if (!earFound)
+            {
+                std::cerr << "Error: No ear found. Polygon may be degenerate." << std::endl;
+                break;
+            }
+        }
+
+        return triangles;
+    }
 }

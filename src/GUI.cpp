@@ -130,6 +130,26 @@ void GUI::HandleContextMenu(bool* openContextMenu) {
                 PolyBuilder::finishedPolygons = newPolygons;
             }
         }
+        if (ImGui::MenuItem("Ear Cutting Decomposition")) {
+            std::vector<Polygon> newPolygons;
+            for (const auto& poly : PolyBuilder::finishedPolygons) {
+                if (poly.type == PolyBuilder::POLYGON) {
+                    // Créez une copie du polygone pour le modifier
+                    Polygon polyCopy = poly;
+                    std::vector<Polygon> triangles = Clipper::earCutting(polyCopy);
+                    for (auto& triangle : triangles) {
+                        triangle.type = PolyBuilder::POLYGON;
+                        triangle.updateBuffers();
+                        newPolygons.push_back(triangle);
+                    }
+                }
+                else {
+                    newPolygons.push_back(poly);
+                }
+            }
+            // Remplace l'ancienne collection de polygones
+            PolyBuilder::finishedPolygons = newPolygons;
+        }
 
         ImGui::EndPopup();
     }
