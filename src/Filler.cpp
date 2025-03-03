@@ -4,6 +4,7 @@
 #include <cmath>
 #include <stack>
 #include <GLFW/glfw3.h>
+#include <functional>
 
 // Initialize static members
 int Filler::screenWidth = 800;
@@ -400,5 +401,110 @@ std::vector<Vertex> Filler::fillFromSeed(const Polygon& polygon, float seedX, fl
 	}
 
 	std::cout << "Filled from seed with " << fillPoints.size() << " points" << std::endl;
+	return fillPoints;
+}
+
+std::vector<Vertex> Filler::fillFromSeedRecursive(const Polygon& polygon, float seedX, float seedY) {
+	std::vector<Vertex> fillPoints;
+
+	// Convert seed coordinates to screen space
+	Vertex seed = NDCToScreen(Vertex(seedX, seedY));
+	int seedScreenX = static_cast<int>(seed.x);
+	int seedScreenY = static_cast<int>(seed.y);
+
+	// Check if seed is within screen bounds
+	if (seedScreenX < 0 || seedScreenX >= screenWidth ||
+		seedScreenY < 0 || seedScreenY >= screenHeight) {
+		std::cerr << "Seed point is outside screen bounds" << std::endl;
+		return fillPoints;
+	}
+
+	// Create a buffer for the border pixels, initialized to false
+	std::vector<std::vector<bool>> borderPixels(screenHeight, std::vector<bool>(screenWidth, false));
+
+	// Draw the border
+	const auto& vertices = polygon.getVertices();
+	for (size_t i = 0; i < vertices.size(); i++) {
+		size_t j = (i + 1) % vertices.size();
+
+		Vertex v1 = NDCToScreen(vertices[i]);
+		Vertex v2 = NDCToScreen(vertices[j]);
+
+		// Line drawing using Bresenham's algorithm
+		int x1 = static_cast<int>(std::round(v1.x));
+		int y1 = static_cast<int>(std::round(v1.y));
+		int x2 = static_cast<int>(std::round(v2.x));
+		int y2 = static_cast<int>(std::round(v2.y));
+
+		int dx = std::abs(x2 - x1);
+		int dy = std::abs(y2 - y1);
+		int sx = (x1 < x2) ? 1 : -1;
+		int sy = (y1 < y2) ? 1 : -1;
+		int err = dx - dy;
+
+		const int BORDER_SIZE = 2;
+
+		while (true) {
+			for (int offsetY = -BORDER_SIZE; offsetY <= BORDER_SIZE; offsetY++) {
+				for (int offsetX = -BORDER_SIZE; offsetX <= BORDER_SIZE; offsetX++) {
+					int px = x1 + offsetX;
+					int py = y1 + offsetY;
+
+					if (px >= 0 && px < screenWidth && py >= 0 && py < screenHeight) {
+						borderPixels[py][px] = true;
+					}
+				}
+			}
+
+			if (x1 == x2 && y1 == y2) break;
+
+			int e2 = 2 * err;
+			if (e2 > -dy) {
+				err -= dy;
+				x1 += sx;
+			}
+			if (e2 < dx) {
+				err += dx;
+				y1 += sy;
+			}
+		}
+	}
+
+	// Reset filled pixels
+	filledPixels = std::vector<std::vector<bool>>(screenHeight, std::vector<bool>(screenWidth, false));
+
+	// Helper function for recursive fill
+	std::function<void(int, int)> fillRecursive = [&](int x, int y) {
+		// Base case: out of bounds, already filled, or on border
+		if (x < 0 || x >= screenWidth || y < 0 || y >= screenHeight ||
+			filledPixels[y][x] || borderPixels[y][x]) {
+			return;
+		}
+
+		// Mark pixel as filled
+		filledPixels[y][x] = true;
+
+		// Add to the vertices to be drawn
+		Vertex ndcVertex = ScreenToNDC(static_cast<float>(x), static_cast<float>(y));
+		fillPoints.push_back(ndcVertex);
+
+		// Recursive calls for 4-connected neighbors
+		fillRecursive(x + 1, y); // right
+		fillRecursive(x - 1, y); // left
+		fillRecursive(x, y + 1); // up
+		fillRecursive(x, y - 1); // down
+		};
+
+	// Start recursion from seed point
+	try {
+		// Limit recursion depth to avoid stack overflow
+		fillRecursive(seedScreenX, seedScreenY);
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception in recursive fill: " << e.what() << std::endl;
+		std::cerr << "The polygon may be too large for recursive fill. Try using stack-based fill instead." << std::endl;
+	}
+
+	std::cout << "Filled from seed recursively with " << fillPoints.size() << " points" << std::endl;
 	return fillPoints;
 }

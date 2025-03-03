@@ -54,7 +54,7 @@ void GUI::DrawFillSettingsPanel(bool* open) {
         ImGuiWindowFlags_AlwaysAutoResize))
     {
         // Algorithm selection
-        const char* algorithms[] = { "Simple Scanline", "LCA", "Seed Fill" };
+        const char* algorithms[] = { "Simple Scanline", "LCA", "Seed Fill", "Recursive Seed Fill" };
         static int currentAlgorithm = Filler::getSelectedAlgorithm();
         if (ImGui::Combo("Algorithm", &currentAlgorithm, algorithms, IM_ARRAYSIZE(algorithms))) {
             Filler::setSelectedAlgorithm(currentAlgorithm);
@@ -118,7 +118,7 @@ void GUI::HandleContextMenu(bool* openContextMenu) {
                             fillPoints = Filler::fillPolygonLCA(poly);
                             break;
                         case Filler::FILL_SEED:
-                            // Can't do this without a seed point for each polygon
+                        case Filler::FILL_SEED_RECURSIVE:
                             std::cout << "Seed fill requires selecting a polygon and clicking inside it" << std::endl;
                             continue;
                         }
@@ -324,9 +324,17 @@ void GUI::HandleFillClick(GLFWwindow* window, double xPos, double yPos) {
             }
         }
     }
-    else if (Filler::getSelectedAlgorithm() == Filler::FILL_SEED) {
+    else if (Filler::getSelectedAlgorithm() == Filler::FILL_SEED ||
+        Filler::getSelectedAlgorithm() == Filler::FILL_SEED_RECURSIVE) {
         // We have a polygon and we're using seed fill
-        std::vector<Vertex> fillPoints = Filler::fillFromSeed(*selectedPolygonForFill, ndcX, ndcY);
+        std::vector<Vertex> fillPoints;
+
+        if (Filler::getSelectedAlgorithm() == Filler::FILL_SEED) {
+            fillPoints = Filler::fillFromSeed(*selectedPolygonForFill, ndcX, ndcY);
+        }
+        else {
+            fillPoints = Filler::fillFromSeedRecursive(*selectedPolygonForFill, ndcX, ndcY);
+        }
 
         // Get fill color
         float r, g, b, a;

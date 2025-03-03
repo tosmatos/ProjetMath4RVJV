@@ -40,6 +40,7 @@ public:
 	static const int FILL_SCANLINE = 0;
 	static const int FILL_LCA = 1;
 	static const int FILL_SEED = 2;
+	static const int FILL_SEED_RECURSIVE = 3;
 
 	// Get/set the selected fill algorithm
 	static int getSelectedAlgorithm() { return selectedAlgorithm; }
@@ -63,7 +64,11 @@ public:
 	// Fill a polygon using the LCA algorithm (Liste des Côtés Actifs)
 	static std::vector<Vertex> fillPolygonLCA(const Polygon& polygon);
 
-	// Seed-based filling (starting from a point inside the polygon)
+	// Seed-based filling (stack)
 	// AKA "Algorithme à germes version piles"
 	static std::vector<Vertex> fillFromSeed(const Polygon& polygon, float seedX, float seedY);
+
+	// Recursive seed-based filling
+	// AKA "Algorithme a germes version recursive"
+	static std::vector<Vertex> fillFromSeedRecursive(const Polygon& polygon, float seedX, float seedY);
 };
