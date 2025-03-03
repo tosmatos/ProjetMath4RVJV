@@ -99,6 +99,7 @@ namespace PolyBuilder
 
 		// Re-initialize the OpenGL buffers
 		poly.updateBuffers();
+	}
 	
 	// Add a filled polygon to our storage
 	void AddFilledPolygon(const Polygon& poly,
