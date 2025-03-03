@@ -17,4 +17,7 @@ namespace PolyBuilder {
     void AppendVertex(double xPos, double yPos);
     void Finish();
     void Cancel();
+
+    // New function for polygon transformation
+    void MovePolygon(int polyIndex, float deltaX, float deltaY);
 }

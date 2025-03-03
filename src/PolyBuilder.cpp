@@ -39,7 +39,7 @@ namespace PolyBuilder
 
 	void Finish()
 	{
-		std::cout << "Finishing polygon ..." << std::endl;		
+		std::cout << "Finishing polygon ..." << std::endl;
 
 		if (!buildingPoly)
 			return;
@@ -63,8 +63,6 @@ namespace PolyBuilder
 				break;
 		}
 
-		
-
 		buildingPoly = false;
 		tempPolygon = Polygon();
 	}
@@ -73,5 +71,30 @@ namespace PolyBuilder
 	{
 		buildingPoly = false;
 		tempPolygon = Polygon();
+	}
+
+	void MovePolygon(int polyIndex, float deltaX, float deltaY)
+	{
+		// Check for valid index
+		if (polyIndex < 0 || polyIndex >= finishedPolygons.size())
+			return;
+
+		// Get a reference to the polygon to modify
+		Polygon& poly = finishedPolygons[polyIndex];
+
+		// Get a modifiable copy of the vertices
+		std::vector<Vertex> modifiedVertices = poly.getVertices();
+
+		// Apply translation to each vertex
+		for (auto& vertex : modifiedVertices) {
+			vertex.x += deltaX;
+			vertex.y += deltaY;
+		}
+
+		// Update the polygon with the new vertices
+		poly.setVertices(modifiedVertices);
+
+		// Re-initialize the OpenGL buffers
+		poly.updateBuffers();
 	}
 }
