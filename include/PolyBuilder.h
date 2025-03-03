@@ -33,6 +33,9 @@ namespace PolyBuilder {
     void Finish();
     void Cancel();
 
+    // New function for polygon transformation
+    void MovePolygon(int polyIndex, float deltaX, float deltaY);
+	
     // Add a filled polygon to our storage
     void AddFilledPolygon(const Polygon& poly,
         const std::vector<Vertex>& fillPoints,

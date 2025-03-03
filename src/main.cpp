@@ -23,11 +23,6 @@ static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	Filler::init(width, height);
 }
 
-/* I've learned the hard way that the glfwSetCallback functions expect a global function.
-** You cannot use a function in a class at all, except using some funky middle function...
-** So I'm guessing we set up these callbacks here, and then call our class functions
-** in the callbacks themselves. */
-
 static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) // Quit app
@@ -65,16 +60,42 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 		leftMouseDown = false;
 	}
 
-	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-	{
-		openContextMenu = true;
-	}
+	if (action == GLFW_PRESS) {
+        // Try to start window drag first
+        if (GUI::StartWindowDrag(window, button)) {
+            return; // Successfully started drag, don't process further
+        }
+
+        // If not dragging, handle normal mouse actions
+        if (button == GLFW_MOUSE_BUTTON_LEFT) {
+            double xPos, yPos;
+            glfwGetCursorPos(window, &xPos, &yPos);
+            std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
+            PolyBuilder::AppendVertex(xPos, yPos);
+        }
+        else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+            openContextMenu = true;
+        }
+    }
+
+    // Handle drag end
+    if (action == GLFW_RELEASE) {
+        GUI::EndWindowDrag();
+    }
+}
+	
+
+static void CursorPositionCallback(GLFWwindow* window, double xpos, double ypos)
+{
+    // Forward mouse movement to GUI for drag handling
+    GUI::HandleMouseMove(window);
 }
 
 static void setupCallbacks(GLFWwindow* window)
 {
 	glfwSetKeyCallback(window, KeyCallback);
 	glfwSetMouseButtonCallback(window, MouseButtonCallback);
+    glfwSetCursorPosCallback(window, CursorPositionCallback);
 }
 
 int main()
@@ -112,6 +133,10 @@ int main()
 
 	// Set flag for the "gl_Pointsize = float" line in the vertex shader to work
 	glEnable(GL_PROGRAM_POINT_SIZE);
+
+    // Enable blending for semi-transparent rendering
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// Set viewport and resize callback
 	int width, height;
@@ -164,6 +189,7 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+
 		// Draw filled polygons first (so they appear behind the outlines)
 		for (const auto& filled : PolyBuilder::filledPolygons)
 		{
@@ -176,24 +202,46 @@ int main()
 				glDrawArrays(GL_POINTS, 0, filled.fillPoints.size());
 			}
 		}
+		
+        // Draw original and window polygons
+        for (const auto& poly : PolyBuilder::finishedPolygons) {
+            if (poly.type == PolyBuilder::POLYGON || poly.type == PolyBuilder::WINDOW) {
+                shader.Use();
+                switch (poly.type) {
+                case PolyBuilder::POLYGON:
+                    shader.SetColor("uColor", 1.0f, 0.0f, 0.0f, 1.0f); // Red for regular polygons
+                    break;
+                case PolyBuilder::WINDOW:
+                    shader.SetColor("uColor", 0.0f, 1.0f, 0.0f, 1.0f); // Green for window polygons
+                    break;
+                }
+                poly.draw();
 
-		// Draw finished polygons
-		for each (const Polygon & poly in PolyBuilder::finishedPolygons)
-		{
-			shader.Use();
-			switch (poly.type) { // Use the polygon's own type
-			case PolyBuilder::POLYGON:
-				shader.SetColor("uColor", 1.0f, 0.0f, 0.0f, 1.0f);
-				break;
-			case PolyBuilder::WINDOW:
-				shader.SetColor("uColor", 0.0f, 1.0f, 0.0f, 1.0f);
-				break;
-			}
-			poly.draw();
-			shader.SetColor("uColor", 1.0f, 1.0f, 1.0f, 1.0f);
-			poly.drawPoints();
-			// Same drawPoints Logic could be used for when points cross between the window and the polygon
-		}
+                shader.SetColor("uColor", 1.0f, 1.0f, 1.0f, 1.0f);
+                poly.drawPoints();
+            }
+        }
+
+        // Second pass: Draw clipped polygons with transparency
+        for (const auto& poly : PolyBuilder::finishedPolygons) {
+            if (poly.type == PolyBuilder::CLIPPED_CYRUS_BECK ||
+                poly.type == PolyBuilder::CLIPPED_SUTHERLAND_HODGMAN) {
+
+                shader.Use();
+                switch (poly.type) {
+                case PolyBuilder::CLIPPED_CYRUS_BECK:
+                    shader.SetColor("uColor", 0.0f, 0.0f, 1.0f, 0.7f); // Blue with 70% opacity
+                    break;
+                case PolyBuilder::CLIPPED_SUTHERLAND_HODGMAN:
+                    shader.SetColor("uColor", 0.8f, 0.0f, 0.8f, 0.7f); // Purple with 70% opacity
+                    break;
+                }
+                poly.draw();
+
+                shader.SetColor("uColor", 1.0f, 1.0f, 1.0f, 0.7f);
+                poly.drawPoints();
+            }
+        }
 
 		// ImGui Rendering
 		ImGui::Render();

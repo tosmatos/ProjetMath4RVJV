@@ -64,9 +64,7 @@ namespace PolyBuilder
 			finishedPolygons.push_back(window);
 			break;
 		}
-
-
-
+		
 		buildingPoly = false;
 		tempPolygon = Polygon();
 	}
@@ -77,6 +75,31 @@ namespace PolyBuilder
 		tempPolygon = Polygon();
 	}
 
+
+	void MovePolygon(int polyIndex, float deltaX, float deltaY)
+	{
+		// Check for valid index
+		if (polyIndex < 0 || polyIndex >= finishedPolygons.size())
+			return;
+
+		// Get a reference to the polygon to modify
+		Polygon& poly = finishedPolygons[polyIndex];
+
+		// Get a modifiable copy of the vertices
+		std::vector<Vertex> modifiedVertices = poly.getVertices();
+
+		// Apply translation to each vertex
+		for (auto& vertex : modifiedVertices) {
+			vertex.x += deltaX;
+			vertex.y += deltaY;
+		}
+
+		// Update the polygon with the new vertices
+		poly.setVertices(modifiedVertices);
+
+		// Re-initialize the OpenGL buffers
+		poly.updateBuffers();
+	
 	// Add a filled polygon to our storage
 	void AddFilledPolygon(const Polygon& poly,
 		const std::vector<Vertex>& fillPoints,
