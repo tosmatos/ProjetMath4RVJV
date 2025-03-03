@@ -8,13 +8,19 @@
 #include "PolyBuilder.h"
 #include "Shader.h"
 #include "GUI.h"
+#include "Filler.h"
 
 bool openContextMenu;
+bool showFillSettings = true;
+bool leftMouseDown = false;
+double lastClickX = 0, lastClickY = 0;
 
 // Window resize callback
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+	// Update Filler screen dimensions
+	Filler::init(width, height);
 }
 
 /* I've learned the hard way that the glfwSetCallback functions expect a global function.
@@ -33,12 +39,30 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 
 static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
+	// Get mouse position
+	double xPos, yPos;
+	glfwGetCursorPos(window, &xPos, &yPos);
+
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
-		double xPos, yPos;
-		glfwGetCursorPos(window, &xPos, &yPos);
 		std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
-		PolyBuilder::AppendVertex(xPos, yPos);
+
+		// Check if in polygon building mode or fill mode
+		if (PolyBuilder::buildingPoly) {
+			PolyBuilder::AppendVertex(xPos, yPos);
+		}
+		else {
+			// Handle fill click
+			lastClickX = xPos;
+			lastClickY = yPos;
+			leftMouseDown = true;
+
+			// Process fill click
+			GUI::HandleFillClick(window, xPos, yPos);
+		}
+	}
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+		leftMouseDown = false;
 	}
 
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
@@ -67,7 +91,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Create window
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Polygon Clipping", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(800, 600, "Polygon Clipping & Filling", nullptr, nullptr);
 	if (!window) {
 		std::cerr << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
@@ -90,8 +114,13 @@ int main()
 	glEnable(GL_PROGRAM_POINT_SIZE);
 
 	// Set viewport and resize callback
-	glViewport(0, 0, 800, 600);
+	int width, height;
+	glfwGetFramebufferSize(window, &width, &height);
+	glViewport(0, 0, width, height);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+	// Initialize Filler with current window dimensions
+	Filler::init(width, height);
 
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -107,7 +136,7 @@ int main()
 
 	Shader shader = Shader(vertexShaderPath, fragmentShaderPath);
 
-	
+
 	float maxPointSize[2];
 	glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, maxPointSize);
 	std::cout << "Max point size supported: " << maxPointSize[1] << std::endl;
@@ -126,12 +155,26 @@ int main()
 		GUI::DrawVertexInfoPanel(); // Top left panel
 		GUI::HandleContextMenu(&openContextMenu); // Right click menu
 		GUI::DrawHoverTooltip(window); // Tooltip when hovering vertices
+		GUI::DrawFillSettingsPanel(&showFillSettings); // Fill settings panel
 
 		// Rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);		
+		glClear(GL_COLOR_BUFFER_BIT);
 
-		// Draw finished polygons
+		// Draw filled polygons first (so they appear behind the outlines)
+		for (const auto& filled : PolyBuilder::filledPolygons)
+		{
+			if (!filled.fillPoints.empty()) {
+				shader.Use();
+				shader.SetColor("uColor", filled.colorR, filled.colorG, filled.colorB, filled.colorA);
+
+				// Bind and draw the fill points
+				glBindVertexArray(filled.vao);
+				glDrawArrays(GL_POINTS, 0, filled.fillPoints.size());
+			}
+		}
+
+		// Draw finished polygons (outlines)
 		for each (const Polygon & poly in PolyBuilder::finishedPolygons)
 		{
 			shader.Use();
@@ -140,7 +183,7 @@ int main()
 				shader.SetColor("uColor", 1.0f, 0.0f, 0.0f, 1.0f);
 				break;
 			case PolyBuilder::WINDOW:
-				shader.SetColor("uColor", 0.0f, 1.0f, 0.0f, 1.0f); 
+				shader.SetColor("uColor", 0.0f, 1.0f, 0.0f, 1.0f);
 				break;
 			}
 			poly.draw();
