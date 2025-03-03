@@ -132,9 +132,12 @@ int main()
 	ImGui_ImplOpenGL3_Init();
 
 	const char* vertexShaderPath = "shaders/vertex.glsl";
+	const char* vertexFillShaderPath = "shaders/vertex_fill.glsl";
 	const char* fragmentShaderPath = "shaders/fragment.glsl";
 
 	Shader shader = Shader(vertexShaderPath, fragmentShaderPath);
+	// Fill shader uses normal point size, vertex shader uses bigger points
+	Shader fillShader = Shader(vertexFillShaderPath, fragmentShaderPath);
 
 
 	float maxPointSize[2];
@@ -165,8 +168,8 @@ int main()
 		for (const auto& filled : PolyBuilder::filledPolygons)
 		{
 			if (!filled.fillPoints.empty()) {
-				shader.Use();
-				shader.SetColor("uColor", filled.colorR, filled.colorG, filled.colorB, filled.colorA);
+				fillShader.Use();
+				fillShader.SetColor("uColor", filled.colorR, filled.colorG, filled.colorB, filled.colorA);
 
 				// Bind and draw the fill points
 				glBindVertexArray(filled.vao);
@@ -174,7 +177,7 @@ int main()
 			}
 		}
 
-		// Draw finished polygons (outlines)
+		// Draw finished polygons
 		for each (const Polygon & poly in PolyBuilder::finishedPolygons)
 		{
 			shader.Use();

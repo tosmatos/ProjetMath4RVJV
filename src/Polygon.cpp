@@ -107,7 +107,7 @@ const void Polygon::draw() const
 	if (error != GL_NO_ERROR) {
 		std::cout << "OpenGL error before drawing: " << error << std::endl;
 	}
-	
+
 	glDrawArrays(GL_LINE_LOOP, 0, vertices.size());
 
 	// Check for errors after drawing
