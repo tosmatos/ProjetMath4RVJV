@@ -1,4 +1,5 @@
 #include "PolyBuilder.h"
+#include <glad/glad.h>
 #include "GLFW/glfw3.h"
 #include <iostream>
 #include <string>
@@ -11,6 +12,7 @@ namespace PolyBuilder
 	Polygon polygon;
 	Polygon window;
 	std::vector<Polygon> finishedPolygons;
+	std::vector<FilledPolygon> filledPolygons;
 
 	void StartPolygon(Type type)
 	{
@@ -48,21 +50,21 @@ namespace PolyBuilder
 
 		switch (polyType)
 		{
-			case (POLYGON):
-				polygon = tempPolygon;
-				polygon.type = POLYGON;
-				polygon.updateBuffers();
-				finishedPolygons.push_back(polygon);
-				break;
+		case (POLYGON):
+			polygon = tempPolygon;
+			polygon.type = POLYGON;
+			polygon.updateBuffers();
+			finishedPolygons.push_back(polygon);
+			break;
 
-			case (WINDOW):
-				window = tempPolygon;
-				window.type = WINDOW;
-				window.updateBuffers();
-				finishedPolygons.push_back(window);
-				break;
+		case (WINDOW):
+			window = tempPolygon;
+			window.type = WINDOW;
+			window.updateBuffers();
+			finishedPolygons.push_back(window);
+			break;
 		}
-
+		
 		buildingPoly = false;
 		tempPolygon = Polygon();
 	}
@@ -72,6 +74,7 @@ namespace PolyBuilder
 		buildingPoly = false;
 		tempPolygon = Polygon();
 	}
+
 
 	void MovePolygon(int polyIndex, float deltaX, float deltaY)
 	{
@@ -96,5 +99,50 @@ namespace PolyBuilder
 
 		// Re-initialize the OpenGL buffers
 		poly.updateBuffers();
+	
+	// Add a filled polygon to our storage
+	void AddFilledPolygon(const Polygon& poly,
+		const std::vector<Vertex>& fillPoints,
+		float r, float g, float b, float a)
+	{
+		FilledPolygon filled;
+		filled.polygon = poly;
+		filled.fillPoints = fillPoints;
+		filled.colorR = r;
+		filled.colorG = g;
+		filled.colorB = b;
+		filled.colorA = a;
+
+		// Create OpenGL buffers for the fill points
+		glGenVertexArrays(1, &filled.vao);
+		glGenBuffers(1, &filled.vbo);
+
+		// Upload fill points to GPU
+		glBindVertexArray(filled.vao);
+		glBindBuffer(GL_ARRAY_BUFFER, filled.vbo);
+		glBufferData(GL_ARRAY_BUFFER,
+			fillPoints.size() * sizeof(Vertex),
+			fillPoints.data(),
+			GL_STATIC_DRAW);
+
+		// Set up vertex attributes
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+		glEnableVertexAttribArray(0);
+
+		// Add to our collection
+		filledPolygons.push_back(filled);
+	}
+
+	// Clear all filled polygons
+	void ClearFilledPolygons()
+	{
+		for (auto& filled : filledPolygons) {
+			// Delete OpenGL resources
+			if (filled.vao != 0) {
+				glDeleteVertexArrays(1, &filled.vao);
+				glDeleteBuffers(1, &filled.vbo);
+			}
+		}
+		filledPolygons.clear();
 	}
 }

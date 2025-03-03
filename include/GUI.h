@@ -5,10 +5,6 @@
 #include <imgui.h>
 
 namespace GUI {
-    void DrawVertexInfoPanel(bool* open = nullptr);
-    void HandleContextMenu(bool* openContextMenu);
-    void DrawHoverTooltip(GLFWwindow* window);
-
     // New functions for real-time window movement and clipping
     bool StartWindowDrag(GLFWwindow* window, int mouseButton);
     void HandleMouseMove(GLFWwindow* window);
@@ -17,4 +13,10 @@ namespace GUI {
     // Clipping algorithm wrappers for reuse
     void PerformCyrusBeckClipping();
     void PerformSutherlandHodgmanClipping();
+  
+	void DrawVertexInfoPanel(bool* open = nullptr);
+	void HandleContextMenu(bool* openContextMenu);
+	void DrawHoverTooltip(GLFWwindow* window);
+	void DrawFillSettingsPanel(bool* open = nullptr);
+	void HandleFillClick(GLFWwindow* window, double xPos, double yPos);
 }
