@@ -66,14 +66,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
             return; // Successfully started drag, don't process further
         }
 
-        // If not dragging, handle normal mouse actions
-        if (button == GLFW_MOUSE_BUTTON_LEFT) {
-            double xPos, yPos;
-            glfwGetCursorPos(window, &xPos, &yPos);
-            std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
-            PolyBuilder::AppendVertex(xPos, yPos);
-        }
-        else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+        if (button == GLFW_MOUSE_BUTTON_RIGHT) {
             openContextMenu = true;
         }
     }
