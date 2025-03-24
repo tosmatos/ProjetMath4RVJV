@@ -12,7 +12,7 @@ private:
 	bool buffersInitialized = false;
 
 public:
-	PolyBuilder::Type type;
+	PolyType type;
 
 	Polygon();
 	Polygon(const Polygon& other); // Copy constructor

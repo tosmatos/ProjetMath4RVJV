@@ -4,24 +4,15 @@
 #include <iostream>
 #include <string>
 
-namespace PolyBuilder
-{
-	Type polyType;
-	bool buildingPoly;
-	Polygon tempPolygon; // The one for the building process
-	Polygon polygon;
-	Polygon window;
-	std::vector<Polygon> finishedPolygons;
-	std::vector<FilledPolygon> filledPolygons;
 
-	void StartPolygon(Type type)
+	void PolyBuilder::StartPolygon(PolyType type)
 	{
 		polyType = type;
 		buildingPoly = true;
 		tempPolygon = Polygon();
 	}
 
-	void AppendVertex(double xPos, double yPos)
+	void PolyBuilder::AppendVertex(double xPos, double yPos)
 	{
 		if (!buildingPoly)
 			return;
@@ -39,7 +30,7 @@ namespace PolyBuilder
 		tempPolygon.addVertex(normalizedX, normalizedY);
 	}
 
-	void Finish()
+	void PolyBuilder::Finish()
 	{
 		std::cout << "Finishing polygon ..." << std::endl;
 
@@ -69,14 +60,14 @@ namespace PolyBuilder
 		tempPolygon = Polygon();
 	}
 
-	void Cancel()
+	void PolyBuilder::Cancel()
 	{
 		buildingPoly = false;
 		tempPolygon = Polygon();
 	}
 
 
-	void MovePolygon(int polyIndex, float deltaX, float deltaY)
+	void PolyBuilder::MovePolygon(int polyIndex, float deltaX, float deltaY)
 	{
 		// Check for valid index
 		if (polyIndex < 0 || polyIndex >= finishedPolygons.size())
@@ -102,7 +93,7 @@ namespace PolyBuilder
 	}
 	
 	// Add a filled polygon to our storage
-	void AddFilledPolygon(const Polygon& poly,
+	void PolyBuilder::AddFilledPolygon(const Polygon& poly,
 		const std::vector<Vertex>& fillPoints,
 		float r, float g, float b, float a)
 	{
@@ -135,7 +126,7 @@ namespace PolyBuilder
 	}
 
 	// Clear all filled polygons
-	void ClearFilledPolygons()
+	void PolyBuilder::ClearFilledPolygons()
 	{
 		for (auto& filled : filledPolygons) {
 			// Delete OpenGL resources
@@ -146,4 +137,3 @@ namespace PolyBuilder
 		}
 		filledPolygons.clear();
 	}
-}

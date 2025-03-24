@@ -9,11 +9,13 @@
 #include "Shader.h"
 #include "GUI.h"
 #include "Filler.h"
+#include "PolyTypes.h"
 
 bool openContextMenu;
 bool showFillSettings = true;
 bool leftMouseDown = false;
 double lastClickX = 0, lastClickY = 0;
+PolyBuilder polybuilder;
 
 // Window resize callback
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -29,7 +31,7 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 		glfwSetWindowShouldClose(window, true);
 
 	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-		PolyBuilder::Finish();
+		polybuilder.Finish();
 }
 
 static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
@@ -43,8 +45,8 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 		std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
 
 		// Check if in polygon building mode or fill mode
-		if (PolyBuilder::buildingPoly) {
-			PolyBuilder::AppendVertex(xPos, yPos);
+		if (polybuilder.IsBuilding()) {
+			polybuilder.AppendVertex(xPos, yPos);
 		}
 		else {
 			// Handle fill click
@@ -163,7 +165,8 @@ int main()
 	std::cout << "Max point size supported: " << maxPointSize[1] << std::endl;
 
 	// Render loop
-	while (!glfwWindowShouldClose(window)) {
+	while (!glfwWindowShouldClose(window))
+	{
 		// Poll events (keyboard, mouse)
 		glfwPollEvents();
 
@@ -184,7 +187,7 @@ int main()
 
 
 		// Draw filled polygons first (so they appear behind the outlines)
-		for (const auto& filled : PolyBuilder::filledPolygons)
+		for (const auto& filled : polybuilder.GetFilledPolygons())
 		{
 			if (!filled.fillPoints.empty()) {
 				fillShader.Use();
@@ -197,14 +200,15 @@ int main()
 		}
 		
         // Draw original and window polygons
-        for (const auto& poly : PolyBuilder::finishedPolygons) {
-            if (poly.type == PolyBuilder::POLYGON || poly.type == PolyBuilder::WINDOW) {
+		for (const auto& poly : polybuilder.GetFinishedPolygons())
+		{
+            if (poly.type == PolyType::POLYGON || poly.type == PolyType::WINDOW) {
                 shader.Use();
                 switch (poly.type) {
-                case PolyBuilder::POLYGON:
+                case PolyType::POLYGON:
                     shader.SetColor("uColor", 1.0f, 0.0f, 0.0f, 1.0f); // Red for regular polygons
                     break;
-                case PolyBuilder::WINDOW:
+                case PolyType::WINDOW:
                     shader.SetColor("uColor", 0.0f, 1.0f, 0.0f, 1.0f); // Green for window polygons
                     break;
                 }
@@ -216,16 +220,16 @@ int main()
         }
 
         // Second pass: Draw clipped polygons with transparency
-        for (const auto& poly : PolyBuilder::finishedPolygons) {
-            if (poly.type == PolyBuilder::CLIPPED_CYRUS_BECK ||
-                poly.type == PolyBuilder::CLIPPED_SUTHERLAND_HODGMAN) {
+        for (const auto& poly : polybuilder.GetFinishedPolygons()) {
+            if (poly.type == PolyType::CLIPPED_CYRUS_BECK ||
+                poly.type == PolyType::CLIPPED_SUTHERLAND_HODGMAN) {
 
                 shader.Use();
                 switch (poly.type) {
-                case PolyBuilder::CLIPPED_CYRUS_BECK:
+                case PolyType::CLIPPED_CYRUS_BECK:
                     shader.SetColor("uColor", 0.0f, 0.0f, 1.0f, 0.7f); // Blue with 70% opacity
                     break;
-                case PolyBuilder::CLIPPED_SUTHERLAND_HODGMAN:
+                case PolyType::CLIPPED_SUTHERLAND_HODGMAN:
                     shader.SetColor("uColor", 0.8f, 0.0f, 0.8f, 0.7f); // Purple with 70% opacity
                     break;
                 }
