@@ -55,7 +55,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 			leftMouseDown = true;
 
 			// Process fill click
-			GUI::HandleFillClick(window, xPos, yPos);
+			GUI::HandleFillClick(window, polybuilder, xPos, yPos);
 		}
 	}
 	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
@@ -64,7 +64,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 
 	if (action == GLFW_PRESS) {
         // Try to start window drag first
-        if (GUI::StartWindowDrag(window, button)) {
+        if (GUI::StartWindowDrag(window, button, polybuilder)) {
             return; // Successfully started drag, don't process further
         }
 
@@ -83,7 +83,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 static void CursorPositionCallback(GLFWwindow* window, double xpos, double ypos)
 {
     // Forward mouse movement to GUI for drag handling
-    GUI::HandleMouseMove(window);
+    GUI::HandleMouseMove(window, polybuilder);
 }
 
 static void setupCallbacks(GLFWwindow* window)
@@ -176,9 +176,9 @@ int main()
 		ImGui::NewFrame();
 
 		// Draw all the ImGui part (in GUI namespace)
-		GUI::DrawVertexInfoPanel(); // Top left panel
-		GUI::HandleContextMenu(&openContextMenu); // Right click menu
-		GUI::DrawHoverTooltip(window); // Tooltip when hovering vertices
+		GUI::DrawVertexInfoPanel(polybuilder); // Top left panel
+		GUI::HandleContextMenu(&openContextMenu, polybuilder); // Right click menu
+		GUI::DrawHoverTooltip(window, polybuilder); // Tooltip when hovering vertices
 		GUI::DrawFillSettingsPanel(&showFillSettings); // Fill settings panel
 
 		// Rendering

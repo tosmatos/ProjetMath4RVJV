@@ -1,4 +1,6 @@
 #include "Polygon.h"
+
+#include <algorithm>
 #include <glad/glad.h>
 #include <iostream>
 

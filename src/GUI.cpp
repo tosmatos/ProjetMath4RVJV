@@ -7,7 +7,7 @@
 #include "PolyTypes.h"
 
 // For filling functionality
-static Polygon* selectedPolygonForFill = nullptr;
+static int selectedPolygonIndex = -1;
 static bool awaitingFillSeed = false;
 static ImVec4 fillColor(0.0f, 0.0f, 1.0f, 1.0f);
 
@@ -19,7 +19,7 @@ namespace {
 	int selectedWindowIndex = -1;
 }
 
-void GUI::DrawVertexInfoPanel(bool* open, PolyBuilder polybuilder) {
+void GUI::DrawVertexInfoPanel(PolyBuilder& polybuilder, bool* open) {
 	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
 	ImGui::SetNextWindowBgAlpha(0.3f);
 
@@ -103,15 +103,15 @@ void GUI::DrawFillSettingsPanel(bool* open) {
 		}
 
 		// Clear selection button
-		if (selectedPolygonForFill != nullptr && ImGui::Button("Cancel Fill")) {
-			selectedPolygonForFill = nullptr;
+		if (selectedPolygonIndex != -1 && ImGui::Button("Cancel Fill")) {
+			selectedPolygonIndex = -1;
 			awaitingFillSeed = false;
 		}
 	}
 	ImGui::End();
 }
 
-void GUI::HandleContextMenu(bool* openContextMenu, PolyBuilder polybuilder) {
+void GUI::HandleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder) {
 	if (*openContextMenu) {
 		ImGui::OpenPopup("ContextMenu");
 		*openContextMenu = false;
@@ -178,12 +178,12 @@ void GUI::HandleContextMenu(bool* openContextMenu, PolyBuilder polybuilder) {
 
 		if (ImGui::MenuItem("Cyrus–Beck Clip All Polygons"))
 		{
-			PerformCyrusBeckClipping();
+			PerformCyrusBeckClipping(polybuilder);
 		}
 
 		if (ImGui::MenuItem("Sutherland-Hodgman Clip All Polygons"))
 		{
-			PerformSutherlandHodgmanClipping();
+			PerformSutherlandHodgmanClipping(polybuilder);
 		}
 
 		if (ImGui::MenuItem("Ear Cutting Decomposition")) {
@@ -211,7 +211,7 @@ void GUI::HandleContextMenu(bool* openContextMenu, PolyBuilder polybuilder) {
 	}
 }
 
-void GUI::PerformCyrusBeckClipping(PolyBuilder polybuilder) {
+void GUI::PerformCyrusBeckClipping(PolyBuilder& polybuilder) {
 	Polygon windowPoly;
 	bool foundWindow = false;
 	for (auto& poly : polybuilder.GetFinishedPolygons()) {
@@ -227,18 +227,10 @@ void GUI::PerformCyrusBeckClipping(PolyBuilder polybuilder) {
 	}
 
 	// Clear any previous clipped results of the same type
-	auto it = polybuilder.GetFinishedPolygons().begin();
-	while (it != polybuilder.GetFinishedPolygons().end()) {
-		if (it->type == PolyType::CLIPPED_CYRUS_BECK) {
-			it = polybuilder.GetFinishedPolygons().erase(it);
-		}
-		else {
-			++it;
-		}
-	}
+	polybuilder.RemoveAllPolygonsOfType(PolyType::CLIPPED_CYRUS_BECK);
 
 	// Add clipped versions of polygons
-	for (auto& poly : PolyBuilder::finishedPolygons) {
+	for (auto& poly : polybuilder.GetFinishedPolygons()) {
 		if (poly.type == PolyType::POLYGON) {
 			// Clip the polygon and add as a new polygon
 			Polygon clipped = Clipper::clipPolygonCyrusBeck(poly, windowPoly);
@@ -247,16 +239,16 @@ void GUI::PerformCyrusBeckClipping(PolyBuilder polybuilder) {
 			if (!clipped.getVertices().empty()) {
 				clipped.type = PolyType::CLIPPED_CYRUS_BECK;
 				clipped.updateBuffers();
-				PolyBuilder::finishedPolygons.push_back(clipped);
+				polybuilder.AddFinishedPolygon(clipped);
 			}
 		}
 	}
 }
 
-void GUI::PerformSutherlandHodgmanClipping() {
+void GUI::PerformSutherlandHodgmanClipping(PolyBuilder& polybuilder) {
 	Polygon windowPoly;
 	bool foundWindow = false;
-	for (auto& poly : PolyBuilder::finishedPolygons) {
+	for (auto& poly : polybuilder.GetFinishedPolygons()) {
 		if (poly.type == PolyType::WINDOW) {
 			windowPoly = poly;
 			foundWindow = true;
@@ -269,18 +261,10 @@ void GUI::PerformSutherlandHodgmanClipping() {
 	}
 
 	// Clear any previous clipped results of the same type
-	auto it = PolyBuilder::finishedPolygons.begin();
-	while (it != PolyBuilder::finishedPolygons.end()) {
-		if (it->type == PolyType::CLIPPED_SUTHERLAND_HODGMAN) {
-			it = PolyBuilder::finishedPolygons.erase(it);
-		}
-		else {
-			++it;
-		}
-	}
+	polybuilder.RemoveAllPolygonsOfType(PolyType::CLIPPED_SUTHERLAND_HODGMAN);
 
 	// Add clipped versions of polygons
-	for (auto& poly : PolyBuilder::finishedPolygons) {
+	for (auto& poly : polybuilder.GetFinishedPolygons()) {
 		if (poly.type == PolyType::POLYGON) {
 			// Clip the polygon and add as a new polygon
 			Polygon clipped = Clipper::clipPolygonSutherlandHodgman(poly, windowPoly);
@@ -289,13 +273,13 @@ void GUI::PerformSutherlandHodgmanClipping() {
 			if (!clipped.getVertices().empty()) {
 				clipped.type = PolyType::CLIPPED_SUTHERLAND_HODGMAN;
 				clipped.updateBuffers();
-				PolyBuilder::finishedPolygons.push_back(clipped);
+				polybuilder.AddFinishedPolygon(clipped);
 			}
 		}
 	}
 }
 
-void GUI::DrawHoverTooltip(GLFWwindow* window) {
+void GUI::DrawHoverTooltip(GLFWwindow* window, PolyBuilder& polybuilder) {
 	ImVec2 mousePos = ImGui::GetMousePos();
 	int displayW, displayH;
 	glfwGetFramebufferSize(window, &displayW, &displayH);
@@ -306,7 +290,7 @@ void GUI::DrawHoverTooltip(GLFWwindow* window) {
 
 	// Check proximity to vertices
 	const float hoverRadius = 0.02f;
-	for (const auto& poly : PolyBuilder::finishedPolygons) {
+	for (const auto& poly : polybuilder.GetFinishedPolygons()) {
 		for (const auto& vert : poly.getVertices()) {
 			float dx = vert.x - ndcX;
 			float dy = vert.y - ndcY;
@@ -320,7 +304,7 @@ void GUI::DrawHoverTooltip(GLFWwindow* window) {
 	}
 }
 
-void GUI::HandleMouseMove(GLFWwindow* window) {
+void GUI::HandleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder) {
 	// If we're not dragging, do nothing
 	if (!isDraggingWindow || selectedWindowIndex < 0)
 		return;
@@ -344,12 +328,12 @@ void GUI::HandleMouseMove(GLFWwindow* window) {
 	lastMouseY = ndcY;
 
 	// Apply movement to window polygon
-	PolyBuilder::MovePolygon(selectedWindowIndex, deltaX, deltaY);
+	polybuilder.MovePolygon(selectedWindowIndex, deltaX, deltaY);
 
 	// Update clipped polygons (based on current active clipping algorithm)
 	// Check if Sutherland-Hodgman clipped polygons exist
 	bool hasShClipped = false;
-	for (const auto& poly : PolyBuilder::finishedPolygons) {
+	for (const auto& poly : polybuilder.GetFinishedPolygons()) {
 		if (poly.type == PolyType::CLIPPED_SUTHERLAND_HODGMAN) {
 			hasShClipped = true;
 			break;
@@ -358,7 +342,7 @@ void GUI::HandleMouseMove(GLFWwindow* window) {
 
 	// Check if Cyrus-Beck clipped polygons exist
 	bool hasCbClipped = false;
-	for (const auto& poly : PolyBuilder::finishedPolygons) {
+	for (const auto& poly : polybuilder.GetFinishedPolygons()) {
 		if (poly.type == PolyType::CLIPPED_CYRUS_BECK) {
 			hasCbClipped = true;
 			break;
@@ -367,15 +351,15 @@ void GUI::HandleMouseMove(GLFWwindow* window) {
 
 	// Re-perform the active clipping algorithm(s)
 	if (hasShClipped) {
-		PerformSutherlandHodgmanClipping();
+		PerformSutherlandHodgmanClipping(polybuilder);
 	}
 
 	if (hasCbClipped) {
-		PerformCyrusBeckClipping();
+		PerformCyrusBeckClipping(polybuilder);
 	}
 }
 
-bool GUI::StartWindowDrag(GLFWwindow* window, int mouseButton) {
+bool GUI::StartWindowDrag(GLFWwindow* window, int mouseButton, PolyBuilder& polybuilder) {
 	// Only allow dragging with middle mouse button or Ctrl+Left mouse
 	bool isCtrlPressed = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
 		glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
@@ -395,9 +379,11 @@ bool GUI::StartWindowDrag(GLFWwindow* window, int mouseButton) {
 	float ndcX = (2.0f * xPos) / displayW - 1.0f;
 	float ndcY = 1.0f - (2.0f * yPos) / displayH;
 
+	auto finishedPolys = polybuilder.GetFinishedPolygons();
+
 	// Find a window polygon that contains the mouse position
-	for (size_t i = 0; i < PolyBuilder::finishedPolygons.size(); i++) {
-		const auto& poly = PolyBuilder::finishedPolygons[i];
+	for (size_t i = 0; i < finishedPolys.size(); i++) {
+		const auto& poly = finishedPolys[i];
 		if (poly.type == PolyType::WINDOW) {
 			// Simple point-in-polygon test (bounding box for now, can be enhanced)
 			const auto& verts = poly.getVertices();
@@ -435,7 +421,7 @@ void GUI::EndWindowDrag() {
 	selectedWindowIndex = -1;
 }
 
-void GUI::HandleFillClick(GLFWwindow* window, double xPos, double yPos) {
+void GUI::HandleFillClick(GLFWwindow* window, PolyBuilder& polyBuilder, double xPos, double yPos) {
 	if (!awaitingFillSeed) {
 		return;
 	}
@@ -447,44 +433,27 @@ void GUI::HandleFillClick(GLFWwindow* window, double xPos, double yPos) {
 	float ndcY = 1.0f - (2.0f * yPos / height);
 
 	// First check: are we selecting a polygon?
-	if (selectedPolygonForFill == nullptr) {
+	if (selectedPolygonIndex == -1) {
 		// Find a polygon that contains this point
-		for (auto& poly : PolyBuilder::finishedPolygons) {
+		const auto& polygons = polyBuilder.GetFinishedPolygons();
+
+		for (int i = 0; i < polygons.size(); i++) {
+			const auto& poly = polygons[i];
 			if (poly.type == PolyType::POLYGON) {
 				// Simple point-in-polygon test
-				// This is a simplified test - in a complete implementation
-				// you would use a proper point-in-polygon algorithm
 				const auto& vertices = poly.getVertices();
 
-				// For simplicity, just check if point is close to any vertex
+				// Check if point is close to any vertex
 				for (const auto& vert : vertices) {
 					float dx = vert.x - ndcX;
 					float dy = vert.y - ndcY;
-					if (dx * dx + dy * dy < 0.1f) {  // Larger radius for selection
-						selectedPolygonForFill = &poly;
-						std::cout << "Selected polygon for filling" << std::endl;
+					if (dx * dx + dy * dy < 0.1f) {  // Selection radius
+						selectedPolygonIndex = i;
+						std::cout << "Selected polygon at index " << i << " for filling" << std::endl;
 
 						// If not using seed fill, fill immediately
 						if (Filler::getSelectedAlgorithm() != Filler::FILL_SEED) {
-							std::vector<Vertex> fillPoints;
-
-							if (Filler::getSelectedAlgorithm() == Filler::FILL_SCANLINE) {
-								fillPoints = Filler::fillPolygon(*selectedPolygonForFill);
-							}
-							else {
-								fillPoints = Filler::fillPolygonLCA(*selectedPolygonForFill);
-							}
-
-							// Get fill color
-							float r, g, b, a;
-							Filler::getFillColor(r, g, b, a);
-
-							// Store the filled polygon
-							PolyBuilder::AddFilledPolygon(*selectedPolygonForFill, fillPoints, r, g, b, a);
-
-							// Reset state
-							selectedPolygonForFill = nullptr;
-							awaitingFillSeed = false;
+							handleNonSeedFill(polyBuilder);
 						}
 						return;
 					}
@@ -493,26 +462,64 @@ void GUI::HandleFillClick(GLFWwindow* window, double xPos, double yPos) {
 		}
 	}
 	else if (Filler::getSelectedAlgorithm() == Filler::FILL_SEED ||
-		Filler::getSelectedAlgorithm() == Filler::FILL_SEED_RECURSIVE) {
-		// We have a polygon and we're using seed fill
-		std::vector<Vertex> fillPoints;
+			 Filler::getSelectedAlgorithm() == Filler::FILL_SEED_RECURSIVE) {
+		// We have a selected polygon index and we're using seed fill
+		handleSeedFill(polyBuilder, ndcX, ndcY);
+			 }
+}
 
-		if (Filler::getSelectedAlgorithm() == Filler::FILL_SEED) {
-			fillPoints = Filler::fillFromSeed(*selectedPolygonForFill, ndcX, ndcY);
-		}
-		else {
-			fillPoints = Filler::fillFromSeedRecursive(*selectedPolygonForFill, ndcX, ndcY);
-		}
-
-		// Get fill color
-		float r, g, b, a;
-		Filler::getFillColor(r, g, b, a);
-
-		// Store the filled polygon
-		PolyBuilder::AddFilledPolygon(*selectedPolygonForFill, fillPoints, r, g, b, a);
-
-		// Reset state
-		selectedPolygonForFill = nullptr;
-		awaitingFillSeed = false;
+// Helper method for non-seed fill algorithms
+void GUI::handleNonSeedFill(PolyBuilder& polyBuilder) {
+	if (!polyBuilder.IsValidPolygonIndex(selectedPolygonIndex)) {
+		return;
 	}
+
+	Polygon& selectedPolygon = polyBuilder.GetPolygonAt(selectedPolygonIndex);
+	std::vector<Vertex> fillPoints;
+
+	if (Filler::getSelectedAlgorithm() == Filler::FILL_SCANLINE) {
+		fillPoints = Filler::fillPolygon(selectedPolygon);
+	}
+	else {
+		fillPoints = Filler::fillPolygonLCA(selectedPolygon);
+	}
+
+	// Get fill color
+	float r, g, b, a;
+	Filler::getFillColor(r, g, b, a);
+
+	// Store the filled polygon
+	polyBuilder.AddFilledPolygon(selectedPolygon, fillPoints, r, g, b, a);
+
+	// Reset state
+	selectedPolygonIndex = -1;
+	awaitingFillSeed = false;
+}
+
+// Helper method for seed fill algorithms
+void GUI::handleSeedFill(PolyBuilder& polyBuilder, float ndcX, float ndcY) {
+	if (!polyBuilder.IsValidPolygonIndex(selectedPolygonIndex)) {
+		return;
+	}
+
+	Polygon& selectedPolygon = polyBuilder.GetPolygonAt(selectedPolygonIndex);
+	std::vector<Vertex> fillPoints;
+
+	if (Filler::getSelectedAlgorithm() == Filler::FILL_SEED) {
+		fillPoints = Filler::fillFromSeed(selectedPolygon, ndcX, ndcY);
+	}
+	else {
+		fillPoints = Filler::fillFromSeedRecursive(selectedPolygon, ndcX, ndcY);
+	}
+
+	// Get fill color
+	float r, g, b, a;
+	Filler::getFillColor(r, g, b, a);
+
+	// Store the filled polygon
+	polyBuilder.AddFilledPolygon(selectedPolygon, fillPoints, r, g, b, a);
+
+	// Reset state
+	selectedPolygonIndex = -1;
+	awaitingFillSeed = false;
 }

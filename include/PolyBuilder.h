@@ -21,7 +21,6 @@ struct FilledPolygon
 class PolyBuilder
 {
 private:
-    // Declare variables as external
     PolyType polyType;
     bool buildingPoly;
     Polygon tempPolygon;
@@ -48,23 +47,25 @@ public:
     // Clear all filled polygons
     void ClearFilledPolygons();
 
-    const std::vector<Polygon>& GetFinishedPolygons() const
-    {
-        return finishedPolygons;
-    }
+    const std::vector<Polygon>& GetFinishedPolygons() const;
 
-    void SetFinishedPolygons(std::vector<Polygon> newFinishedPolygons)
-    {
-        finishedPolygons = newFinishedPolygons;
-    }
+    void SetFinishedPolygons(std::vector<Polygon> newFinishedPolygons);
 
-    const std::vector<FilledPolygon>& GetFilledPolygons() const
-    {
-        return filledPolygons;
-    }
+    const std::vector<FilledPolygon>& GetFilledPolygons() const;
 
-    bool IsBuilding() const
-    {
-        return buildingPoly;
-    }
+    void AddFinishedPolygon(const Polygon& polygon);
+
+    void RemoveFinishedPolygon(int index);
+
+    // For clipping purposes, removes already clipped polygons to make new ones
+    void RemoveAllPolygonsOfType(PolyType type);
+
+    // Access polygon by index (non-const version for modification)
+    Polygon& GetPolygonAt(size_t index);
+
+    // Check if index is valid
+    bool IsValidPolygonIndex(int index) const;
+
+    // Check if is currently building polygon, for mouse input
+    bool IsBuilding() const;
 };
