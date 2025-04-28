@@ -6,17 +6,19 @@
 
 namespace GUI {
     // New functions for real-time window movement and clipping
-    bool StartWindowDrag(GLFWwindow* window, int mouseButton);
-    void HandleMouseMove(GLFWwindow* window);
+    bool StartWindowDrag(GLFWwindow* window, int mouseButton, PolyBuilder& polybuilder);
+    void HandleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder);
     void EndWindowDrag();
 
     // Clipping algorithm wrappers for reuse
-    void PerformCyrusBeckClipping();
-    void PerformSutherlandHodgmanClipping();
+    void PerformCyrusBeckClipping(PolyBuilder& polybuilder);
+    void PerformSutherlandHodgmanClipping(PolyBuilder& polybuilder);
   
-	void DrawVertexInfoPanel(bool* open = nullptr);
-	void HandleContextMenu(bool* openContextMenu);
-	void DrawHoverTooltip(GLFWwindow* window);
+	void DrawVertexInfoPanel(PolyBuilder& polybuilder, bool* open = nullptr);
+	void HandleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder);
+	void DrawHoverTooltip(GLFWwindow* window, PolyBuilder& polybuilder);
 	void DrawFillSettingsPanel(bool* open = nullptr);
-	void HandleFillClick(GLFWwindow* window, double xPos, double yPos);
+	void HandleFillClick(GLFWwindow* window, PolyBuilder& polyBuilder, double xPos, double yPos);
+	void handleNonSeedFill(PolyBuilder& polyBuilder);
+	void handleSeedFill(PolyBuilder& polyBuilder, float ndcX, float ndcY);
 }

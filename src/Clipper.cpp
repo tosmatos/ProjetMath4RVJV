@@ -1,4 +1,6 @@
 ﻿#include "Clipper.h"
+
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <cmath> // for fabs
