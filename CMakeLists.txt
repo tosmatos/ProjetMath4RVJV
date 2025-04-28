@@ -25,7 +25,7 @@ add_executable(ProjetMath4RVJV
  "include/PolyTypes.h" 
  "include/GUI.h" "src/GUI.cpp" 
  "include/Clipper.h" "src/Clipper.cpp" 
- "include/Filler.h" "src/filler.cpp")
+ "include/Filler.h" "src/filler.cpp" "include/Bezier.h")
 
 # Copy shaders to build directory
 add_custom_command(TARGET ProjetMath4RVJV POST_BUILD

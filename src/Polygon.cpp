@@ -119,7 +119,7 @@ const void Polygon::draw() const
 	}
 }
 
-void Polygon::drawPoints() const
+const void Polygon::drawPoints() const
 {
 	glBindVertexArray(VAO);
 	glDrawArrays(GL_POINTS, 0, vertices.size());
