@@ -9,7 +9,8 @@ class Bezier
 private:
 	std::vector<Vertex> controlPoints; // Control points, what the user defined
 	std::vector<Vertex> generatedCurve; // That's the actual curve when the user's finished
-	unsigned int VAO, VBO; // Vertex Array Object and Buffer Object for OpenGL
+	unsigned int controlVAO, curveVAO; // Vertex Array Object for saving VBO settings
+	unsigned int controlVBO, curveVBO; // Vertex Buffer Object for each drawn shape
 	bool buffersInitialized = false;
 
 public:
@@ -28,7 +29,7 @@ public:
 	const std::vector<Vertex>& getGeneratedCurve() const;
 	void setControlPoints(std::vector<Vertex> controlPointsVector);
 
-	// Not sure if those two are gonna be necessary of useful
+	// Not sure if those two are gonna be necessary or useful
 	//bool isClockwise() const;
 	//void reverseOrientation(); // Makes polygon clockwise if counter clockwise and the opposite
 };

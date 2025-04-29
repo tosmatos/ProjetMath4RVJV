@@ -28,8 +28,9 @@ Bezier& Bezier::operator=(const Bezier& other)
 	{
 		if (buffersInitialized)
 		{
-			glDeleteVertexArrays(1, &VAO);
-			glDeleteBuffers(1, &VBO);
+			glDeleteVertexArrays(1, &controlVAO);
+			glDeleteBuffers(1, &controlVBO);
+			glDeleteBuffers(1, &curveVBO);
 			buffersInitialized = false;
 		}
 		controlPoints = other.controlPoints;
@@ -50,8 +51,9 @@ Bezier::~Bezier()
 	{
 		// When polygon is destroyed, clean up the OpenGL buffers
 		// This prevents memory leaks in the GPU
-		glDeleteVertexArrays(1, &VAO);
-		glDeleteBuffers(1, &VBO);
+		glDeleteVertexArrays(1, &controlVAO);
+		glDeleteBuffers(1, &controlVBO);
+		glDeleteBuffers(1, &curveVBO);
 	}
 }
 
@@ -69,16 +71,17 @@ void Bezier::updateBuffers()
 {
 	if (!buffersInitialized)
 	{
-		glGenVertexArrays(1, &VAO);
-		glGenBuffers(1, &VBO);
+		glGenVertexArrays(1, &controlVAO);
+		glGenBuffers(1, &controlVBO);
+		glGenBuffers(1, &curveVBO);
 		buffersInitialized = true;
 	}
 
 	// Step 1: Bind the VAO - this records all subsequent buffer settings
-	glBindVertexArray(VAO);
+	glBindVertexArray(controlVAO);
 
 	// Step 2: Bind the VBO and upload vertex data to GPU
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, controlVBO);
 	glBufferData(GL_ARRAY_BUFFER,                // Target buffer
 		controlPoints.size() * sizeof(Vertex),// Size of data in bytes
 		controlPoints.data(),                 // Pointer to our vertex data
@@ -93,6 +96,15 @@ void Bezier::updateBuffers()
 		sizeof(Vertex),      // Stride (bytes between consecutive vertices)
 		(void*)0             // Offset of first component
 	);
+
+	// Now do the same thing for the generated curve vertices
+	glBindVertexArray(curveVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, curveVBO);
+	glBufferData(GL_ARRAY_BUFFER, generatedCurve.size() * sizeof(Vertex), generatedCurve.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+	glEnableVertexAttribArray(0);
+
 	// Enable the vertex attribute we just configured
 	glEnableVertexAttribArray(0);
 }
