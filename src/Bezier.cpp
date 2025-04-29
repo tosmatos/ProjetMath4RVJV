@@ -88,7 +88,7 @@ void Bezier::updateBuffers()
 
     // Step 3: Tell OpenGL how to interpret our vertex data
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-    glEnableVertexAttribArray(0);f
+    glEnableVertexAttribArray(0);
 
     // Now do the same thing for the generated curve vertices
     glBindVertexArray(curveVAO);
