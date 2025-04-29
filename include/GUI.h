@@ -15,6 +15,7 @@ namespace GUI {
     void PerformSutherlandHodgmanClipping(PolyBuilder& polybuilder);
   
 	void DrawVertexInfoPanel(PolyBuilder& polybuilder, bool* open = nullptr);
+	void DrawBezierInfoPanel(PolyBuilder& polybuilder, bool* open = nullptr);
 	void HandleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder);
 	void DrawHoverTooltip(GLFWwindow* window, PolyBuilder& polybuilder);
 	void DrawFillSettingsPanel(bool* open = nullptr);

@@ -76,8 +76,23 @@ void GUI::DrawVertexInfoPanel(PolyBuilder& polybuilder, bool* open) {
 	ImGui::End();
 }
 
+void GUI::DrawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
+{
+	ImGui::SetNextWindowPos(ImVec2(10, 30), ImGuiCond_Always);
+	ImGui::SetNextWindowBgAlpha(0.3f);
+
+	if (ImGui::Begin("Béziers Info", open,
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		if (polybuilder.GetFinishedBeziers().empty())
+			ImGui::Text("No Bézier curve.");
+	}
+	ImGui::End();
+}
+
 void GUI::DrawFillSettingsPanel(bool* open) {
-	ImGui::SetNextWindowPos(ImVec2(10, 300), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(220, 10), ImGuiCond_Always);
 	ImGui::SetNextWindowBgAlpha(0.3f);
 
 	if (ImGui::Begin("Fill Settings", open,

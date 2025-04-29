@@ -178,6 +178,7 @@ int main()
 
 		// Draw all the ImGui part (in GUI namespace)
 		GUI::DrawVertexInfoPanel(polybuilder); // Top left panel
+		GUI::DrawBezierInfoPanel(polybuilder);
 		GUI::HandleContextMenu(&openContextMenu, polybuilder); // Right click menu
 		GUI::DrawHoverTooltip(window, polybuilder); // Tooltip when hovering vertices
 		GUI::DrawFillSettingsPanel(&showFillSettings); // Fill settings panel

@@ -44,8 +44,8 @@ public:
 	void generateCurve(); // When control points are set, this will be called
 	void setAlgorithm(int algo);
 	void setStepSize(float step) { stepSize = step; };
-	void incrementStepSize() { stepSize += 0.01f; };
-	void decrementStepSize() { stepSize -= 0.01f; };
+	void incrementStepSize() { stepSize += 0.01f; generateCurve(); };
+	void decrementStepSize() { stepSize -= 0.01f; generateCurve(); };
 
 	// Not sure if those two are gonna be necessary or useful
 	//bool isClockwise() const;
