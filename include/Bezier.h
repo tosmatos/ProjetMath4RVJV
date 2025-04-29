@@ -3,6 +3,7 @@
 #include <vector>
 #include "Vertex.h"
 #include "PolyTypes.h"
+#include "Shader.h"
 
 class Bezier
 {
@@ -23,8 +24,8 @@ public:
 	void addControlPoint(float x, float y);
 	void addControlPoint(Vertex vertex);
 	void updateBuffers();
-	const void drawControlPoints() const;
-	const void drawGeneratedCurve() const;	
+	const void drawControlPoints(Shader& shader) const;
+	const void drawGeneratedCurve(Shader& shader) const;
 	const std::vector<Vertex>& getControlPoints() const;
 	const std::vector<Vertex>& getGeneratedCurve() const;
 	void setControlPoints(std::vector<Vertex> controlPointsVector);

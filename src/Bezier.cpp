@@ -77,25 +77,16 @@ void Bezier::updateBuffers()
 		buffersInitialized = true;
 	}
 
+	// For more detailed info on those gl functions check out Polygon.cpp which has detailed comments
 	// Step 1: Bind the VAO - this records all subsequent buffer settings
 	glBindVertexArray(controlVAO);
 
 	// Step 2: Bind the VBO and upload vertex data to GPU
 	glBindBuffer(GL_ARRAY_BUFFER, controlVBO);
-	glBufferData(GL_ARRAY_BUFFER,                // Target buffer
-		controlPoints.size() * sizeof(Vertex),// Size of data in bytes
-		controlPoints.data(),                 // Pointer to our vertex data
-		GL_STATIC_DRAW);                 // Usage hint: data won't change much
+	glBufferData(GL_ARRAY_BUFFER, controlPoints.size() * sizeof(Vertex), controlPoints.data(), GL_STATIC_DRAW);
 
 	// Step 3: Tell OpenGL how to interpret our vertex data
-	glVertexAttribPointer(
-		0,                    // Attribute location (0 = position)
-		2,                    // Size (2 components: x, y)
-		GL_FLOAT,            // Data type of each component
-		GL_FALSE,            // Should OpenGL normalize the data?
-		sizeof(Vertex),      // Stride (bytes between consecutive vertices)
-		(void*)0             // Offset of first component
-	);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
 
 	// Now do the same thing for the generated curve vertices
 	glBindVertexArray(curveVAO);
@@ -107,4 +98,21 @@ void Bezier::updateBuffers()
 
 	// Enable the vertex attribute we just configured
 	glEnableVertexAttribArray(0);
+}
+
+const void Bezier::drawControlPoints(Shader& shader) const
+{
+	shader.Use();
+	// Maybe that can be where we set shader parameters like color
+	glBindVertexArray(controlVAO);
+	glDrawArrays(GL_LINE_STRIP, 0, controlPoints.size());
+	glDrawArrays(GL_POINTS, 0, controlPoints.size());
+}
+
+const void Bezier::drawGeneratedCurve(Shader& shader) const
+{
+	shader.Use();
+	// Maybe that can be where we set shader parameters like color
+	glBindVertexArray(curveVAO);
+	glDrawArrays(GL_LINE_STRIP, 0, generatedCurve.size());
 }
