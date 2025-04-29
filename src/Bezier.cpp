@@ -3,6 +3,37 @@
 #include <algorithm>
 #include <glad/glad.h>
 #include <iostream>
+#include <cmath>
+
+// Helper function to calculate binomial coefficient C(n, k)
+// This is the mathematical representation of the numbers in Pascal's triangle.
+// C(n, k) = n! / (k! * (n-k)!)
+// See Maths Chap 1 Courbes - 3 Base de bernstein
+long long static combinations(int n, int k)
+{
+    // Handle invalid inputs
+    if (k < 0 || k > n)
+    {
+        return 0;
+    }
+    // C(n, 0) and C(n, n) are always 1
+    if (k == 0 || k == n)
+    {
+        return 1;
+    }
+    // Use symmetry: C(n, k) = C(n, n-k) to reduce calculations
+    if (k > n / 2)
+    {
+        k = n - k;
+    }
+    // Calculate the binomial coefficient iteratively
+    long long res = 1;
+    for (int i = 1; i <= k; ++i)
+    {
+        res = res * (n - i + 1) / i;
+    }
+    return res;
+}
 
 Bezier::Bezier()
 {
@@ -13,8 +44,7 @@ Bezier::Bezier(const Bezier& other) : controlPoints(other.controlPoints), buffer
 { // Copy constructor
     controlPoints = other.controlPoints;
     
-    //generatedCurve = other.generatedCurve; // Will I need this how do I recompute it every time ?
-    
+    generatedCurve = other.generatedCurve;
     //type = other.type;
     if (other.buffersInitialized)
     {
@@ -34,7 +64,7 @@ Bezier& Bezier::operator=(const Bezier& other)
             buffersInitialized = false;
         }
         controlPoints = other.controlPoints;
-        //generatedCurve = other.generatedCurve; // Will I need this how do I recompute it every time ?
+        generatedCurve = other.generatedCurve;
         
         //type = other.type;
         if (other.buffersInitialized)
@@ -128,7 +158,8 @@ const void Bezier::drawControlPoints(Shader& shader) const
 const void Bezier::drawGeneratedCurve(Shader& shader) const
 {
     shader.Use();
-    // Maybe that can be where we set shader parameters like color
+    shader.SetColor("uColor", 0.0f, 0.0f, 1.0f, 1.0f);
+
     glBindVertexArray(curveVAO);
     glDrawArrays(GL_LINE_STRIP, 0, generatedCurve.size());
 }
@@ -137,13 +168,11 @@ void Bezier::generateCurve()
 {
     if (controlPoints.size() < 2)
     {
-        std::cout << "Not enough control points to generated a bézier curve." << std::endl;
+        std::cout << "Not enough control points to generate a bézier curve." << std::endl;
         return;
     }
 
     generatedCurve.clear(); // Clear previous points
-
-    // TODO : Figure out how to implement these algorithms.
 
     if (algorithm == 0)
         generatePascalCurve();
@@ -153,7 +182,35 @@ void Bezier::generateCurve()
 
 void Bezier::generatePascalCurve()
 {
-    // TODO : Implement that algorithm !
+    // the degree of the bézier curve
+    int degree = controlPoints.size() - 1;
+
+    // t represents the position along the curve
+    for (float t = 0.0f; t <= 1.0f; t += stepSize)
+    {
+        Vertex pointOnCurve; // Initialize the result vertex
+
+        // sum of the contributions of each control point
+        for (int i = 0; i <= degree; ++i)
+        {
+            // Calculate the Bernstein polynomial term for the i-th control point and current 't'
+            // The formula is: BinomialCoefficient(n, i) * (1-t)^(n-i) * t^i
+            // Where n is the degree of the curve
+            // C.f Maths Chap 1 Courbes - 3 Base de bernstein
+            float bernsteinTerm = static_cast<float>(combinations(degree, i)) *
+                std::pow(1.0 - t, degree - i) *
+                std::pow(t, i);
+
+            // Add the weighted control point to the current point on the curve
+            pointOnCurve.x += controlPoints[i].x * bernsteinTerm;
+            pointOnCurve.y += controlPoints[i].y * bernsteinTerm;
+        }
+
+        generatedCurve.push_back(pointOnCurve);
+    }
+
+    // Update buffers to send the new curve data to the GPU
+    updateBuffers();
 }
 
 void Bezier::generateDeCasteljauCurve()
@@ -163,7 +220,7 @@ void Bezier::generateDeCasteljauCurve()
 
 void Bezier::setAlgorithm(int algo)
 {
-    if (algo != 0 || algo != 1)
+    if (algo != 0 && algo != 1)
     {
         std::cout << "Can't set Bézier algorithm to something other than 0 or 1. Value passed : " << algo << std::endl;
         return;

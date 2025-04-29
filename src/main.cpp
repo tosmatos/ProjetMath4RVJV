@@ -244,7 +244,7 @@ int main()
 		for (const auto& bezier : polybuilder.GetFinishedBeziers())
 		{
 			bezier.drawControlPoints(shader);
-			//dbezier.drawGeneratedCurve(shader);
+			bezier.drawGeneratedCurve(shader);
 		}
 
 		// ImGui Rendering

@@ -87,8 +87,7 @@ void PolyBuilder::FinishBezier()
         return;
 
     bezier = tempBezier;
-    bezier.generateCurve();
-    bezier.updateBuffers();
+    bezier.generateCurve(); // Generate buffers is called from generate curve
     finishedBeziers.push_back(bezier);
     buildingPoly = false;
     ToggleBezierMode();

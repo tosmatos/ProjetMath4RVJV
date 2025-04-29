@@ -16,7 +16,7 @@ private:
 
 	bool buffersInitialized = false;
 
-	int stepSize = 50;
+	float stepSize = 0.01f;
 	int algorithm = 0; // 0 = normal pascal, 1 = De Casteljau (iterative)
 
 	void generatePascalCurve();
@@ -43,9 +43,9 @@ public:
 
 	void generateCurve(); // When control points are set, this will be called
 	void setAlgorithm(int algo);
-	void setStepSize(int step) { stepSize = step; };
-	void incrementStepSize() { stepSize += 1; };
-	void decrementStepSize() { stepSize -= 1; };
+	void setStepSize(float step) { stepSize = step; };
+	void incrementStepSize() { stepSize += 0.01f; };
+	void decrementStepSize() { stepSize -= 0.01f; };
 
 	// Not sure if those two are gonna be necessary or useful
 	//bool isClockwise() const;
