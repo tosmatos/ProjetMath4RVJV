@@ -1,8 +1,10 @@
 #pragma once
 
+#include <vector>
+
 #include "PolyTypes.h"
 #include "Polygon.h"
-#include <vector>
+#include "Bezier.h"
 
 // For storing filled polygons
 struct FilledPolygon
@@ -28,6 +30,15 @@ private:
     Polygon window;
     std::vector<Polygon> finishedPolygons;
     std::vector<FilledPolygon> filledPolygons;
+
+    void FinishPolygon();
+    
+    bool bezierMode;
+    Bezier tempBezier;
+    Bezier bezier;
+    std::vector<Bezier> finishedBeziers;
+
+    void FinishBezier();
 
 public:
     // Function declarations
@@ -68,4 +79,9 @@ public:
 
     // Check if is currently building polygon, for mouse input
     bool IsBuilding() const;
+
+    // Bézier mode functions
+    void ToggleBezierMode() { bezierMode = !bezierMode; };
+    void StartBezierCurve();
+    const std::vector<Bezier>& GetFinishedBeziers() const { return finishedBeziers; };
 };

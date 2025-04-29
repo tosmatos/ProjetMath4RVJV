@@ -16,8 +16,8 @@ private:
 
 	bool buffersInitialized = false;
 
-	int stepSize;
-	int algorithm; // 0 = normal pascal, 1 = De Casteljau (iterative)
+	int stepSize = 50;
+	int algorithm = 0; // 0 = normal pascal, 1 = De Casteljau (iterative)
 
 	void generatePascalCurve();
 	void generateDeCasteljauCurve();

@@ -10,6 +10,7 @@
 #include "GUI.h"
 #include "Filler.h"
 #include "PolyTypes.h"
+#include "Bezier.h"
 
 bool openContextMenu;
 bool showFillSettings = true;
@@ -239,6 +240,12 @@ int main()
                 poly.drawPoints();
             }
         }
+
+		for (const auto& bezier : polybuilder.GetFinishedBeziers())
+		{
+			bezier.drawControlPoints(shader);
+			//dbezier.drawGeneratedCurve(shader);
+		}
 
 		// ImGui Rendering
 		ImGui::Render();

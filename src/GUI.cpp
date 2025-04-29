@@ -111,18 +111,27 @@ void GUI::DrawFillSettingsPanel(bool* open) {
 	ImGui::End();
 }
 
-void GUI::HandleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder) {
-	if (*openContextMenu) {
+void GUI::HandleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder)
+{
+	if (*openContextMenu)
+	{
 		ImGui::OpenPopup("ContextMenu");
 		*openContextMenu = false;
 	}
 
-	if (ImGui::BeginPopup("ContextMenu")) {
-		if (ImGui::MenuItem("Create Polygon")) {
+	if (ImGui::BeginPopup("ContextMenu"))
+	{
+		if (ImGui::MenuItem("Create Polygon"))
+		{
 			polybuilder.StartPolygon(PolyType::POLYGON);
 		}
-		if (ImGui::MenuItem("Create Window")) {
+		if (ImGui::MenuItem("Create Window"))
+		{
 			polybuilder.StartPolygon(PolyType::WINDOW);
+		}
+		if (ImGui::MenuItem("Create Bézier"))
+		{
+			polybuilder.StartBezierCurve();
 		}
 		ImGui::Separator();
 		if (polybuilder.IsBuilding()) {
