@@ -116,3 +116,42 @@ const void Bezier::drawGeneratedCurve(Shader& shader) const
 	glBindVertexArray(curveVAO);
 	glDrawArrays(GL_LINE_STRIP, 0, generatedCurve.size());
 }
+
+void Bezier::generateCurve()
+{
+	if (controlPoints.size() < 2)
+	{
+		std::cout << "Not enough control points to generated a bézier curve." << std::endl;
+		return;
+	}
+
+	generatedCurve.clear(); // Clear previous points
+
+	// TODO : Figure out how to implement these algorithms.
+
+	if (algorithm == 0)
+		generatePascalCurve();
+	else if (algorithm == 1)
+		generateDeCasteljauCurve();
+}
+
+void Bezier::generatePascalCurve()
+{
+	// TODO : Implement that algorithm !
+}
+
+void Bezier::generateDeCasteljauCurve()
+{
+	// TODO : Implement that algorithm !
+}
+
+void Bezier::setAlgorithm(int algo)
+{
+	if (algo != 0 || algo != 1)
+	{
+		std::cout << "Can't set Bézier algorithm to something other than 0 or 1. Value passed : " << algo << std::endl;
+		return;
+	}
+
+	algorithm = algo;
+}
