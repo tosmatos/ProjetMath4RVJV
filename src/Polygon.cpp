@@ -12,26 +12,29 @@ Polygon::Polygon()
 
 }
 
-Polygon::Polygon(const Polygon& other) : vertices(other.vertices), buffersInitialized(false) { // Copy constructor
+Polygon::Polygon(const Polygon& other) : vertices(other.vertices), buffersInitialized(false)
+{ // Copy constructor
 	vertices = other.vertices;
 	type = other.type;
-	if (other.buffersInitialized) {
+	if (other.buffersInitialized)
 		updateBuffers();
-	}
 }
 
-Polygon& Polygon::operator=(const Polygon& other) { // Copy operator
-	if (this != &other) {
-		if (buffersInitialized) {
+Polygon& Polygon::operator=(const Polygon& other)
+{ // Copy operator
+	if (this != &other)
+	{
+		if (buffersInitialized)
+		{
 			glDeleteVertexArrays(1, &VAO);
 			glDeleteBuffers(1, &VBO);
 			buffersInitialized = false;
 		}
 		vertices = other.vertices;
 		type = other.type;
-		if (other.buffersInitialized) {
+
+		if (other.buffersInitialized)
 			updateBuffers();
-		}
 	}
 	return *this;
 }
@@ -62,7 +65,8 @@ void Polygon::addVertex(Vertex vertex)
 
 void Polygon::updateBuffers()
 {
-	if (!buffersInitialized) {
+	if (!buffersInitialized)
+	{
 		glGenVertexArrays(1, &VAO);
 		glGenBuffers(1, &VBO);
 		buffersInitialized = true;
@@ -106,17 +110,15 @@ const void Polygon::draw() const
 
 	// Debug: check for OpenGL errors
 	GLenum error = glGetError();
-	if (error != GL_NO_ERROR) {
+	if (error != GL_NO_ERROR)
 		std::cout << "OpenGL error before drawing: " << error << std::endl;
-	}
 
 	glDrawArrays(GL_LINE_LOOP, 0, vertices.size());
 
 	// Check for errors after drawing
 	error = glGetError();
-	if (error != GL_NO_ERROR) {
+	if (error != GL_NO_ERROR)
 		std::cout << "OpenGL error after drawing: " << error << std::endl;
-	}
 }
 
 const void Polygon::drawPoints() const

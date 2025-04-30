@@ -31,62 +31,62 @@ private:
     std::vector<Polygon> finishedPolygons;
     std::vector<FilledPolygon> filledPolygons;
 
-    void FinishPolygon();
+    void finishPolygon();
     
     bool bezierMode;
     Bezier tempBezier;
     Bezier bezier;
     std::vector<Bezier> finishedBeziers;
 
-    void FinishBezier();
+    void finishBezier();
 
 public:
     // Function declarations
-    void StartPolygon(PolyType type);
-    void AppendVertex(double xPos, double yPos);
-    void Finish();
-    void Cancel();
+    void startPolygon(PolyType type);
+    void appendVertex(double xPos, double yPos);
+    void finish();
+    void cancel();
 
     // New function for polygon transformation
-    void MovePolygon(int polyIndex, float deltaX, float deltaY);
+    void movePolygon(int polyIndex, float deltaX, float deltaY);
 
     // Add a filled polygon to our storage
-    void AddFilledPolygon(const Polygon& poly,
+    void addFilledPolygon(const Polygon& poly,
         const std::vector<Vertex>& fillPoints,
         float r, float g, float b, float a);
 
     // Clear all filled polygons
-    void ClearFilledPolygons();
+    void clearFilledPolygons();
 
-    const std::vector<Polygon>& GetFinishedPolygons() const;
+    const std::vector<Polygon>& getFinishedPolygons() const;
 
-    void SetFinishedPolygons(std::vector<Polygon> newFinishedPolygons);
+    void setFinishedPolygons(std::vector<Polygon> newFinishedPolygons);
 
-    const std::vector<FilledPolygon>& GetFilledPolygons() const;
+    const std::vector<FilledPolygon>& getFilledPolygons() const;
 
-    void AddFinishedPolygon(const Polygon& polygon);
+    void addFinishedPolygon(const Polygon& polygon);
 
-    void RemoveFinishedPolygon(int index);
+    void removeFinishedPolygon(int index);
 
     // For clipping purposes, removes already clipped polygons to make new ones
-    void RemoveAllPolygonsOfType(PolyType type);
+    void removeAllPolygonsOfType(PolyType type);
 
     // Access polygon by index (non-const version for modification)
-    Polygon& GetPolygonAt(size_t index);
+    Polygon& getPolygonAt(size_t index);
 
     // Check if index is valid
-    bool IsValidPolygonIndex(int index) const;
+    bool isValidPolygonIndex(int index) const;
 
     // Check if is currently building polygon, for mouse input
-    bool IsBuilding() const;
+    bool isBuilding() const;
 
     // Bézier mode functions
-    void ToggleBezierMode() { bezierMode = !bezierMode; };
-    void StartBezierCurve();
-    const std::vector<Bezier>& GetFinishedBeziers() const { return finishedBeziers; };
-    void RemoveFinishedBezier(size_t index);
+    void toggleBezierMode() { bezierMode = !bezierMode; };
+    void startBezierCurve();
+    const std::vector<Bezier>& getFinishedBeziers() const { return finishedBeziers; };
+    void removeFinishedBezier(size_t index);
 
-    void SwapBezierAlgorithm(size_t index);
-    void IncrementBezierStepSize(size_t index);
-    void DecrementBezierStepSize(size_t index);
+    void swapBezierAlgorithm(size_t index);
+    void incrementBezierStepSize(size_t index);
+    void decrementBezierStepSize(size_t index);
 };

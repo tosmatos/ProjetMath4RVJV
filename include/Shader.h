@@ -5,8 +5,8 @@
 class Shader 
 {
 private:
-	void CheckCompileErrors(unsigned int shader, const std::string type);
-	std::string LoadShaderFile(const char* shaderPath);
+	void checkCompileErrors(unsigned int shader, const std::string type);
+	std::string loadShaderFile(const char* shaderPath);
 
 public:
 	unsigned int id;
@@ -14,6 +14,6 @@ public:
 	Shader(const char* vertexPath, const char* fragmentPath);
 	~Shader();
 
-	void Use() const;
-	void SetColor(const std::string name, float r, float g, float b, float a) const;
+	void use() const;
+	void setColor(const std::string name, float r, float g, float b, float a) const;
 };

@@ -134,8 +134,8 @@ void Bezier::updateBuffers()
 
 const void Bezier::drawControlPoints(Shader& shader) const
 {
-    shader.Use();
-    shader.SetColor("uColor", 1.0f, 0.0f, 0.0f, 1.0f);
+    shader.use();
+    shader.setColor("uColor", 1.0f, 0.0f, 0.0f, 1.0f);
 
     // Debug: check for OpenGL errors
     GLenum error = glGetError();
@@ -157,8 +157,8 @@ const void Bezier::drawControlPoints(Shader& shader) const
 
 const void Bezier::drawGeneratedCurve(Shader& shader) const
 {
-    shader.Use();
-    shader.SetColor("uColor", 0.0f, 0.0f, 1.0f, 1.0f);
+    shader.use();
+    shader.setColor("uColor", 0.0f, 0.0f, 1.0f, 1.0f);
 
     glBindVertexArray(curveVAO);
     glDrawArrays(GL_LINE_STRIP, 0, generatedCurve.size());

@@ -5,45 +5,45 @@
 #include <string>
 
 
-void PolyBuilder::StartPolygon(PolyType type)
+void PolyBuilder::startPolygon(PolyType type)
 {
     polyType = type;
     buildingPoly = true;
     tempPolygon = Polygon();
 }
 
-void PolyBuilder::StartBezierCurve()
+void PolyBuilder::startBezierCurve()
 {
     tempBezier = Bezier();
     buildingPoly = true;
-    ToggleBezierMode();
+    toggleBezierMode();
 }
 
-void PolyBuilder::RemoveFinishedBezier(size_t index)
+void PolyBuilder::removeFinishedBezier(size_t index)
 {
     if (index < finishedBeziers.size())
         finishedBeziers.erase(finishedBeziers.begin() + index);
 }
 
-void PolyBuilder::SwapBezierAlgorithm(size_t index)
+void PolyBuilder::swapBezierAlgorithm(size_t index)
 {
     if (index < finishedBeziers.size())
         finishedBeziers[index].swapAlgorithm();
 }
 
-void PolyBuilder::IncrementBezierStepSize(size_t index)
+void PolyBuilder::incrementBezierStepSize(size_t index)
 {
     if (index < finishedBeziers.size())
         finishedBeziers[index].incrementStepSize();
 }
 
-void PolyBuilder::DecrementBezierStepSize(size_t index)
+void PolyBuilder::decrementBezierStepSize(size_t index)
 {
     if (index < finishedBeziers.size())
         finishedBeziers[index].decrementStepSize();
 }
 
-void PolyBuilder::AppendVertex(double xPos, double yPos)
+void PolyBuilder::appendVertex(double xPos, double yPos)
 {
     if (!buildingPoly)
         return;
@@ -65,15 +65,15 @@ void PolyBuilder::AppendVertex(double xPos, double yPos)
         tempPolygon.addVertex(normalizedX, normalizedY);
 }
 
-void PolyBuilder::Finish()
+void PolyBuilder::finish()
 {
     if (bezierMode)
-        FinishBezier();
+        finishBezier();
     else
-        FinishPolygon();
+        finishPolygon();
 }
 
-void PolyBuilder::FinishPolygon()
+void PolyBuilder::finishPolygon()
 {
     std::cout << "Finishing polygon ..." << std::endl;
 
@@ -103,7 +103,7 @@ void PolyBuilder::FinishPolygon()
     tempPolygon = Polygon();
 }
 
-void PolyBuilder::FinishBezier()
+void PolyBuilder::finishBezier()
 {
     std::cout << "Finishing Bézier ..." << std::endl;
 
@@ -114,11 +114,11 @@ void PolyBuilder::FinishBezier()
     bezier.generateCurve(); // Generate buffers is called from generate curve
     finishedBeziers.push_back(bezier);
     buildingPoly = false;
-    ToggleBezierMode();
+    toggleBezierMode();
     tempBezier = Bezier();
 }
 
-void PolyBuilder::Cancel()
+void PolyBuilder::cancel()
 {
     buildingPoly = false;
     tempPolygon = Polygon();
@@ -126,7 +126,7 @@ void PolyBuilder::Cancel()
 }
 
 
-void PolyBuilder::MovePolygon(int polyIndex, float deltaX, float deltaY)
+void PolyBuilder::movePolygon(int polyIndex, float deltaX, float deltaY)
 {
     // Check for valid index
     if (polyIndex < 0 || polyIndex >= finishedPolygons.size())
@@ -153,7 +153,7 @@ void PolyBuilder::MovePolygon(int polyIndex, float deltaX, float deltaY)
 }
 
 // Add a filled polygon to our storage
-void PolyBuilder::AddFilledPolygon(const Polygon& poly,
+void PolyBuilder::addFilledPolygon(const Polygon& poly,
                                    const std::vector<Vertex>& fillPoints,
                                    float r, float g, float b, float a)
 {
@@ -186,7 +186,7 @@ void PolyBuilder::AddFilledPolygon(const Polygon& poly,
 }
 
 // Clear all filled polygons
-void PolyBuilder::ClearFilledPolygons()
+void PolyBuilder::clearFilledPolygons()
 {
     for (auto& filled : filledPolygons)
     {
@@ -200,59 +200,57 @@ void PolyBuilder::ClearFilledPolygons()
     filledPolygons.clear();
 }
 
-const std::vector<Polygon>& PolyBuilder::GetFinishedPolygons() const
+const std::vector<Polygon>& PolyBuilder::getFinishedPolygons() const
 {
     return finishedPolygons;
 }
 
-void PolyBuilder::SetFinishedPolygons(std::vector<Polygon> newFinishedPolygons)
+void PolyBuilder::setFinishedPolygons(std::vector<Polygon> newFinishedPolygons)
 {
     finishedPolygons = newFinishedPolygons;
 }
 
-const std::vector<FilledPolygon>& PolyBuilder::GetFilledPolygons() const
+const std::vector<FilledPolygon>& PolyBuilder::getFilledPolygons() const
 {
     return filledPolygons;
 }
 
-void PolyBuilder::AddFinishedPolygon(const Polygon& polygon)
+void PolyBuilder::addFinishedPolygon(const Polygon& polygon)
 {
     finishedPolygons.push_back(polygon);
 }
 
-void PolyBuilder::RemoveFinishedPolygon(int index)
+void PolyBuilder::removeFinishedPolygon(int index)
 {
-    if (index >= 0 && index < finishedPolygons.size()) {
+    if (index >= 0 && index < finishedPolygons.size())
         finishedPolygons.erase(finishedPolygons.begin() + index);
-    }
 }
 
-void PolyBuilder::RemoveAllPolygonsOfType(PolyType type)
+void PolyBuilder::removeAllPolygonsOfType(PolyType type)
 {
     auto it = finishedPolygons.begin();
     while (it != finishedPolygons.end()) {
-        if (it->type == type) {
+        if (it->type == type)
             it = finishedPolygons.erase(it);
-        } else {
+        else
             ++it;
-        }
     }
 }
 
-Polygon& PolyBuilder::GetPolygonAt(size_t index)
+Polygon& PolyBuilder::getPolygonAt(size_t index)
 {
-    if (index >= finishedPolygons.size()) {
+    if (index >= finishedPolygons.size())
         throw std::out_of_range("Polygon index out of range");
-    }
+
     return finishedPolygons[index];
 }
 
-bool PolyBuilder::IsValidPolygonIndex(int index) const
+bool PolyBuilder::isValidPolygonIndex(int index) const
 {
     return index >= 0 && index < static_cast<int>(finishedPolygons.size());
 }
 
-bool PolyBuilder::IsBuilding() const
+bool PolyBuilder::isBuilding() const
 {
     return buildingPoly;
 }

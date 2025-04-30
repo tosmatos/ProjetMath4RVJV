@@ -32,7 +32,7 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 		glfwSetWindowShouldClose(window, true);
 
 	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-		polybuilder.Finish();
+		polybuilder.finish();
 }
 
 static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
@@ -46,8 +46,8 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 		std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
 
 		// Check if in polygon building mode or fill mode
-		if (polybuilder.IsBuilding()) {
-			polybuilder.AppendVertex(xPos, yPos);
+		if (polybuilder.isBuilding()) {
+			polybuilder.appendVertex(xPos, yPos);
 		}
 		else {
 			// Handle fill click
@@ -56,7 +56,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 			leftMouseDown = true;
 
 			// Process fill click
-			GUI::HandleFillClick(window, polybuilder, xPos, yPos);
+			GUI::handleFillClick(window, polybuilder, xPos, yPos);
 		}
 	}
 	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
@@ -65,7 +65,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 
 	if (action == GLFW_PRESS) {
         // Try to start window drag first
-        if (GUI::StartWindowDrag(window, button, polybuilder)) {
+        if (GUI::startWindowDrag(window, button, polybuilder)) {
             return; // Successfully started drag, don't process further
         }
 
@@ -76,7 +76,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 
     // Handle drag end
     if (action == GLFW_RELEASE) {
-        GUI::EndWindowDrag();
+        GUI::endWindowDrag();
     }
 }
 	
@@ -84,7 +84,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 static void CursorPositionCallback(GLFWwindow* window, double xpos, double ypos)
 {
     // Forward mouse movement to GUI for drag handling
-    GUI::HandleMouseMove(window, polybuilder);
+    GUI::handleMouseMove(window, polybuilder);
 }
 
 static void setupCallbacks(GLFWwindow* window)
@@ -177,11 +177,11 @@ int main()
 		ImGui::NewFrame();
 
 		// Draw all the ImGui part (in GUI namespace)
-		GUI::DrawVertexInfoPanel(polybuilder); // Top left panel
-		GUI::DrawBezierInfoPanel(polybuilder);
-		GUI::HandleContextMenu(&openContextMenu, polybuilder); // Right click menu
-		GUI::DrawHoverTooltip(window, polybuilder); // Tooltip when hovering vertices
-		GUI::DrawFillSettingsPanel(&showFillSettings); // Fill settings panel
+		GUI::drawVertexInfoPanel(polybuilder); // Top left panel
+		GUI::drawBezierInfoPanel(polybuilder);
+		GUI::handleContextMenu(&openContextMenu, polybuilder); // Right click menu
+		GUI::drawHoverTooltip(window, polybuilder); // Tooltip when hovering vertices
+		GUI::drawFillSettingsPanel(&showFillSettings); // Fill settings panel
 
 		// Rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -189,11 +189,11 @@ int main()
 
 
 		// Draw filled polygons first (so they appear behind the outlines)
-		for (const auto& filled : polybuilder.GetFilledPolygons())
+		for (const auto& filled : polybuilder.getFilledPolygons())
 		{
 			if (!filled.fillPoints.empty()) {
-				fillShader.Use();
-				fillShader.SetColor("uColor", filled.colorR, filled.colorG, filled.colorB, filled.colorA);
+				fillShader.use();
+				fillShader.setColor("uColor", filled.colorR, filled.colorG, filled.colorB, filled.colorA);
 
 				// Bind and draw the fill points
 				glBindVertexArray(filled.vao);
@@ -202,47 +202,47 @@ int main()
 		}
 		
         // Draw original and window polygons
-		for (const auto& poly : polybuilder.GetFinishedPolygons())
+		for (const auto& poly : polybuilder.getFinishedPolygons())
 		{
             if (poly.type == PolyType::POLYGON || poly.type == PolyType::WINDOW) {
-                shader.Use();
+                shader.use();
                 switch (poly.type) {
                 case PolyType::POLYGON:
-                    shader.SetColor("uColor", 1.0f, 0.0f, 0.0f, 1.0f); // Red for regular polygons
+                    shader.setColor("uColor", 1.0f, 0.0f, 0.0f, 1.0f); // Red for regular polygons
                     break;
                 case PolyType::WINDOW:
-                    shader.SetColor("uColor", 0.0f, 1.0f, 0.0f, 1.0f); // Green for window polygons
+                    shader.setColor("uColor", 0.0f, 1.0f, 0.0f, 1.0f); // Green for window polygons
                     break;
                 }
                 poly.draw();
 
-                shader.SetColor("uColor", 1.0f, 1.0f, 1.0f, 1.0f);
+                shader.setColor("uColor", 1.0f, 1.0f, 1.0f, 1.0f);
                 poly.drawPoints();
             }
         }
 
         // Second pass: Draw clipped polygons with transparency
-        for (const auto& poly : polybuilder.GetFinishedPolygons()) {
+        for (const auto& poly : polybuilder.getFinishedPolygons()) {
             if (poly.type == PolyType::CLIPPED_CYRUS_BECK ||
                 poly.type == PolyType::CLIPPED_SUTHERLAND_HODGMAN) {
 
-                shader.Use();
+                shader.use();
                 switch (poly.type) {
                 case PolyType::CLIPPED_CYRUS_BECK:
-                    shader.SetColor("uColor", 0.0f, 0.0f, 1.0f, 0.7f); // Blue with 70% opacity
+                    shader.setColor("uColor", 0.0f, 0.0f, 1.0f, 0.7f); // Blue with 70% opacity
                     break;
                 case PolyType::CLIPPED_SUTHERLAND_HODGMAN:
-                    shader.SetColor("uColor", 0.8f, 0.0f, 0.8f, 0.7f); // Purple with 70% opacity
+                    shader.setColor("uColor", 0.8f, 0.0f, 0.8f, 0.7f); // Purple with 70% opacity
                     break;
                 }
                 poly.draw();
 
-                shader.SetColor("uColor", 1.0f, 1.0f, 1.0f, 0.7f);
+                shader.setColor("uColor", 1.0f, 1.0f, 1.0f, 0.7f);
                 poly.drawPoints();
             }
         }
 
-		for (const auto& bezier : polybuilder.GetFinishedBeziers())
+		for (const auto& bezier : polybuilder.getFinishedBeziers())
 		{
 			bezier.drawControlPoints(shader);
 			bezier.drawGeneratedCurve(shader);

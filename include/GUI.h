@@ -6,20 +6,20 @@
 
 namespace GUI {
     // New functions for real-time window movement and clipping
-    bool StartWindowDrag(GLFWwindow* window, int mouseButton, PolyBuilder& polybuilder);
-    void HandleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder);
-    void EndWindowDrag();
+    bool startWindowDrag(GLFWwindow* window, int mouseButton, PolyBuilder& polybuilder);
+    void handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder);
+    void endWindowDrag();
 
     // Clipping algorithm wrappers for reuse
-    void PerformCyrusBeckClipping(PolyBuilder& polybuilder);
-    void PerformSutherlandHodgmanClipping(PolyBuilder& polybuilder);
+    void performCyrusBeckClipping(PolyBuilder& polybuilder);
+    void performSutherlandHodgmanClipping(PolyBuilder& polybuilder);
   
-	void DrawVertexInfoPanel(PolyBuilder& polybuilder, bool* open = nullptr);
-	void DrawBezierInfoPanel(PolyBuilder& polybuilder, bool* open = nullptr);
-	void HandleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder);
-	void DrawHoverTooltip(GLFWwindow* window, PolyBuilder& polybuilder);
-	void DrawFillSettingsPanel(bool* open = nullptr);
-	void HandleFillClick(GLFWwindow* window, PolyBuilder& polyBuilder, double xPos, double yPos);
+	void drawVertexInfoPanel(PolyBuilder& polybuilder, bool* open = nullptr);
+	void drawBezierInfoPanel(PolyBuilder& polybuilder, bool* open = nullptr);
+	void handleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder);
+	void drawHoverTooltip(GLFWwindow* window, PolyBuilder& polybuilder);
+	void drawFillSettingsPanel(bool* open = nullptr);
+	void handleFillClick(GLFWwindow* window, PolyBuilder& polyBuilder, double xPos, double yPos);
 	void handleNonSeedFill(PolyBuilder& polyBuilder);
 	void handleSeedFill(PolyBuilder& polyBuilder, float ndcX, float ndcY);
 }
