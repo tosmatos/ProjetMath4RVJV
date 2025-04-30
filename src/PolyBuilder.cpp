@@ -19,6 +19,30 @@ void PolyBuilder::StartBezierCurve()
     ToggleBezierMode();
 }
 
+void PolyBuilder::RemoveFinishedBezier(size_t index)
+{
+    if (index < finishedBeziers.size())
+        finishedBeziers.erase(finishedBeziers.begin() + index);
+}
+
+void PolyBuilder::SwapBezierAlgorithm(size_t index)
+{
+    if (index < finishedBeziers.size())
+        finishedBeziers[index].swapAlgorithm();
+}
+
+void PolyBuilder::IncrementBezierStepSize(size_t index)
+{
+    if (index < finishedBeziers.size())
+        finishedBeziers[index].incrementStepSize();
+}
+
+void PolyBuilder::DecrementBezierStepSize(size_t index)
+{
+    if (index < finishedBeziers.size())
+        finishedBeziers[index].decrementStepSize();
+}
+
 void PolyBuilder::AppendVertex(double xPos, double yPos)
 {
     if (!buildingPoly)

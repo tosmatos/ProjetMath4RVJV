@@ -217,14 +217,3 @@ void Bezier::generateDeCasteljauCurve()
 {
     // TODO : Implement that algorithm !
 }
-
-void Bezier::setAlgorithm(int algo)
-{
-    if (algo != 0 && algo != 1)
-    {
-        std::cout << "Can't set Bézier algorithm to something other than 0 or 1. Value passed : " << algo << std::endl;
-        return;
-    }
-
-    algorithm = algo;
-}

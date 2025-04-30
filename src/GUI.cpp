@@ -1,6 +1,7 @@
 #include "GUI.h"
 
 #include <iostream>
+#include <algorithm>
 
 #include "Clipper.h"
 #include "Filler.h"
@@ -87,6 +88,50 @@ void GUI::DrawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
 	{
 		if (polybuilder.GetFinishedBeziers().empty())
 			ImGui::Text("No Bézier curve.");
+
+		// Store indices to remove
+		std::vector<size_t> indicesToRemove;
+
+		for (size_t index = 0; index < polybuilder.GetFinishedBeziers().size(); index++)
+		{
+			const auto& bezier = polybuilder.GetFinishedBeziers()[index];
+			float stepSize = bezier.getStepSize();
+			int controlPoints = bezier.getControlPoints().size();
+			int algorithm = bezier.getAlgorithm();
+			std::string algoString = algorithm == 0 ? "Pascal" : "DeCasteljau";
+
+			ImGui::Text("%d : Step Size = %.3f, Control Points : %d, Algorithm : %s",
+				static_cast<int>(index), stepSize, controlPoints, algoString.c_str());
+
+			ImGui::SameLine();
+			if (ImGui::Button("<->"))
+				polybuilder.SwapBezierAlgorithm(index);
+
+			ImGui::SetItemTooltip("Swap Algorithm");
+			ImGui::SameLine();
+			if (ImGui::Button("+"))
+				polybuilder.IncrementBezierStepSize(index);
+
+			ImGui::SetItemTooltip("Increment Step Size by 0.01");
+			if (ImGui::Button("-"))
+				polybuilder.DecrementBezierStepSize(index);
+
+			ImGui::SetItemTooltip("Decrement Step Size by 0.01");
+			ImGui::SameLine();
+			if (ImGui::Button("X"))
+				indicesToRemove.push_back(index);
+			ImGui::SetItemTooltip("Delete Bézier Curve");
+
+			ImGui::Separator();
+		}
+
+		// Remove curves marked for deletion (from highest index to lowest)
+		// Done afterwards to guarantee that vector won't be changed during loop causing crash
+		std::sort(indicesToRemove.begin(), indicesToRemove.end(), std::greater<size_t>());
+		for (size_t index : indicesToRemove)
+		{
+			polybuilder.RemoveFinishedBezier(index);
+		}
 	}
 	ImGui::End();
 }

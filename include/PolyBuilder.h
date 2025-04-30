@@ -84,4 +84,9 @@ public:
     void ToggleBezierMode() { bezierMode = !bezierMode; };
     void StartBezierCurve();
     const std::vector<Bezier>& GetFinishedBeziers() const { return finishedBeziers; };
+    void RemoveFinishedBezier(size_t index);
+
+    void SwapBezierAlgorithm(size_t index);
+    void IncrementBezierStepSize(size_t index);
+    void DecrementBezierStepSize(size_t index);
 };

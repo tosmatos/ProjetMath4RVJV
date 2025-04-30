@@ -42,7 +42,10 @@ public:
 	void setControlPoints(std::vector<Vertex> controlPointsVector) { controlPoints = controlPointsVector; };
 
 	void generateCurve(); // When control points are set, this will be called
-	void setAlgorithm(int algo);
+	const int getAlgorithm() const { return algorithm; };
+	void swapAlgorithm() { algorithm = algorithm == 0 ? 1 : 0; };
+
+	const float getStepSize() const { return stepSize; };
 	void setStepSize(float step) { stepSize = step; };
 	void incrementStepSize() { stepSize += 0.01f; generateCurve(); };
 	void decrementStepSize() { stepSize -= 0.01f; generateCurve(); };
