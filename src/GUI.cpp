@@ -108,23 +108,24 @@ void GUI::drawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
 			ImGui::Text("%d : Step Size = %.3f, Control Points : %d, Curve Points : %d, Algorithm : %s",
 				static_cast<int>(index), stepSize, controlPoints, curvePoints, algoString.c_str());
 
-			if (ImGui::Button("<->"))
+			if (ImGui::Button(("<->##" + std::to_string(index)).c_str()))
 				polybuilder.swapBezierAlgorithm(index);
 
 			ImGui::SetItemTooltip("Swap Algorithm");
 			ImGui::SameLine();
-			if (ImGui::Button("+"))
+			if (ImGui::Button(("+##" + std::to_string(index)).c_str()))
 				polybuilder.incrementBezierStepSize(index);
 
 			ImGui::SetItemTooltip("Increment Step Size by 0.01");
 			ImGui::SameLine();
-			if (ImGui::Button("-"))
+			if (ImGui::Button(("-##" + std::to_string(index)).c_str()))
 				polybuilder.decrementBezierStepSize(index);
 
 			ImGui::SetItemTooltip("Decrement Step Size by 0.01");
 			ImGui::SameLine();
-			if (ImGui::Button("X"))
+			if (ImGui::Button(("X##" + std::to_string(index)).c_str()))
 				indicesToRemove.push_back(index);
+				
 			ImGui::SetItemTooltip("Delete Bézier Curve");
 
 			ImGui::Separator();
@@ -135,6 +136,7 @@ void GUI::drawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
 		std::sort(indicesToRemove.begin(), indicesToRemove.end(), std::greater<size_t>());
 		for (size_t index : indicesToRemove)
 		{
+			std::cout << "Removing bézier curve " << index << "..." << std::endl;
 			polybuilder.removeFinishedBezier(index);
 		}
 	}
