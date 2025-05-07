@@ -43,7 +43,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
-		std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
+		//std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
 
 		// Check if in polygon building mode or fill mode
 		if (polybuilder.isBuilding()) {

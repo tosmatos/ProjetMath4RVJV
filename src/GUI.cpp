@@ -101,13 +101,13 @@ void GUI::drawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
 			const auto& bezier = polybuilder.getFinishedBeziers()[index];
 			float stepSize = bezier.getStepSize();
 			int controlPoints = bezier.getControlPoints().size();
+			int curvePoints = bezier.getGeneratedCurve().size();
 			int algorithm = bezier.getAlgorithm();
 			std::string algoString = algorithm == 0 ? "Pascal" : "DeCasteljau";
 
-			ImGui::Text("%d : Step Size = %.3f, Control Points : %d, Algorithm : %s",
-				static_cast<int>(index), stepSize, controlPoints, algoString.c_str());
+			ImGui::Text("%d : Step Size = %.3f, Control Points : %d, Curve Points : %d, Algorithm : %s",
+				static_cast<int>(index), stepSize, controlPoints, curvePoints, algoString.c_str());
 
-			ImGui::SameLine();
 			if (ImGui::Button("<->"))
 				polybuilder.swapBezierAlgorithm(index);
 
@@ -117,6 +117,7 @@ void GUI::drawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
 				polybuilder.incrementBezierStepSize(index);
 
 			ImGui::SetItemTooltip("Increment Step Size by 0.01");
+			ImGui::SameLine();
 			if (ImGui::Button("-"))
 				polybuilder.decrementBezierStepSize(index);
 

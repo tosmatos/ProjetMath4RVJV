@@ -18,6 +18,8 @@ private:
 
 	float stepSize = 0.01f;
 	int algorithm = 0; // 0 = normal pascal, 1 = De Casteljau (iterative)
+	
+	double generationTime = 0.0f;
 
 	void generatePascalCurve();
 	void generateDeCasteljauCurve();
@@ -47,8 +49,8 @@ public:
 
 	const float getStepSize() const { return stepSize; };
 	void setStepSize(float step) { stepSize = step; };
-	void incrementStepSize() { stepSize += 0.01f; generateCurve(); };
-	void decrementStepSize() { stepSize -= 0.01f; generateCurve(); };
+	void incrementStepSize() { stepSize += 0.001f; generateCurve(); };
+	void decrementStepSize() { stepSize -= 0.001f; generateCurve(); };
 
 	// Not sure if those two are gonna be necessary or useful
 	//bool isClockwise() const;
