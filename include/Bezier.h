@@ -43,7 +43,7 @@ public:
 
 	void generateCurve(); // When control points are set, this will be called
 	const int getAlgorithm() const { return algorithm; };
-	void swapAlgorithm() { algorithm = algorithm == 0 ? 1 : 0; };
+	void swapAlgorithm() { algorithm = algorithm == 0 ? 1 : 0; generateCurve(); };
 
 	const float getStepSize() const { return stepSize; };
 	void setStepSize(float step) { stepSize = step; };
