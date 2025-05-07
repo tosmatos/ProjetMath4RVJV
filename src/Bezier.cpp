@@ -243,7 +243,7 @@ void Bezier::generateDeCasteljauCurve()
             currentPoints = newPoints;
         }
 
-        // After that loop, there's only one point in currentPoints.
+        // After that loop, there's only one point in currentPoints. 
         // That's the one we add to the generatedCurve vector
         generatedCurve.push_back(currentPoints[0]);
     }
