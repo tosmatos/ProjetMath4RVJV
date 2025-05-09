@@ -62,7 +62,11 @@ void PolyBuilder::appendVertex(double xPos, double yPos)
     if (bezierMode)
         tempBezier.addControlPoint(normalizedX, normalizedY);
     else
+    {
         tempPolygon.addVertex(normalizedX, normalizedY);
+        tempPolygon.updateBuffers();
+    }
+        
 }
 
 void PolyBuilder::finish()

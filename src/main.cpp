@@ -242,6 +242,11 @@ int main()
             }
         }
 
+		if (polybuilder.isBuilding())
+		{
+			polybuilder.tempPolygon.drawPreview(shader);
+		}
+
 		for (const auto& bezier : polybuilder.getFinishedBeziers())
 		{
 			bezier.drawControlPoints(shader);

@@ -3,6 +3,7 @@
 #include <vector>
 #include "Vertex.h"
 #include "PolyTypes.h"
+#include "Shader.h"
 
 class Polygon
 {
@@ -23,6 +24,7 @@ public:
 	void updateBuffers();
 	const void draw() const;
 	const void drawPoints() const;
+	const void drawPreview(Shader& shader) const;
 	const std::vector<Vertex>& getVertices() const;
 	void setVertices(std::vector<Vertex> vertexVector);
 	bool isClockwise() const;

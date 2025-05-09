@@ -127,6 +127,17 @@ const void Polygon::drawPoints() const
 	glDrawArrays(GL_POINTS, 0, vertices.size());
 }
 
+const void Polygon::drawPreview(Shader& shader) const
+{
+	shader.use();
+
+	glBindVertexArray(VAO);
+	shader.setColor("uColor", 1.0f, 0.0f, 1.0f, 0.5f);
+	glDrawArrays(GL_LINE_LOOP, 0, vertices.size());
+	shader.setColor("uColor", 1.0f, 1.0f, 1.0f, 0.5f);
+	glDrawArrays(GL_POINTS, 0, vertices.size());
+}
+
 const std::vector<Vertex>& Polygon::getVertices() const
 {
 	// Provide read-only access to our vertices

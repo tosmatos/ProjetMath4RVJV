@@ -24,8 +24,7 @@ class PolyBuilder
 {
 private:
     PolyType polyType;
-    bool buildingPoly;
-    Polygon tempPolygon;
+    bool buildingPoly;    
     Polygon polygon;
     Polygon window;
     std::vector<Polygon> finishedPolygons;
@@ -41,6 +40,8 @@ private:
     void finishBezier();
 
 public:
+    Polygon tempPolygon;
+
     // Function declarations
     void startPolygon(PolyType type);
     void appendVertex(double xPos, double yPos);
