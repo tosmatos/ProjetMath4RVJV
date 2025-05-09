@@ -138,7 +138,6 @@ void Bezier::updateBuffers()
 const void Bezier::drawControlPoints(Shader& shader) const
 {
     shader.use();
-    shader.setColor("uColor", 1.0f, 0.0f, 0.0f, 1.0f);
 
     // Debug: check for OpenGL errors
     GLenum error = glGetError();
@@ -148,7 +147,11 @@ const void Bezier::drawControlPoints(Shader& shader) const
     }
 
     glBindVertexArray(controlVAO);
+
+    shader.setColor("uColor", 1.0f, 0.0f, 0.0f, 1.0f);
     glDrawArrays(GL_LINE_STRIP, 0, controlPoints.size());
+
+    shader.setColor("uColor", 1.0f, 1.0f, 1.0f, 1.0f);
     glDrawArrays(GL_POINTS, 0, controlPoints.size());
 
     error = glGetError();
@@ -161,9 +164,34 @@ const void Bezier::drawControlPoints(Shader& shader) const
 const void Bezier::drawGeneratedCurve(Shader& shader) const
 {
     shader.use();
-    shader.setColor("uColor", 0.0f, 0.0f, 1.0f, 1.0f);
 
     glBindVertexArray(curveVAO);
+
+    shader.setColor("uColor", 0.0f, 0.0f, 1.0f, 1.0f);
+    glDrawArrays(GL_LINE_STRIP, 0, generatedCurve.size());
+}
+
+const void Bezier::drawControlPointsPreview(Shader& shader) const
+{
+    shader.use();
+
+    glBindVertexArray(controlVAO);
+
+    shader.setColor("uColor", 1.0f, 1.0f, 0.0f, 0.5f);
+    glDrawArrays(GL_LINE_STRIP, 0, controlPoints.size());
+
+    shader.setColor("uColor", 1.0f, 1.0f, 1.0f, 1.0f);
+    glDrawArrays(GL_POINTS, 0, controlPoints.size());
+
+}
+
+const void Bezier::drawGeneratedCurvePreview(Shader& shader) const
+{
+    shader.use();
+
+    glBindVertexArray(curveVAO);
+
+    shader.setColor("uColor", 0.0f, 1.0f, 1.0f, 1.0f);
     glDrawArrays(GL_LINE_STRIP, 0, generatedCurve.size());
 }
 

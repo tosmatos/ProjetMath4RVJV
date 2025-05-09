@@ -38,6 +38,8 @@ public:
 	void updateBuffers();
 	const void drawControlPoints(Shader& shader) const;
 	const void drawGeneratedCurve(Shader& shader) const;
+	const void drawControlPointsPreview(Shader& shader) const;
+	const void drawGeneratedCurvePreview(Shader& shader) const;
 
 	const std::vector<Vertex>& getControlPoints() const { return controlPoints; };
 	const std::vector<Vertex>& getGeneratedCurve() const { return generatedCurve; };

@@ -244,7 +244,14 @@ int main()
 
 		if (polybuilder.isBuilding())
 		{
-			polybuilder.tempPolygon.drawPreview(shader);
+			if (polybuilder.bezierMode)
+			{
+				polybuilder.tempBezier.drawControlPointsPreview(shader);
+				if (polybuilder.tempBezier.getControlPoints().size() > 2)
+					polybuilder.tempBezier.drawGeneratedCurvePreview(shader);
+			}				
+			else 
+				polybuilder.tempPolygon.drawPreview(shader);
 		}
 
 		for (const auto& bezier : polybuilder.getFinishedBeziers())

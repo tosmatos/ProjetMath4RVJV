@@ -60,7 +60,12 @@ void PolyBuilder::appendVertex(double xPos, double yPos)
         std::endl;
 
     if (bezierMode)
+    {
         tempBezier.addControlPoint(normalizedX, normalizedY);
+        tempBezier.updateBuffers();
+        if (tempBezier.getControlPoints().size() > 2)
+            tempBezier.generateCurve();
+    }
     else
     {
         tempPolygon.addVertex(normalizedX, normalizedY);

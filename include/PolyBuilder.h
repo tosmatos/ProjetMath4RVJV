@@ -32,15 +32,16 @@ private:
 
     void finishPolygon();
     
-    bool bezierMode;
-    Bezier tempBezier;
     Bezier bezier;
     std::vector<Bezier> finishedBeziers;
 
     void finishBezier();
 
 public:
+    bool bezierMode;
+
     Polygon tempPolygon;
+    Bezier tempBezier;
 
     // Function declarations
     void startPolygon(PolyType type);
