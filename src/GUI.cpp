@@ -634,3 +634,46 @@ void GUI::handleSeedFill(PolyBuilder& polyBuilder, float ndcX, float ndcY)
 	selectedPolygonIndex = -1;
 	awaitingFillSeed = false;
 }
+
+void GUI::drawBuildingHelpTextbox(GLFWwindow* window, bool* open) // Added GLFWwindow if needed for viewport info, optional 'open' flag
+{
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImVec2 work_pos = viewport->WorkPos; // Top-left corner of the work area
+	ImVec2 work_size = viewport->WorkSize; // Size of the work area
+
+	// Define the properties of our anchored textbox window
+	float window_width = 350.0f;    // Adjust as needed
+	float window_padding = 10.0f;   // Padding from the very edge of the viewport
+
+	// --- Position the window ---
+	// We want to align the window's bottom-right corner with the viewport's bottom-right corner.
+	ImVec2 window_pivot = ImVec2(1.0f, 1.0f); // Pivot at the window's bottom-right
+	ImVec2 desired_window_pos = ImVec2(work_pos.x + work_size.x - window_padding,
+		work_pos.y + work_size.y - window_padding);
+
+	ImGui::SetNextWindowPos(desired_window_pos, ImGuiCond_Always, window_pivot);
+
+	// --- Size the window ---
+	// Set a fixed width and let the height auto-adjust to content.
+	// If you want a multi-line input, you might set a fixed height too.
+	ImGui::SetNextWindowSize(ImVec2(window_width, 0.0f), ImGuiCond_Always);
+
+	// --- Window Flags ---
+	// Minimal flags for a simple input box area
+	ImGuiWindowFlags window_flags =
+		ImGuiWindowFlags_NoTitleBar |
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoScrollbar |
+		ImGuiWindowFlags_NoCollapse |
+		ImGuiWindowFlags_NoSavedSettings | // Good for elements you always want in a fixed place
+		ImGuiWindowFlags_AlwaysAutoResize; // Let height fit the content
+
+	// --- Begin Window ---
+	if (ImGui::Begin("Help", open, window_flags)) // 'open' is optional
+	{
+		ImGui::TextWrapped("Building a shape. Press space to finalize or 'C' to cancel.");
+	}
+
+	ImGui::End();
+}

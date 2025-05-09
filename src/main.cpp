@@ -33,6 +33,9 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 
 	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
 		polybuilder.finish();
+
+	if (key == GLFW_KEY_C && action == GLFW_PRESS && polybuilder.isBuilding())
+		polybuilder.cancel();
 }
 
 static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
@@ -182,6 +185,8 @@ int main()
 		GUI::handleContextMenu(&openContextMenu, polybuilder); // Right click menu
 		GUI::drawHoverTooltip(window, polybuilder); // Tooltip when hovering vertices
 		GUI::drawFillSettingsPanel(&showFillSettings); // Fill settings panel
+		if (polybuilder.isBuilding())
+			GUI::drawBuildingHelpTextbox(window);
 
 		// Rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
