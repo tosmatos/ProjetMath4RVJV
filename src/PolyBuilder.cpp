@@ -44,6 +44,40 @@ void PolyBuilder::decrementBezierStepSize(size_t index)
 
 void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
 {
+    Matrix3x3 translationMatrix = createTranslationMatrix(deltaX, deltaY);
+
+    std::vector<Vertex> vertices;
+    if (isPolygon)
+    {
+        auto poly = finishedPolygons[shapeIndex];
+        vertices = poly.getVertices();
+    }
+    else
+    {
+        auto bezier = finishedBeziers[shapeIndex];
+        vertices = bezier.getControlPoints();
+    }
+
+    for (Vertex& vertex : vertices)
+    {
+        Vertex transformedPoint = multiplyMatrixVertex(translationMatrix, vertex);
+        vertex.x = transformedPoint.x;
+        vertex.y = transformedPoint.y;
+    }
+
+    if (isPolygon)
+    {
+        Polygon& poly = finishedPolygons[shapeIndex];
+        poly.setVertices(vertices);
+        poly.updateBuffers();
+    }
+    else
+    {
+        Bezier& bezier = finishedBeziers[shapeIndex];
+        bezier.setControlPoints(vertices);
+        bezier.generateCurve();
+        bezier.updateBuffers();
+    }
 }
 
 void PolyBuilder::rotate(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
@@ -210,8 +244,7 @@ void PolyBuilder::updateVertexPosition(int shapeIndex, int vertexIndex, bool isP
     {
         Bezier& bezier = finishedBeziers[shapeIndex];
         bezier.setControlPoints(vertices);
-        bezier.generateCurve();
-        bezier.updateBuffers();
+        bezier.generateCurve(); // calls update buffers internally
     }
 }
 
@@ -277,8 +310,7 @@ void PolyBuilder::deleteVertex(int shapeIndex, int vertexIndex, bool isPolygon)
         }
 
         bezier.setControlPoints(vertices);
-        bezier.generateCurve();
-        bezier.updateBuffers();
+        bezier.generateCurve(); // Calls update buffers internally
     }
 }
 

@@ -17,7 +17,7 @@ struct Matrix3x3
 	}
 };
 
-Matrix3x3 createTranslationMatrix(float tx, float ty)
+inline Matrix3x3 createTranslationMatrix(float tx, float ty)
 {
 	Matrix3x3 outMatrix;
 
@@ -28,7 +28,7 @@ Matrix3x3 createTranslationMatrix(float tx, float ty)
 }
 
 // With implicit w = 1
-Vertex multiplyMatrixVertex(const Matrix3x3 matrix, const Vertex& inVertex)
+inline Vertex multiplyMatrixVertex(const Matrix3x3 matrix, const Vertex& inVertex)
 {
 	Vertex outVertex;
 
