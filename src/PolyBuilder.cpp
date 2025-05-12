@@ -161,6 +161,40 @@ void PolyBuilder::movePolygon(int polyIndex, float deltaX, float deltaY)
     poly.updateBuffers();
 }
 
+void PolyBuilder::updateVertexPosition(int polyIndex, int vertexIndex, bool isPolygon, float deltaX, float deltaY)
+{
+    std::vector<Vertex> vertices;
+    if (isPolygon)
+    {
+        auto poly = finishedPolygons[polyIndex];
+        vertices = poly.getVertices();
+    }
+    else
+    {
+        auto bezier = finishedBeziers[polyIndex];
+        vertices = bezier.getControlPoints();
+    }
+
+    Vertex vertexToUpdate = vertices[vertexIndex];
+    vertexToUpdate.x += deltaX;
+    vertexToUpdate.y += deltaY;
+    vertices[vertexIndex] = vertexToUpdate;
+
+    if (isPolygon)
+    {
+        auto poly = finishedPolygons[polyIndex];
+        poly.setVertices(vertices);
+        poly.updateBuffers();
+    }
+    else
+    {
+        auto bezier = finishedBeziers[polyIndex];
+        bezier.setControlPoints(vertices);
+        bezier.generateCurve();
+        bezier.updateBuffers();
+    }
+}
+
 // Add a filled polygon to our storage
 void PolyBuilder::addFilledPolygon(const Polygon& poly,
                                    const std::vector<Vertex>& fillPoints,

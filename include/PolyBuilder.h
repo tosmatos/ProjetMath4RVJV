@@ -49,8 +49,10 @@ public:
     void finish();
     void cancel();
 
-    // New function for polygon transformation
+    // Function for polygon transformation
     void movePolygon(int polyIndex, float deltaX, float deltaY);
+
+    void updateVertexPosition(int shapeIndex, int vertexIndex, bool isPolygon, float deltaX, float deltaY);
 
     // Add a filled polygon to our storage
     void addFilledPolygon(const Polygon& poly,
