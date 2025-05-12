@@ -7,6 +7,23 @@
 #include "Filler.h"
 #include "PolyTypes.h"
 
+namespace GUI
+{
+	int selectedPolygonIndex = -1;
+	bool awaitingFillSeed = false;
+	ImVec4 fillColor(0.0f, 0.0f, 1.0f, 1.0f);
+
+	bool isDraggingWindow = false;
+	float lastMouseX = 0.0f;
+	float lastMouseY = 0.0f;
+	int selectedWindowIndex = -1;
+
+	bool isDraggingVertex = false;
+	bool isShapePolygon = false;
+	int selectedShapeIndex = -1;
+	int selectedVertexIndex = -1;
+}
+
 void GUI::drawVertexInfoPanel(PolyBuilder& polybuilder, bool* open)
 {
 	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
@@ -415,10 +432,6 @@ void GUI::drawHoverTooltip(GLFWwindow* window, PolyBuilder& polybuilder)
 
 void GUI::handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder)
 {
-	// If we're not dragging, do nothing
-	if (!isDraggingWindow || selectedWindowIndex < 0)
-		return;
-
 	// Get current mouse position
 	double xPos, yPos;
 	glfwGetCursorPos(window, &xPos, &yPos);
@@ -436,6 +449,18 @@ void GUI::handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder)
 	// Update last position
 	lastMouseX = ndcX;
 	lastMouseY = ndcY;
+
+	if (isDraggingWindow && selectedWindowIndex != -1)
+		handleWindowDrag(window, polybuilder, deltaX, deltaY);
+	else if (isDraggingVertex && selectedShapeIndex != -1)
+		handleVertexDrag(window, polybuilder, deltaX, deltaY);
+}
+
+void GUI::handleWindowDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY)
+{
+	// If we're not dragging, do nothing
+	if (!isDraggingWindow || selectedWindowIndex < 0)
+		return;
 
 	// Apply movement to window polygon
 	polybuilder.movePolygon(selectedWindowIndex, deltaX, deltaY);
@@ -469,6 +494,15 @@ void GUI::handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder)
 
 	if (hasCbClipped)
 		performCyrusBeckClipping(polybuilder);
+}
+
+void GUI::handleVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY)
+{
+	// If we're not dragging, do nothing
+	if (!isDraggingVertex || selectedShapeIndex < 0 || selectedVertexIndex < 0)
+		return;
+
+	polybuilder.updateVertexPosition(selectedShapeIndex, selectedVertexIndex, isShapePolygon, deltaX, deltaY);
 }
 
 bool GUI::startWindowDrag(GLFWwindow* window, int mouseButton, PolyBuilder& polybuilder)
@@ -534,10 +568,13 @@ bool GUI::startWindowDrag(GLFWwindow* window, int mouseButton, PolyBuilder& poly
 	return false;
 }
 
-void GUI::endWindowDrag()
+void GUI::endDrag()
 {
 	isDraggingWindow = false;
 	selectedWindowIndex = -1;
+	isDraggingVertex = false;
+	selectedShapeIndex = -1;
+	selectedVertexIndex = -1;
 }
 
 bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder polybuilder, double xPos, double yPos)
@@ -549,8 +586,7 @@ bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder polybuilder, double
 	float ndcX = (2.0f * xPos) / displayW - 1.0f;
 	float ndcY = 1.0f - (2.0f * yPos) / displayH;
 
-	auto finishedPolys = polybuilder.getFinishedPolygons();
-	auto finishedBeziers = polybuilder.getFinishedBeziers();
+	auto finishedPolys = polybuilder.getFinishedPolygons();	
 
 	// Check proximity to vertices
 	const float hoverRadius = 0.02f;
@@ -573,6 +609,7 @@ bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder polybuilder, double
 				selectedVertexIndex = j;
 				foundMatch = true;
 				isShapePolygon = true;
+				isDraggingVertex = true;
 				break;
 			}
 		}
@@ -582,6 +619,8 @@ bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder polybuilder, double
 
 	if (foundMatch)
 		return true;
+
+	auto finishedBeziers = polybuilder.getFinishedBeziers();
 
 	for (size_t i = 0; i < finishedBeziers.size(); i++)
 	{
@@ -600,7 +639,8 @@ bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder polybuilder, double
 				selectedVertexIndex = j;
 				foundMatch = true;
 				isShapePolygon = false;
-				break; // Only show the first match
+				isDraggingVertex = true;
+				break;
 			}
 		}
 

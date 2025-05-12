@@ -217,12 +217,12 @@ void Bezier::generateCurve()
     auto time_span = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
     generationTime = time_span.count();
 
-    std::cout << "Generation took " << std::fixed << std::setprecision(7) << generationTime << " seconds." << std::endl;
+    //std::cout << "Generation took " << std::fixed << std::setprecision(7) << generationTime << " seconds." << std::endl;
 }
 
 void Bezier::generatePascalCurve()
 {
-    std::cout << "Generating curve with Pascal algorithm..." << std::endl;
+    //std::cout << "Generating curve with Pascal algorithm..." << std::endl;
     auto start = std::chrono::steady_clock::now(); // type is time_point
 
     // the degree of the bézier curve
@@ -266,7 +266,7 @@ void Bezier::generatePascalCurve()
 // New bonus point to do !
 void Bezier::generateDeCasteljauCurve()
 {
-    std::cout << "Generating curve with DeCasteljau algorithm..." << std::endl;
+    //std::cout << "Generating curve with DeCasteljau algorithm..." << std::endl;
 
     // Compute number of segments beforehand
     // Because if it becomes too small, errors accumualte and the loop never finishes

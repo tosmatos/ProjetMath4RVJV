@@ -90,7 +90,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
     // Handle drag end
     if (action == GLFW_RELEASE)
 	{
-        GUI::endWindowDrag();
+        GUI::endDrag();
     }
 }
 	

@@ -163,6 +163,8 @@ void PolyBuilder::movePolygon(int polyIndex, float deltaX, float deltaY)
 
 void PolyBuilder::updateVertexPosition(int polyIndex, int vertexIndex, bool isPolygon, float deltaX, float deltaY)
 {
+    //std::cout << "Updating vertex position" << std::endl;
+
     std::vector<Vertex> vertices;
     if (isPolygon)
     {
@@ -182,13 +184,13 @@ void PolyBuilder::updateVertexPosition(int polyIndex, int vertexIndex, bool isPo
 
     if (isPolygon)
     {
-        auto poly = finishedPolygons[polyIndex];
+        Polygon& poly = finishedPolygons[polyIndex];
         poly.setVertices(vertices);
         poly.updateBuffers();
     }
     else
     {
-        auto bezier = finishedBeziers[polyIndex];
+        Bezier& bezier = finishedBeziers[polyIndex];
         bezier.setControlPoints(vertices);
         bezier.generateCurve();
         bezier.updateBuffers();

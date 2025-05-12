@@ -6,24 +6,26 @@
 
 namespace GUI {
 	// For filling functionality
-	static int selectedPolygonIndex = -1;
-	static bool awaitingFillSeed = false;
-	static ImVec4 fillColor(0.0f, 0.0f, 1.0f, 1.0f);
+	extern int selectedPolygonIndex;
+	extern bool awaitingFillSeed;
+	extern ImVec4 fillColor;
 
-	bool isDraggingWindow = false;
-	float lastMouseX = 0.0f;
-	float lastMouseY = 0.0f;
-	int selectedWindowIndex = -1;
+	extern bool isDraggingWindow;
+	extern float lastMouseX;
+	extern float lastMouseY;
+	extern int selectedWindowIndex;
 
-	bool isDraggingVertex = false;
-	bool isShapePolygon = false;
-	int selectedShapeIndex = -1;
-	int selectedVertexIndex = -1;
+	extern bool isDraggingVertex;
+	extern bool isShapePolygon;
+	extern int selectedShapeIndex;
+	extern int selectedVertexIndex;
 
     // Functions for real-time window movement and clipping
     bool startWindowDrag(GLFWwindow* window, int mouseButton, PolyBuilder& polybuilder);
     void handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder);
-    void endWindowDrag();
+	void handleWindowDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY);
+	void handleVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY);
+    void endDrag();
 
 	// Vertex dragging
 	bool tryStartVertexDrag(GLFWwindow* window, PolyBuilder polybuilder, double xPos, double yPos);
