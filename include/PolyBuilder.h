@@ -5,6 +5,7 @@
 #include "PolyTypes.h"
 #include "Polygon.h"
 #include "Bezier.h"
+#include "Matrix.h"
 
 // For storing filled polygons
 struct FilledPolygon
@@ -95,4 +96,9 @@ public:
     void swapBezierAlgorithm(size_t index);
     void incrementBezierStepSize(size_t index);
     void decrementBezierStepSize(size_t index);
+
+    void translate(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
+    void rotate(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
+    void scale(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
+    void shear(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
 };

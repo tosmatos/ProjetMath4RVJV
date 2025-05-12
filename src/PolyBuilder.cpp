@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 
-
 void PolyBuilder::startPolygon(PolyType type)
 {
     polyType = type;
@@ -41,6 +40,25 @@ void PolyBuilder::decrementBezierStepSize(size_t index)
 {
     if (index < finishedBeziers.size())
         finishedBeziers[index].decrementStepSize();
+}
+
+void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
+{
+}
+
+void PolyBuilder::rotate(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
+{
+    // TODO : implement this !
+}
+
+void PolyBuilder::scale(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
+{
+    // TODO : implement this !
+}
+
+void PolyBuilder::shear(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
+{
+    // TODO : implement this !
 }
 
 void PolyBuilder::appendVertex(double xPos, double yPos)
