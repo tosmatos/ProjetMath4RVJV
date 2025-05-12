@@ -54,6 +54,8 @@ public:
 
     void updateVertexPosition(int shapeIndex, int vertexIndex, bool isPolygon, float deltaX, float deltaY);
 
+    void deleteVertex(int shapeIndex, int vertexIndex, bool isPolygon);
+
     // Add a filled polygon to our storage
     void addFilledPolygon(const Polygon& poly,
         const std::vector<Vertex>& fillPoints,

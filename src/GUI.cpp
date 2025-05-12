@@ -577,7 +577,63 @@ void GUI::endDrag()
 	selectedVertexIndex = -1;
 }
 
-bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder polybuilder, double xPos, double yPos)
+void GUI::deleteVertex(GLFWwindow* window, PolyBuilder& polybuilder, double xPos, double yPos)
+{
+	int displayW, displayH;
+	glfwGetFramebufferSize(window, &displayW, &displayH);
+
+	// Convert mouse pos to NDC
+	float ndcX = (2.0f * xPos) / displayW - 1.0f;
+	float ndcY = 1.0f - (2.0f * yPos) / displayH;
+
+	auto finishedPolys = polybuilder.getFinishedPolygons();
+
+	// Check proximity to vertices
+	const float hoverRadius = 0.02f;
+
+	for (size_t i = 0; i < finishedPolys.size(); i++)
+	{
+		Polygon poly = finishedPolys[i];
+		auto vertices = poly.getVertices();
+
+
+		for (size_t j = 0; j < vertices.size(); j++)
+		{
+			Vertex vert = vertices[j];
+			float dx = vert.x - ndcX;
+			float dy = vert.y - ndcY;
+			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+			{
+				std::cout << "Deleting vertex" << std::endl;
+				polybuilder.deleteVertex(i, j, true);
+				return;
+			}
+		}
+	}
+
+	auto finishedBeziers = polybuilder.getFinishedBeziers();
+
+	for (size_t i = 0; i < finishedBeziers.size(); i++)
+	{
+		Bezier bezier = finishedBeziers[i];
+		auto controlPoints = bezier.getControlPoints();
+
+		for (size_t j = 0; j < controlPoints.size(); j++)
+		{
+			Vertex vert = controlPoints[j];
+			float dx = vert.x - ndcX;
+			float dy = vert.y - ndcY;
+			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+			{
+				std::cout << "Deleting vertex" << std::endl;
+				polybuilder.deleteVertex(i, j, false);
+				return;
+			}
+		}
+	}
+}
+
+bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, double xPos, double yPos)
 {
 	int displayW, displayH;
 	glfwGetFramebufferSize(window, &displayW, &displayH);
@@ -626,7 +682,6 @@ bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder polybuilder, double
 	{
 		Bezier bezier = finishedBeziers[i];
 		auto controlPoints = bezier.getControlPoints();
-		bool foundMatch = false;
 
 		for (size_t j = 0; j < controlPoints.size(); j++)
 		{

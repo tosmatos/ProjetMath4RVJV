@@ -73,6 +73,11 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 		leftMouseDown = false;
 	}
 
+	if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS)
+	{
+		GUI::deleteVertex(window, polybuilder, xPos, yPos);
+	}
+
 	if (action == GLFW_PRESS)
 	{
         // Try to start window drag first

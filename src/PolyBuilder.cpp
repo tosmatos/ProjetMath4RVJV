@@ -161,19 +161,19 @@ void PolyBuilder::movePolygon(int polyIndex, float deltaX, float deltaY)
     poly.updateBuffers();
 }
 
-void PolyBuilder::updateVertexPosition(int polyIndex, int vertexIndex, bool isPolygon, float deltaX, float deltaY)
+void PolyBuilder::updateVertexPosition(int shapeIndex, int vertexIndex, bool isPolygon, float deltaX, float deltaY)
 {
     //std::cout << "Updating vertex position" << std::endl;
 
     std::vector<Vertex> vertices;
     if (isPolygon)
     {
-        auto poly = finishedPolygons[polyIndex];
+        auto poly = finishedPolygons[shapeIndex];
         vertices = poly.getVertices();
     }
     else
     {
-        auto bezier = finishedBeziers[polyIndex];
+        auto bezier = finishedBeziers[shapeIndex];
         vertices = bezier.getControlPoints();
     }
 
@@ -184,13 +184,80 @@ void PolyBuilder::updateVertexPosition(int polyIndex, int vertexIndex, bool isPo
 
     if (isPolygon)
     {
-        Polygon& poly = finishedPolygons[polyIndex];
+        Polygon& poly = finishedPolygons[shapeIndex];
         poly.setVertices(vertices);
         poly.updateBuffers();
     }
     else
     {
-        Bezier& bezier = finishedBeziers[polyIndex];
+        Bezier& bezier = finishedBeziers[shapeIndex];
+        bezier.setControlPoints(vertices);
+        bezier.generateCurve();
+        bezier.updateBuffers();
+    }
+}
+
+void PolyBuilder::deleteVertex(int shapeIndex, int vertexIndex, bool isPolygon)
+{
+    std::vector<Vertex> vertices;
+
+    if (isPolygon)
+    {
+        if (shapeIndex < 0 || shapeIndex >= finishedPolygons.size())
+        {
+            std::cerr << "Error: Invalid polygon index " << shapeIndex << std::endl;
+            return;
+        }
+
+        Polygon& poly = finishedPolygons[shapeIndex];
+        vertices = poly.getVertices();
+
+        // Check vertex index validity
+        if (vertexIndex < 0 || vertexIndex >= vertices.size())
+        {
+            std::cerr << "Error: Invalid vertex index " << vertexIndex << " for polygon " << shapeIndex << std::endl;
+            return;
+        }
+
+        vertices.erase(vertices.begin() + vertexIndex);
+
+        if (vertices.size() < 3)
+        {
+            std::cout << "Polygon " << shapeIndex << " has less than 3 vertices after deletion. Removing polygon." << std::endl;
+            finishedPolygons.erase(finishedPolygons.begin() + shapeIndex);
+            return; // Polygon removed
+        }
+
+        poly.setVertices(vertices);
+        poly.updateBuffers();
+    }
+    else
+    {
+        // Check index validity for the Bezier list
+        if (shapeIndex < 0 || shapeIndex >= finishedBeziers.size())
+        {
+            std::cerr << "Error: Invalid Bezier index " << shapeIndex << std::endl;
+            return;
+        }
+        Bezier& bezier = finishedBeziers[shapeIndex];
+        vertices = bezier.getControlPoints();
+
+        // Check vertex index validity
+        if (vertexIndex < 0 || vertexIndex >= vertices.size())
+        {
+            std::cerr << "Error: Invalid control point index " << vertexIndex << " for Bezier " << shapeIndex << std::endl;
+            return;
+        }
+
+        vertices.erase(vertices.begin() + vertexIndex);
+
+        if (vertices.size() < 2)
+        {
+            std::cout << "Bezier " << shapeIndex << " has less than 2 control points after deletion. Removing Bezier." << std::endl;
+            finishedBeziers.erase(finishedBeziers.begin() + shapeIndex);
+            return; // Bezier removed
+        }
+
         bezier.setControlPoints(vertices);
         bezier.generateCurve();
         bezier.updateBuffers();

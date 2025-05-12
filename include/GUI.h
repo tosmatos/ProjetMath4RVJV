@@ -20,15 +20,15 @@ namespace GUI {
 	extern int selectedShapeIndex;
 	extern int selectedVertexIndex;
 
-    // Functions for real-time window movement and clipping
+    // Functions for real-time shape movement and clipping
     bool startWindowDrag(GLFWwindow* window, int mouseButton, PolyBuilder& polybuilder);
+	bool tryStartVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, double xPos, double yPos);
     void handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder);
 	void handleWindowDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY);
 	void handleVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY);
     void endDrag();
-
-	// Vertex dragging
-	bool tryStartVertexDrag(GLFWwindow* window, PolyBuilder polybuilder, double xPos, double yPos);
+	
+	void deleteVertex(GLFWwindow* window, PolyBuilder& polybuilder, double xPos, double yPos);
 
     // Clipping algorithm wrappers for reuse
     void performCyrusBeckClipping(PolyBuilder& polybuilder);
