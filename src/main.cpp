@@ -49,10 +49,12 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 		//std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
 
 		// Check if in polygon building mode or fill mode
-		if (polybuilder.isBuilding()) {
+		if (polybuilder.isBuilding())
+		{
 			polybuilder.appendVertex(xPos, yPos);
 		}
-		else {
+		else if (GUI::awaitingFillSeed)
+		{
 			// Handle fill click
 			lastClickX = xPos;
 			lastClickY = yPos;
@@ -61,24 +63,33 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 			// Process fill click
 			GUI::handleFillClick(window, polybuilder, xPos, yPos);
 		}
+		else
+		{
+			GUI::tryStartVertexDrag(window, polybuilder, xPos, yPos);
+		}
 	}
-	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+	{
 		leftMouseDown = false;
 	}
 
-	if (action == GLFW_PRESS) {
+	if (action == GLFW_PRESS)
+	{
         // Try to start window drag first
-        if (GUI::startWindowDrag(window, button, polybuilder)) {
+        if (GUI::startWindowDrag(window, button, polybuilder))
+		{
             return; // Successfully started drag, don't process further
         }
 
-        if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+        if (button == GLFW_MOUSE_BUTTON_RIGHT)
+		{
             openContextMenu = true;
         }
     }
 
     // Handle drag end
-    if (action == GLFW_RELEASE) {
+    if (action == GLFW_RELEASE)
+	{
         GUI::endWindowDrag();
     }
 }

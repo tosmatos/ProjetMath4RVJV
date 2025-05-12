@@ -7,20 +7,6 @@
 #include "Filler.h"
 #include "PolyTypes.h"
 
-// For filling functionality
-static int selectedPolygonIndex = -1;
-static bool awaitingFillSeed = false;
-static ImVec4 fillColor(0.0f, 0.0f, 1.0f, 1.0f);
-
-// State for window dragging
-namespace
-{
-	bool isDraggingWindow = false;
-	float lastMouseX = 0.0f;
-	float lastMouseY = 0.0f;
-	int selectedWindowIndex = -1;
-}
-
 void GUI::drawVertexInfoPanel(PolyBuilder& polybuilder, bool* open)
 {
 	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
@@ -552,6 +538,79 @@ void GUI::endWindowDrag()
 {
 	isDraggingWindow = false;
 	selectedWindowIndex = -1;
+}
+
+bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder polybuilder, double xPos, double yPos)
+{
+	int displayW, displayH;
+	glfwGetFramebufferSize(window, &displayW, &displayH);
+
+	// Convert mouse pos to NDC
+	float ndcX = (2.0f * xPos) / displayW - 1.0f;
+	float ndcY = 1.0f - (2.0f * yPos) / displayH;
+
+	auto finishedPolys = polybuilder.getFinishedPolygons();
+	auto finishedBeziers = polybuilder.getFinishedBeziers();
+
+	// Check proximity to vertices
+	const float hoverRadius = 0.02f;
+	bool foundMatch = false;
+
+	for (size_t i = 0; i < finishedPolys.size(); i++)
+	{
+		Polygon poly = finishedPolys[i];
+		auto vertices = poly.getVertices();
+		
+
+		for (size_t j = 0; j < vertices.size(); j++)
+		{
+			Vertex vert = vertices[j];
+			float dx = vert.x - ndcX;
+			float dy = vert.y - ndcY;
+			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+			{
+				selectedShapeIndex = i;
+				selectedVertexIndex = j;
+				foundMatch = true;
+				isShapePolygon = true;
+				break;
+			}
+		}
+
+		if (foundMatch) break;
+	}
+
+	if (foundMatch)
+		return true;
+
+	for (size_t i = 0; i < finishedBeziers.size(); i++)
+	{
+		Bezier bezier = finishedBeziers[i];
+		auto controlPoints = bezier.getControlPoints();
+		bool foundMatch = false;
+
+		for (size_t j = 0; j < controlPoints.size(); j++)
+		{
+			Vertex vert = controlPoints[j];
+			float dx = vert.x - ndcX;
+			float dy = vert.y - ndcY;
+			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+			{
+				selectedShapeIndex = i;
+				selectedVertexIndex = j;
+				foundMatch = true;
+				isShapePolygon = false;
+				break; // Only show the first match
+			}
+		}
+
+		if (foundMatch) break;
+	}
+
+	if (foundMatch)
+		return true;
+
+	return false;
 }
 
 void GUI::handleFillClick(GLFWwindow* window, PolyBuilder& polyBuilder, double xPos, double yPos)
