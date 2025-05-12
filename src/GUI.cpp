@@ -388,6 +388,7 @@ void GUI::drawHoverTooltip(GLFWwindow* window, PolyBuilder& polybuilder)
 	const float hoverRadius = 0.02f;
 	for (const auto& poly : polybuilder.getFinishedPolygons())
 	{
+		bool foundMatch = false;
 		for (const auto& vert : poly.getVertices())
 		{
 			float dx = vert.x - ndcX;
@@ -397,9 +398,32 @@ void GUI::drawHoverTooltip(GLFWwindow* window, PolyBuilder& polybuilder)
 				ImGui::BeginTooltip();
 				ImGui::Text("Position: (%.2f, %.2f)", vert.x, vert.y);
 				ImGui::EndTooltip();
-				return; // Only show the first match
+				foundMatch = true;
+				break; // Only show the first match
 			}
 		}
+
+		if (foundMatch) break;
+	}
+
+	for (const auto& bezier : polybuilder.getFinishedBeziers())
+	{
+		bool foundMatch = false;
+		for (const auto& vert : bezier.getControlPoints())
+		{
+			float dx = vert.x - ndcX;
+			float dy = vert.y - ndcY;
+			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Position: (%.2f, %.2f)", vert.x, vert.y);
+				ImGui::EndTooltip();
+				foundMatch = true;
+				break; // Only show the first match
+			}
+		}
+
+		if (foundMatch) break;
 	}
 }
 
