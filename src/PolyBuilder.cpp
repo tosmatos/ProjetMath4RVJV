@@ -86,8 +86,6 @@ void PolyBuilder::rotate(int shapeIndex, bool isPolygon, float deltaX, float del
 
 void PolyBuilder::scale(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
 {
-    Matrix3x3 scalingMatrix = createScalingMatrix(deltaX, deltaY);
-
     std::vector<Vertex> vertices;
     if (isPolygon)
     {
@@ -100,9 +98,24 @@ void PolyBuilder::scale(int shapeIndex, bool isPolygon, float deltaX, float delt
         vertices = bezier.getControlPoints();
     }
 
+    Vertex center = calculateCenter(vertices);
+
+    Matrix3x3 translateToOrigin = createTranslationMatrix(-center.x, -center.y);
+    Matrix3x3 translateBack = createTranslationMatrix(center.x, center.y);
+
+    // TODO : First figure why I'd need to use that scale factor. Try without first
+    float scaleFactorX = 1.0f + deltaX * scaleSensitivity;
+    float scaleFactorY = 1.0f + deltaY * scaleSensitivity;
+
+    std::cout << "Scale factor X,Y : " << scaleFactorX << "," << scaleFactorY << std::endl;
+
+    Matrix3x3 scalingMatrix = createScalingMatrix(scaleFactorX, scaleFactorY);
+
+    Matrix3x3 finalMatrix = translateBack * scalingMatrix * translateToOrigin;
+
     for (Vertex& vertex : vertices)
     {
-        Vertex transformedPoint = multiplyMatrixVertex(scalingMatrix, vertex);
+        Vertex transformedPoint = multiplyMatrixVertex(finalMatrix, vertex);
         vertex.x = transformedPoint.x;
         vertex.y = transformedPoint.y;
     }
