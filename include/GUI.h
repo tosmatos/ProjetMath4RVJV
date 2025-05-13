@@ -19,8 +19,17 @@ namespace GUI {
 	extern int selectedShapeIndex;
 	extern int selectedVertexIndex;
 
+	enum TransformationType
+	{
+		TRANSLATE,
+		SCALE,
+		ROTATE,
+		SHEAR
+	};
+	extern TransformationType currentTransformationType;
+
     // Functions for real-time shape movement and clipping
-    bool tryStartShapeDrag(GLFWwindow* window, int mouseButton, PolyBuilder& polybuilder);
+    bool tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mods);
 	bool tryStartVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, double xPos, double yPos);
     void handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder);
 	void handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY);

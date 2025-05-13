@@ -23,6 +23,7 @@ namespace GUI
 	bool isShapePolygon = false;
 	int selectedShapeIndex = -1;
 	int selectedVertexIndex = -1;
+	TransformationType currentTransformationType = TRANSLATE;
 }
 
 void GUI::drawVertexInfoPanel(PolyBuilder& polybuilder, bool* open)
@@ -459,12 +460,26 @@ void GUI::handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder)
 
 void GUI::handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY)
 {
+	std::cout << "Dragging" << std::endl;
 	// If we're not dragging, do nothing
 	if (!isDraggingShape || selectedShapeIndex < 0)
 		return;
 
-	// Apply movement to window polygon
-	polybuilder.movePolygon(selectedShapeIndex, deltaX, deltaY);
+	switch (currentTransformationType)
+	{
+	case TRANSLATE:
+		polybuilder.translate(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
+		break;
+	case SCALE:
+		polybuilder.scale(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
+		break;
+	case ROTATE:
+		polybuilder.rotate(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
+		break;
+	case SHEAR:
+		polybuilder.shear(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
+		break;
+	}
 
 	// Update clipped polygons (based on current active clipping algorithm)
 	// Check if Sutherland-Hodgman clipped polygons exist
@@ -506,17 +521,26 @@ void GUI::handleVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, float d
 	polybuilder.updateVertexPosition(selectedShapeIndex, selectedVertexIndex, isShapePolygon, deltaX, deltaY);
 }
 
-bool GUI::tryStartShapeDrag(GLFWwindow* window, int mouseButton, PolyBuilder& polybuilder)
+bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mods)
 {
-	// Only allow dragging with middle mouse button or Ctrl+Left mouse
-	bool isCtrlPressed = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
-		glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
-
-	bool validDragStart = (mouseButton == GLFW_MOUSE_BUTTON_MIDDLE) ||
-		(mouseButton == GLFW_MOUSE_BUTTON_LEFT && isCtrlPressed);
-
-	if (!validDragStart)
-		return false;
+	// Determine transformation type based on modifiers
+	// & is bitwise AND operator. If both bits are 1, result is true
+	if (mods & GLFW_MOD_CONTROL)
+	{
+		currentTransformationType = SCALE;
+	}
+	else if (mods & GLFW_MOD_SHIFT)
+	{
+		currentTransformationType = ROTATE;
+	}
+	else if (mods & GLFW_MOD_ALT)
+	{
+		currentTransformationType = SHEAR;
+	}
+	else
+	{
+		currentTransformationType = TRANSLATE;
+	}
 
 	// Check if we're hovering over a window polygon
 	double xPos, yPos;
@@ -524,44 +548,81 @@ bool GUI::tryStartShapeDrag(GLFWwindow* window, int mouseButton, PolyBuilder& po
 
 	int displayW, displayH;
 	glfwGetFramebufferSize(window, &displayW, &displayH);
+	// ndc = normalized device coordinates (-1.0f - 1.0f)
 	float ndcX = (2.0f * xPos) / displayW - 1.0f;
 	float ndcY = 1.0f - (2.0f * yPos) / displayH;
 
 	auto finishedPolys = polybuilder.getFinishedPolygons();
 
-	// Find a window polygon that contains the mouse position
+	// Find a polygon that contains the mouse position
 	for (size_t i = 0; i < finishedPolys.size(); i++)
 	{
 		const auto& poly = finishedPolys[i];
-		if (poly.type == PolyType::WINDOW)
+		// Create bounding box and check if mouse is in there
+		// TODO : Implement a better algorithm like ray tracing or Winding Number
+		const auto& verts = poly.getVertices();
+
+		if (verts.size() > 0)
 		{
-			// Simple point-in-polygon test (bounding box for now, can be enhanced)
-			const auto& verts = poly.getVertices();
-			if (verts.size() > 0)
+			// Create a bounding box
+			float minX = verts[0].x;
+			float maxX = verts[0].x;
+			float minY = verts[0].y;
+			float maxY = verts[0].y;
+
+			for (const auto& vert : verts)
 			{
-				// Create a bounding box
-				float minX = verts[0].x;
-				float maxX = verts[0].x;
-				float minY = verts[0].y;
-				float maxY = verts[0].y;
+				minX = std::min(minX, vert.x);
+				maxX = std::max(maxX, vert.x);
+				minY = std::min(minY, vert.y);
+				maxY = std::max(maxY, vert.y);
+			}
 
-				for (const auto& vert : verts)
-				{
-					minX = std::min(minX, vert.x);
-					maxX = std::max(maxX, vert.x);
-					minY = std::min(minY, vert.y);
-					maxY = std::max(maxY, vert.y);
-				}
+			// Check if point is in bounding box
+			if (ndcX >= minX && ndcX <= maxX && ndcY >= minY && ndcY <= maxY)
+			{
+				isDraggingShape = true;
+				selectedShapeIndex = static_cast<int>(i);
+				isShapePolygon = true;
+				lastMouseX = ndcX;
+				lastMouseY = ndcY;
+				return true;
+			}
+		}
+	}
 
-				// Check if point is in bounding box
-				if (ndcX >= minX && ndcX <= maxX && ndcY >= minY && ndcY <= maxY)
-				{
-					isDraggingShape = true;
-					selectedShapeIndex = static_cast<int>(i);
-					lastMouseX = ndcX;
-					lastMouseY = ndcY;
-					return true;
-				}
+	auto beziers = polybuilder.getFinishedBeziers();
+
+	for (size_t i = 0; i < beziers.size(); i++)
+	{
+		const auto& bezier = beziers[i];
+		const auto& verts = bezier.getControlPoints();
+
+		if (verts.size() > 0)
+		{
+			// Create a bounding box
+			float minX = verts[0].x;
+			float maxX = verts[0].x;
+			float minY = verts[0].y;
+			float maxY = verts[0].y;
+
+			for (const auto& vert : verts)
+			{
+				minX = std::min(minX, vert.x);
+				maxX = std::max(maxX, vert.x);
+				minY = std::min(minY, vert.y);
+				maxY = std::max(maxY, vert.y);
+			}
+
+			// Check if point is in bounding box
+			if (ndcX >= minX && ndcX <= maxX && ndcY >= minY && ndcY <= maxY)
+			{
+				isDraggingShape = true;
+				selectedShapeIndex = static_cast<int>(i);
+				isShapePolygon = false;
+				lastMouseX = ndcX;
+				lastMouseY = ndcY;
+				return true;
 			}
 		}
 	}

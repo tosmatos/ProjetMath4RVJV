@@ -70,7 +70,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 			}
 			else
 			{
-				GUI::tryStartShapeDrag(window, button, polybuilder);
+				GUI::tryStartShapeDrag(window, polybuilder, mods);
 			}
 		}
 	}
