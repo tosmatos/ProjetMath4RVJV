@@ -19,6 +19,10 @@ namespace GUI {
 	extern int selectedShapeIndex;
 	extern int selectedVertexIndex;
 
+	// For tracking scaling relative to initial shape size
+	extern float initialScaleMouseX, initialScaleMouseY;
+	extern float initialShapeWidth, initialShapeHeight;
+
 	enum TransformationType
 	{
 		TRANSLATE,
@@ -32,9 +36,9 @@ namespace GUI {
     bool tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mods);
 	bool tryStartVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, double xPos, double yPos);
     void handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder);
-	void handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY);
-	void handleVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY);
-    void endDrag();
+	void handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder);
+	void handleVertexDrag(GLFWwindow* window, PolyBuilder& polybuilderY);
+    void endDrag(PolyBuilder& polybuilder);
 	
 	void deleteVertex(GLFWwindow* window, PolyBuilder& polybuilder, double xPos, double yPos);
 

@@ -49,7 +49,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 		{
 			//std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
 
-		// Check if in polygon building mode or fill mode
+			// Check if in polygon building mode or fill mode
 			if (polybuilder.isBuilding())
 			{
 				polybuilder.appendVertex(xPos, yPos);
@@ -85,7 +85,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 	else if (action == GLFW_RELEASE)
 	{
 		if (button == GLFW_MOUSE_BUTTON_LEFT)
-			GUI::endDrag();
+			GUI::endDrag(polybuilder);
 	}
 }
 	

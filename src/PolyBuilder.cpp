@@ -84,7 +84,84 @@ void PolyBuilder::rotate(int shapeIndex, bool isPolygon, float deltaX, float del
     // TODO : implement this !
 }
 
-void PolyBuilder::scale(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
+// In PolyBuilder.cpp
+
+void PolyBuilder::startScalingShape(int shapeIndex, bool isPolygon)
+{
+    if (isPolygon)
+    {
+        if (shapeIndex >= 0 && shapeIndex < finishedPolygons.size())
+        {
+            transformOriginalVertices = finishedPolygons[shapeIndex].getVertices();
+            isCurrentlyScalingShape = true;
+        }
+    }
+    else
+    {
+        if (shapeIndex >= 0 && shapeIndex < finishedBeziers.size())
+        {
+            transformOriginalVertices = finishedBeziers[shapeIndex].getControlPoints();
+            isCurrentlyScalingShape = true;
+        }
+    }
+}
+
+void PolyBuilder::stopScalingShape()
+{
+    isCurrentlyScalingShape = false;
+    transformOriginalVertices.clear();
+}
+
+// This will replace your current `scale` method for this drag interaction
+void PolyBuilder::applyScaleFromOriginal(int shapeIndex, bool isPolygon, float totalScaleFactorX, float totalScaleFactorY)
+{
+    if (!isCurrentlyScalingShape || transformOriginalVertices.empty())
+    {
+        return; // Not in a scaling operation or no original vertices
+    }
+
+    //std::cout << "In applyScaleFromOriginal. shapeIndex : " << shapeIndex << std::endl;
+
+    std::vector<Vertex> newVertices = transformOriginalVertices; // Work on a copy of the original
+
+    Vertex center = calculateCenter(transformOriginalVertices); // Center of the *original* shape
+
+    Matrix3x3 translateToOrigin = createTranslationMatrix(-center.x, -center.y);
+    Matrix3x3 scalingMatrix = createScalingMatrix(totalScaleFactorX, totalScaleFactorY);
+    Matrix3x3 translateBack = createTranslationMatrix(center.x, center.y);
+
+    Matrix3x3 finalMatrix = translateBack * scalingMatrix * translateToOrigin;
+
+    for (Vertex& vertex : newVertices)
+    {
+        // Apply the total transformation to each original vertex
+        Vertex transformedPoint = multiplyMatrixVertex(finalMatrix, vertex);
+        vertex.x = transformedPoint.x;
+        vertex.y = transformedPoint.y;
+    }
+
+    // Update the live shape with the newly calculated vertices
+    if (isPolygon)
+    {
+        if (shapeIndex >= 0 && shapeIndex < finishedPolygons.size())
+        {
+            Polygon& poly = finishedPolygons[shapeIndex];
+            poly.setVertices(newVertices);
+            poly.updateBuffers();
+        }
+    }
+    else
+    {
+        if (shapeIndex >= 0 && shapeIndex < finishedBeziers.size())
+        {
+            Bezier& bezier = finishedBeziers[shapeIndex];
+            bezier.setControlPoints(newVertices);
+            bezier.generateCurve(); // This should update its buffers
+        }
+    }
+}
+
+void PolyBuilder::scale(int shapeIndex, bool isPolygon, float scaleFactorX, float scaleFactorY)
 {
     std::vector<Vertex> vertices;
     if (isPolygon)
@@ -102,13 +179,6 @@ void PolyBuilder::scale(int shapeIndex, bool isPolygon, float deltaX, float delt
 
     Matrix3x3 translateToOrigin = createTranslationMatrix(-center.x, -center.y);
     Matrix3x3 translateBack = createTranslationMatrix(center.x, center.y);
-
-    // TODO : First figure why I'd need to use that scale factor. Try without first
-    float scaleFactorX = 1.0f + deltaX * scaleSensitivity;
-    float scaleFactorY = 1.0f + deltaY * scaleSensitivity;
-
-    std::cout << "Scale factor X,Y : " << scaleFactorX << "," << scaleFactorY << std::endl;
-
     Matrix3x3 scalingMatrix = createScalingMatrix(scaleFactorX, scaleFactorY);
 
     Matrix3x3 finalMatrix = translateBack * scalingMatrix * translateToOrigin;

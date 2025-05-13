@@ -24,6 +24,9 @@ namespace GUI
 	int selectedShapeIndex = -1;
 	int selectedVertexIndex = -1;
 	TransformationType currentTransformationType = TRANSLATE;
+
+	float initialScaleMouseX = 0.0f, initialScaleMouseY = 0.0f;
+	float initialShapeWidth = 0.0f, initialShapeHeight = 0.0f;
 }
 
 void GUI::drawVertexInfoPanel(PolyBuilder& polybuilder, bool* open)
@@ -434,6 +437,18 @@ void GUI::drawHoverTooltip(GLFWwindow* window, PolyBuilder& polybuilder)
 
 void GUI::handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder)
 {
+	if (isDraggingShape && selectedShapeIndex != -1)
+		handleShapeDrag(window, polybuilder);
+	else if (isDraggingVertex && selectedShapeIndex != -1)
+		handleVertexDrag(window, polybuilder);
+}
+
+void GUI::handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder)
+{
+	// If we're not dragging, do nothing
+	if (!isDraggingShape || selectedShapeIndex < 0)
+		return;
+
 	// Get current mouse position
 	double xPos, yPos;
 	glfwGetCursorPos(window, &xPos, &yPos);
@@ -452,26 +467,37 @@ void GUI::handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder)
 	lastMouseX = ndcX;
 	lastMouseY = ndcY;
 
-	if (isDraggingShape && selectedShapeIndex != -1)
-		handleShapeDrag(window, polybuilder, deltaX, deltaY);
-	else if (isDraggingVertex && selectedShapeIndex != -1)
-		handleVertexDrag(window, polybuilder, deltaX, deltaY);
-}
-
-void GUI::handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY)
-{
-	// If we're not dragging, do nothing
-	if (!isDraggingShape || selectedShapeIndex < 0)
-		return;
-
 	switch (currentTransformationType)
 	{
 	case TRANSLATE:
 		polybuilder.translate(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
 		break;
 	case SCALE:
-		polybuilder.scale(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
+	{ // Need braces because I declare variables in here
+		// Calculate total mouse delta
+		float totalMouseDeltaX = ndcX - initialScaleMouseX;
+		float totalMouseDeltaY = ndcY - initialScaleMouseY;
+
+		float scaleSensitivity = polybuilder.getScaleSensitivity();
+
+		/*std::cout << "Initial mouse movement: " << totalMouseDeltaX << ", " << totalMouseDeltaY << std::endl;
+		std::cout << "Scale sensitivity: " << scaleSensitivity << std::endl;*/
+
+		// Apply scale sensitivity directly to the mouse delta
+		float targetTotalScaleFactorX = 1.0f + totalMouseDeltaX * scaleSensitivity;
+		float targetTotalScaleFactorY = 1.0f + totalMouseDeltaY * scaleSensitivity;
+
+		// Clamp to avoid extreme scaling
+		const float minScale = 0.1f;
+		targetTotalScaleFactorX = std::max(targetTotalScaleFactorX, minScale);
+		targetTotalScaleFactorY = std::max(targetTotalScaleFactorY, minScale);
+
+		std::cout << "Target Total Delta X,Y : " << targetTotalScaleFactorX << "," << targetTotalScaleFactorY << std::endl;
+
+		polybuilder.applyScaleFromOriginal(selectedShapeIndex, isShapePolygon,
+			targetTotalScaleFactorX, targetTotalScaleFactorY);
 		break;
+	}		
 	case ROTATE:
 		polybuilder.rotate(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
 		break;
@@ -511,11 +537,29 @@ void GUI::handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, float de
 		performCyrusBeckClipping(polybuilder);
 }
 
-void GUI::handleVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY)
+void GUI::handleVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder)
 {
 	// If we're not dragging, do nothing
 	if (!isDraggingVertex || selectedShapeIndex < 0 || selectedVertexIndex < 0)
 		return;
+
+	// Get current mouse position
+	double xPos, yPos;
+	glfwGetCursorPos(window, &xPos, &yPos);
+
+	// Convert to normalized coordinates
+	int displayW, displayH;
+	glfwGetFramebufferSize(window, &displayW, &displayH);
+	float ndcX = (2.0f * xPos) / displayW - 1.0f;
+	float ndcY = 1.0f - (2.0f * yPos) / displayH;
+
+	// Calculate movement delta
+	float deltaX = ndcX - lastMouseX;
+	float deltaY = ndcY - lastMouseY;
+
+	// Update last position
+	lastMouseX = ndcX;
+	lastMouseY = ndcY;
 
 	polybuilder.updateVertexPosition(selectedShapeIndex, selectedVertexIndex, isShapePolygon, deltaX, deltaY);
 }
@@ -585,6 +629,16 @@ bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mo
 				isShapePolygon = true;
 				lastMouseX = ndcX;
 				lastMouseY = ndcY;
+
+				if (currentTransformationType == SCALE)
+				{
+					initialScaleMouseX = ndcX;
+					initialScaleMouseY = ndcY;
+					polybuilder.startScalingShape(selectedShapeIndex, isShapePolygon);
+					initialShapeWidth = maxX - minX;
+					initialShapeHeight = maxY - minY;
+				}
+
 				return true;
 			}
 		}
@@ -621,6 +675,16 @@ bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mo
 				isShapePolygon = false;
 				lastMouseX = ndcX;
 				lastMouseY = ndcY;
+
+				if (currentTransformationType == SCALE)
+				{
+					initialScaleMouseX = ndcX;
+					initialScaleMouseY = ndcY;
+					polybuilder.startScalingShape(selectedShapeIndex, isShapePolygon);
+					initialShapeWidth = maxX - minX;
+					initialShapeHeight = maxY - minY;
+				}
+
 				return true;
 			}
 		}
@@ -629,12 +693,13 @@ bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mo
 	return false;
 }
 
-void GUI::endDrag()
+void GUI::endDrag(PolyBuilder& polybuilder)
 {
 	isDraggingShape = false;
 	isDraggingVertex = false;
 	selectedShapeIndex = -1;
 	selectedVertexIndex = -1;
+	polybuilder.stopScalingShape();
 }
 
 void GUI::deleteVertex(GLFWwindow* window, PolyBuilder& polybuilder, double xPos, double yPos)
