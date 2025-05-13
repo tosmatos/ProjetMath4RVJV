@@ -242,6 +242,20 @@ void PolyBuilder::finishBezier()
     tempBezier = Bezier();
 }
 
+// For transformations that should take place on the center, like scaling or shearing
+Vertex PolyBuilder::calculateCenter(const std::vector<Vertex>& vertices)
+{
+    if (vertices.empty()) return { 0.0f, 0.0f };
+    float sumX = 0.0f;
+    float sumY = 0.0f;
+    for (const auto& vert : vertices)
+    {
+        sumX += vert.x;
+        sumY += vert.y;
+    }
+    return { sumX / vertices.size(), sumY / vertices.size() };
+}
+
 void PolyBuilder::cancel()
 {
     buildingPoly = false;

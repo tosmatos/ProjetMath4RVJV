@@ -38,6 +38,8 @@ private:
 
     void finishBezier();
 
+    Vertex calculateCenter(const std::vector<Vertex>& vertices);
+
 public:
     bool bezierMode;
 

@@ -22,6 +22,24 @@ struct Matrix3x3
 			}
 		}
 	}
+
+	Matrix3x3 operator*(const Matrix3x3 other) const
+	{
+		Matrix3x3 result;
+
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				for (int k = 0; k < 3; k++)
+				{
+					result.elements[i][j] += elements[i][k] * other.elements[k][j];
+				}
+			}
+		}
+
+		return result;
+	}
 };
 
 inline Matrix3x3 createTranslationMatrix(float tx, float ty)
