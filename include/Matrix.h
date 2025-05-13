@@ -38,18 +38,32 @@ inline Matrix3x3 createTranslationMatrix(float tx, float ty)
 inline Matrix3x3 createRotationMatrix(float angle)
 {
 	Matrix3x3 outMatrix;
+
+	outMatrix.elements[0][0] = cos(angle); // first row first column
+	outMatrix.elements[0][1] = -sin(angle); // first row second column
+	outMatrix.elements[1][0] = sin(angle); // second row first column
+	outMatrix.elements[1][1] = cos(angle); // second row second column
+
 	return outMatrix;
 }
 
 inline Matrix3x3 createScalingMatrix(float sx, float sy)
 {
 	Matrix3x3 outMatrix;
+
+	outMatrix.elements[0][0] = sx; // first row first column
+	outMatrix.elements[1][1] = sy; // second row second column
+
 	return outMatrix;
 }
 
 inline Matrix3x3 createShearingMatrix(float shx, float shy)
 {
 	Matrix3x3 outMatrix;
+
+	outMatrix.elements[0][1] = shx; // first row second column
+	outMatrix.elements[1][0] = shy; // second row first column
+
 	return outMatrix;
 }
 

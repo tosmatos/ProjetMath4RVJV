@@ -86,12 +86,76 @@ void PolyBuilder::rotate(int shapeIndex, bool isPolygon, float deltaX, float del
 
 void PolyBuilder::scale(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
 {
-    // TODO : implement this !
+    Matrix3x3 scalingMatrix = createScalingMatrix(deltaX, deltaY);
+
+    std::vector<Vertex> vertices;
+    if (isPolygon)
+    {
+        auto poly = finishedPolygons[shapeIndex];
+        vertices = poly.getVertices();
+    }
+    else
+    {
+        auto bezier = finishedBeziers[shapeIndex];
+        vertices = bezier.getControlPoints();
+    }
+
+    for (Vertex& vertex : vertices)
+    {
+        Vertex transformedPoint = multiplyMatrixVertex(scalingMatrix, vertex);
+        vertex.x = transformedPoint.x;
+        vertex.y = transformedPoint.y;
+    }
+
+    if (isPolygon)
+    {
+        Polygon& poly = finishedPolygons[shapeIndex];
+        poly.setVertices(vertices);
+        poly.updateBuffers();
+    }
+    else
+    {
+        Bezier& bezier = finishedBeziers[shapeIndex];
+        bezier.setControlPoints(vertices);
+        bezier.generateCurve(); // Updates buffers internally
+    }
 }
 
 void PolyBuilder::shear(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
 {
-    // TODO : implement this !
+    Matrix3x3 shearingMatrix = createShearingMatrix(deltaX, deltaY);
+
+    std::vector<Vertex> vertices;
+    if (isPolygon)
+    {
+        auto poly = finishedPolygons[shapeIndex];
+        vertices = poly.getVertices();
+    }
+    else
+    {
+        auto bezier = finishedBeziers[shapeIndex];
+        vertices = bezier.getControlPoints();
+    }
+
+    for (Vertex& vertex : vertices)
+    {
+        Vertex transformedPoint = multiplyMatrixVertex(shearingMatrix, vertex);
+        vertex.x = transformedPoint.x;
+        vertex.y = transformedPoint.y;
+    }
+
+    if (isPolygon)
+    {
+        Polygon& poly = finishedPolygons[shapeIndex];
+        poly.setVertices(vertices);
+        poly.updateBuffers();
+    }
+    else
+    {
+        Bezier& bezier = finishedBeziers[shapeIndex];
+        bezier.setControlPoints(vertices);
+        bezier.generateCurve(); // Updates buffers internally
+    }
 }
 
 void PolyBuilder::appendVertex(double xPos, double yPos)
