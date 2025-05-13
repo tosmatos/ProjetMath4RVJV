@@ -84,8 +84,6 @@ void PolyBuilder::rotate(int shapeIndex, bool isPolygon, float deltaX, float del
     // TODO : implement this !
 }
 
-// In PolyBuilder.cpp
-
 void PolyBuilder::startScalingShape(int shapeIndex, bool isPolygon)
 {
     if (isPolygon)
@@ -120,8 +118,6 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, bool isPolygon, float t
         return; // Not in a scaling operation or no original vertices
     }
 
-    //std::cout << "In applyScaleFromOriginal. shapeIndex : " << shapeIndex << std::endl;
-
     std::vector<Vertex> newVertices = transformOriginalVertices; // Work on a copy of the original
 
     Vertex center = calculateCenter(transformOriginalVertices); // Center of the *original* shape
@@ -129,8 +125,7 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, bool isPolygon, float t
     Matrix3x3 translateToOrigin = createTranslationMatrix(-center.x, -center.y);
     Matrix3x3 scalingMatrix = createScalingMatrix(totalScaleFactorX, totalScaleFactorY);
     Matrix3x3 translateBack = createTranslationMatrix(center.x, center.y);
-
-    Matrix3x3 finalMatrix = translateBack * scalingMatrix * translateToOrigin;
+    Matrix3x3 finalMatrix = translateToOrigin * scalingMatrix * translateBack;
 
     for (Vertex& vertex : newVertices)
     {
@@ -158,49 +153,6 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, bool isPolygon, float t
             bezier.setControlPoints(newVertices);
             bezier.generateCurve(); // This should update its buffers
         }
-    }
-}
-
-void PolyBuilder::scale(int shapeIndex, bool isPolygon, float scaleFactorX, float scaleFactorY)
-{
-    std::vector<Vertex> vertices;
-    if (isPolygon)
-    {
-        auto poly = finishedPolygons[shapeIndex];
-        vertices = poly.getVertices();
-    }
-    else
-    {
-        auto bezier = finishedBeziers[shapeIndex];
-        vertices = bezier.getControlPoints();
-    }
-
-    Vertex center = calculateCenter(vertices);
-
-    Matrix3x3 translateToOrigin = createTranslationMatrix(-center.x, -center.y);
-    Matrix3x3 translateBack = createTranslationMatrix(center.x, center.y);
-    Matrix3x3 scalingMatrix = createScalingMatrix(scaleFactorX, scaleFactorY);
-
-    Matrix3x3 finalMatrix = translateBack * scalingMatrix * translateToOrigin;
-
-    for (Vertex& vertex : vertices)
-    {
-        Vertex transformedPoint = multiplyMatrixVertex(finalMatrix, vertex);
-        vertex.x = transformedPoint.x;
-        vertex.y = transformedPoint.y;
-    }
-
-    if (isPolygon)
-    {
-        Polygon& poly = finishedPolygons[shapeIndex];
-        poly.setVertices(vertices);
-        poly.updateBuffers();
-    }
-    else
-    {
-        Bezier& bezier = finishedBeziers[shapeIndex];
-        bezier.setControlPoints(vertices);
-        bezier.generateCurve(); // Updates buffers internally
     }
 }
 

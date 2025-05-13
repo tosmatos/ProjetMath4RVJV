@@ -31,6 +31,8 @@ struct Matrix3x3
 		{
 			for (int j = 0; j < 3; j++)
 			{
+				// Initialize to 0! if not the 3rd component jumps up to 3.0 when multiplying
+				result.elements[i][j] = 0.0f;
 				for (int k = 0; k < 3; k++)
 				{
 					result.elements[i][j] += elements[i][k] * other.elements[k][j];
