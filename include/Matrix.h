@@ -1,5 +1,12 @@
 #pragma once
+#include <cmath> // For cos and sin
+
 #include "Vertex.h"
+
+/* Having a 3x3 matrix for 2D transformations is because we want to use
+* homogeneous coordinates. This lets us combine different transformations with ease
+* and is a standard in computer graphics it seems.
+* I'll admit this hasn't clicked for me yet. It will. */
 
 struct Matrix3x3
 {
@@ -24,6 +31,25 @@ inline Matrix3x3 createTranslationMatrix(float tx, float ty)
 	outMatrix.elements[0][2] = tx; // first row, third column
 	outMatrix.elements[1][2] = ty; // second row, third column
 
+	return outMatrix;
+}
+
+// Angle should be in radians I think
+inline Matrix3x3 createRotationMatrix(float angle)
+{
+	Matrix3x3 outMatrix;
+	return outMatrix;
+}
+
+inline Matrix3x3 createScalingMatrix(float sx, float sy)
+{
+	Matrix3x3 outMatrix;
+	return outMatrix;
+}
+
+inline Matrix3x3 createShearingMatrix(float shx, float shy)
+{
+	Matrix3x3 outMatrix;
 	return outMatrix;
 }
 
