@@ -9,16 +9,17 @@
 
 namespace GUI
 {
+	// For fill operations
 	int selectedPolygonIndex = -1;
 	bool awaitingFillSeed = false;
 	ImVec4 fillColor(0.0f, 0.0f, 1.0f, 1.0f);
 
-	bool isDraggingWindow = false;
+	// For dragging vertices and shapes
 	float lastMouseX = 0.0f;
 	float lastMouseY = 0.0f;
-	int selectedWindowIndex = -1;
 
 	bool isDraggingVertex = false;
+	bool isDraggingShape = false;
 	bool isShapePolygon = false;
 	int selectedShapeIndex = -1;
 	int selectedVertexIndex = -1;
@@ -450,20 +451,20 @@ void GUI::handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder)
 	lastMouseX = ndcX;
 	lastMouseY = ndcY;
 
-	if (isDraggingWindow && selectedWindowIndex != -1)
-		handleWindowDrag(window, polybuilder, deltaX, deltaY);
+	if (isDraggingShape && selectedShapeIndex != -1)
+		handleShapeDrag(window, polybuilder, deltaX, deltaY);
 	else if (isDraggingVertex && selectedShapeIndex != -1)
 		handleVertexDrag(window, polybuilder, deltaX, deltaY);
 }
 
-void GUI::handleWindowDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY)
+void GUI::handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY)
 {
 	// If we're not dragging, do nothing
-	if (!isDraggingWindow || selectedWindowIndex < 0)
+	if (!isDraggingShape || selectedShapeIndex < 0)
 		return;
 
 	// Apply movement to window polygon
-	polybuilder.movePolygon(selectedWindowIndex, deltaX, deltaY);
+	polybuilder.movePolygon(selectedShapeIndex, deltaX, deltaY);
 
 	// Update clipped polygons (based on current active clipping algorithm)
 	// Check if Sutherland-Hodgman clipped polygons exist
@@ -505,7 +506,7 @@ void GUI::handleVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, float d
 	polybuilder.updateVertexPosition(selectedShapeIndex, selectedVertexIndex, isShapePolygon, deltaX, deltaY);
 }
 
-bool GUI::startWindowDrag(GLFWwindow* window, int mouseButton, PolyBuilder& polybuilder)
+bool GUI::tryStartShapeDrag(GLFWwindow* window, int mouseButton, PolyBuilder& polybuilder)
 {
 	// Only allow dragging with middle mouse button or Ctrl+Left mouse
 	bool isCtrlPressed = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
@@ -555,8 +556,8 @@ bool GUI::startWindowDrag(GLFWwindow* window, int mouseButton, PolyBuilder& poly
 				// Check if point is in bounding box
 				if (ndcX >= minX && ndcX <= maxX && ndcY >= minY && ndcY <= maxY)
 				{
-					isDraggingWindow = true;
-					selectedWindowIndex = static_cast<int>(i);
+					isDraggingShape = true;
+					selectedShapeIndex = static_cast<int>(i);
 					lastMouseX = ndcX;
 					lastMouseY = ndcY;
 					return true;
@@ -570,8 +571,7 @@ bool GUI::startWindowDrag(GLFWwindow* window, int mouseButton, PolyBuilder& poly
 
 void GUI::endDrag()
 {
-	isDraggingWindow = false;
-	selectedWindowIndex = -1;
+	isDraggingShape = false;
 	isDraggingVertex = false;
 	selectedShapeIndex = -1;
 	selectedVertexIndex = -1;

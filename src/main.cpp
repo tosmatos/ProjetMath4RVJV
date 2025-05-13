@@ -14,7 +14,6 @@
 
 bool openContextMenu;
 bool showFillSettings = true;
-bool leftMouseDown = false;
 double lastClickX = 0, lastClickY = 0;
 PolyBuilder polybuilder;
 
@@ -44,6 +43,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 	double xPos, yPos;
 	glfwGetCursorPos(window, &xPos, &yPos);
 
+	// LMB 
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
 		//std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
@@ -58,42 +58,37 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 			// Handle fill click
 			lastClickX = xPos;
 			lastClickY = yPos;
-			leftMouseDown = true;
 
 			// Process fill click
 			GUI::handleFillClick(window, polybuilder, xPos, yPos);
 		}
 		else
 		{
-			GUI::tryStartVertexDrag(window, polybuilder, xPos, yPos);
+			if (GUI::tryStartVertexDrag(window, polybuilder, xPos, yPos))
+			{
+				return; // Successfully found vertex to drag
+			}
+			else
+			{
+				GUI::tryStartShapeDrag(window, button, polybuilder);
+			}
 		}
 	}
-	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+
+	// RMB actions
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 	{
-		leftMouseDown = false;
+		openContextMenu = true;
 	}
 
+	// MMB actions
 	if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS)
 	{
 		GUI::deleteVertex(window, polybuilder, xPos, yPos);
 	}
 
-	if (action == GLFW_PRESS)
-	{
-        // Try to start window drag first
-        if (GUI::startWindowDrag(window, button, polybuilder))
-		{
-            return; // Successfully started drag, don't process further
-        }
-
-        if (button == GLFW_MOUSE_BUTTON_RIGHT)
-		{
-            openContextMenu = true;
-        }
-    }
-
     // Handle drag end
-    if (action == GLFW_RELEASE)
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
 	{
         GUI::endDrag();
     }

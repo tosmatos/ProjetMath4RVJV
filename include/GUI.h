@@ -10,21 +10,20 @@ namespace GUI {
 	extern bool awaitingFillSeed;
 	extern ImVec4 fillColor;
 
-	extern bool isDraggingWindow;
 	extern float lastMouseX;
 	extern float lastMouseY;
-	extern int selectedWindowIndex;
 
+	extern bool isDraggingShape;
 	extern bool isDraggingVertex;
 	extern bool isShapePolygon;
 	extern int selectedShapeIndex;
 	extern int selectedVertexIndex;
 
     // Functions for real-time shape movement and clipping
-    bool startWindowDrag(GLFWwindow* window, int mouseButton, PolyBuilder& polybuilder);
+    bool tryStartShapeDrag(GLFWwindow* window, int mouseButton, PolyBuilder& polybuilder);
 	bool tryStartVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, double xPos, double yPos);
     void handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder);
-	void handleWindowDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY);
+	void handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY);
 	void handleVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY);
     void endDrag();
 	

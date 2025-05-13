@@ -75,8 +75,7 @@ void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float 
     {
         Bezier& bezier = finishedBeziers[shapeIndex];
         bezier.setControlPoints(vertices);
-        bezier.generateCurve();
-        bezier.updateBuffers();
+        bezier.generateCurve(); // Updates buffers internally
     }
 }
 
