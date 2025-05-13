@@ -460,7 +460,6 @@ void GUI::handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder)
 
 void GUI::handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, float deltaX, float deltaY)
 {
-	std::cout << "Dragging" << std::endl;
 	// If we're not dragging, do nothing
 	if (!isDraggingShape || selectedShapeIndex < 0)
 		return;

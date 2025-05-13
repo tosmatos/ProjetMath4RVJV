@@ -43,55 +43,50 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
 	double xPos, yPos;
 	glfwGetCursorPos(window, &xPos, &yPos);
 
-	// LMB 
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	if (action == GLFW_PRESS)
 	{
-		//std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
+		if (button == GLFW_MOUSE_BUTTON_LEFT)
+		{
+			//std::cout << "Mouse position : x = " << xPos << ", y = " << yPos << std::endl;
 
 		// Check if in polygon building mode or fill mode
-		if (polybuilder.isBuilding())
-		{
-			polybuilder.appendVertex(xPos, yPos);
-		}
-		else if (GUI::awaitingFillSeed)
-		{
-			// Handle fill click
-			lastClickX = xPos;
-			lastClickY = yPos;
-
-			// Process fill click
-			GUI::handleFillClick(window, polybuilder, xPos, yPos);
-		}
-		else
-		{
-			if (GUI::tryStartVertexDrag(window, polybuilder, xPos, yPos))
+			if (polybuilder.isBuilding())
 			{
-				return; // Successfully found vertex to drag
+				polybuilder.appendVertex(xPos, yPos);
+			}
+			else if (GUI::awaitingFillSeed)
+			{
+				// Handle fill click
+				lastClickX = xPos;
+				lastClickY = yPos;
+
+				// Process fill click
+				GUI::handleFillClick(window, polybuilder, xPos, yPos);
 			}
 			else
 			{
-				GUI::tryStartShapeDrag(window, polybuilder, mods);
+				if (GUI::tryStartVertexDrag(window, polybuilder, xPos, yPos))
+				{
+					return; // Successfully found vertex to drag
+				}
+				else
+				{
+					GUI::tryStartShapeDrag(window, polybuilder, mods);
+				}
 			}
 		}
-	}
 
-	// RMB actions
-	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-	{
-		openContextMenu = true;
-	}
+		if (button == GLFW_MOUSE_BUTTON_RIGHT)
+			openContextMenu = true;
 
-	// MMB actions
-	if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS)
-	{
-		GUI::deleteVertex(window, polybuilder, xPos, yPos);
+		if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+			GUI::deleteVertex(window, polybuilder, xPos, yPos);
 	}
-
-    // Handle drag end
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+	else if (action == GLFW_RELEASE)
 	{
-        GUI::endDrag();
-    }
+		if (button == GLFW_MOUSE_BUTTON_LEFT)
+			GUI::endDrag();
+	}
 }
 	
 
