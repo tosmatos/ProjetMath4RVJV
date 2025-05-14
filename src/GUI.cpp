@@ -488,7 +488,8 @@ void GUI::handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder)
 	}
 	case ROTATE:
 	{
-		polybuilder.applyRotationFromOriginal(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
+		float totalRotationAngle = ndcX - initialScaleMouseX;
+		polybuilder.applyRotationFromOriginal(selectedShapeIndex, isShapePolygon, -totalRotationAngle);
 		break;
 	}		
 	case SHEAR:

@@ -179,9 +179,41 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, bool isPolygon, float t
     }
 }
 
-void PolyBuilder::applyRotationFromOriginal(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
+void PolyBuilder::applyRotationFromOriginal(int shapeIndex, bool isPolygon, float totalRotationAngle)
 {
-    // TODO : implement this !
+    if (!isCurrentlyTransformingShape || transformOriginalVertices.empty())
+    {
+        return; // Not in a scaling operation or no original vertices
+    }
+
+    std::vector<Vertex> newVertices = transformOriginalVertices; // Work on a copy of the original
+
+    Vertex center = calculateCenter(transformOriginalVertices); // Center of the *original* shape
+
+    Matrix3x3 translateToOrigin = createTranslationMatrix(-center.x, -center.y);
+    Matrix3x3 rotationMatrix = createRotationMatrix(totalRotationAngle);
+    Matrix3x3 translateBack = createTranslationMatrix(center.x, center.y);
+    Matrix3x3 finalMatrix = translateBack * rotationMatrix * translateToOrigin;
+
+    for (Vertex& vertex : newVertices)
+    {
+        Vertex transformedPoint = multiplyMatrixVertex(finalMatrix, vertex);
+        vertex.x = transformedPoint.x;
+        vertex.y = transformedPoint.y;
+    }
+
+    if (isPolygon)
+    {
+        Polygon& poly = finishedPolygons[shapeIndex];
+        poly.setVertices(newVertices);
+        poly.updateBuffers();
+    }
+    else
+    {
+        Bezier& bezier = finishedBeziers[shapeIndex];
+        bezier.setControlPoints(newVertices);
+        bezier.generateCurve(); // Updates buffers internally
+    }
 }
 
 void PolyBuilder::applyShearFromOriginal(int shapeIndex, bool isPolygon, float totalShearX, float totalShearY)
