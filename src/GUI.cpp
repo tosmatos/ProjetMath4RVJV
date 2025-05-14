@@ -560,7 +560,7 @@ void GUI::handleVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder)
 	lastMouseX = ndcX;
 	lastMouseY = ndcY;
 
-	polybuilder.updateVertexPosition(selectedShapeIndex, selectedVertexIndex, isShapePolygon, deltaX, deltaY);
+	polybuilder.translateVertex(selectedShapeIndex, selectedVertexIndex, isShapePolygon, deltaX, deltaY);
 }
 
 bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mods)
@@ -782,6 +782,8 @@ bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, doubl
 				foundMatch = true;
 				isShapePolygon = true;
 				isDraggingVertex = true;
+				lastMouseX = ndcX;
+				lastMouseY = ndcY;
 				break;
 			}
 		}
@@ -811,6 +813,8 @@ bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, doubl
 				foundMatch = true;
 				isShapePolygon = false;
 				isDraggingVertex = true;
+				lastMouseX = ndcX;
+				lastMouseY = ndcY;
 				break;
 			}
 		}

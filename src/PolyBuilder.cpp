@@ -113,6 +113,42 @@ void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float 
     }
 }
 
+void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, bool isPolygon, float deltaX, float deltaY)
+{
+    Matrix3x3 translationMatrix = createTranslationMatrix(deltaX, deltaY);
+
+    std::vector<Vertex> vertices;
+    if (isPolygon)
+    {
+        auto poly = finishedPolygons[shapeIndex];
+        vertices = poly.getVertices();
+    }
+    else
+    {
+        auto bezier = finishedBeziers[shapeIndex];
+        vertices = bezier.getControlPoints();
+    }
+
+    Vertex& vertex = vertices[vertexIndex];
+
+    Vertex transformedPoint = multiplyMatrixVertex(translationMatrix, vertex);
+    vertex.x = transformedPoint.x;
+    vertex.y = transformedPoint.y;
+
+    if (isPolygon)
+    {
+        Polygon& poly = finishedPolygons[shapeIndex];
+        poly.setVertices(vertices);
+        poly.updateBuffers();
+    }
+    else
+    {
+        Bezier& bezier = finishedBeziers[shapeIndex];
+        bezier.setControlPoints(vertices);
+        bezier.generateCurve(); // Updates buffers internally
+    }
+}
+
 void PolyBuilder::startTransformingShape(int shapeIndex, bool isPolygon)
 {
     if (isPolygon)

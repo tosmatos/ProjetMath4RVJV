@@ -106,6 +106,7 @@ public:
 
     // Translation is an affine transformation
     void translate(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
+    void translateVertex(int shapeIndex, int vertexIndex, bool isPolygon, float deltaX, float deltaY);
 
     // For linear transformations
     void startTransformingShape(int shapeIndex, bool isPolygon);
