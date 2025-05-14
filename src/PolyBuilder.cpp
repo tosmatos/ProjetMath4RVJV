@@ -418,7 +418,10 @@ void PolyBuilder::finishBezier()
     if (!buildingPoly)
         return;
 
-    bezier = tempBezier;
+    bezier = tempBezier;    
+    auto hull = computeJarvisHull(bezier.getControlPoints());
+    std::cout << "Number of points in convex hull : " << hull.size() << std::endl;
+    bezier.setConvexHull(hull);    
     bezier.generateCurve(); // Generate buffers is called from generate curve
     finishedBeziers.push_back(bezier);
     buildingPoly = false;

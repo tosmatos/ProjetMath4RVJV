@@ -134,6 +134,7 @@ Bezier::Bezier(const Bezier& other) : controlPoints(other.controlPoints), buffer
     controlPoints = other.controlPoints;
     
     generatedCurve = other.generatedCurve;
+    convexHull = other.convexHull;
     //type = other.type;
     if (other.buffersInitialized)
     {
@@ -149,12 +150,15 @@ Bezier& Bezier::operator=(const Bezier& other)
         {
             glDeleteVertexArrays(1, &controlVAO);
             glDeleteVertexArrays(1, &curveVAO);
+            glDeleteVertexArrays(1, &hullVAO);
             glDeleteBuffers(1, &controlVBO);
             glDeleteBuffers(1, &curveVBO);
+            glDeleteBuffers(1, &hullVBO);
             buffersInitialized = false;
         }
         controlPoints = other.controlPoints;
         generatedCurve = other.generatedCurve;
+        convexHull = other.convexHull;
         
         //type = other.type;
         if (other.buffersInitialized)
@@ -173,8 +177,10 @@ Bezier::~Bezier()
         // This prevents memory leaks in the GPU
         glDeleteVertexArrays(1, &controlVAO);
         glDeleteVertexArrays(1, &curveVAO);
+        glDeleteVertexArrays(1, &hullVAO);
         glDeleteBuffers(1, &controlVBO);
         glDeleteBuffers(1, &curveVBO);
+        glDeleteBuffers(1, &hullVAO);
     }
 }
 
@@ -194,8 +200,10 @@ void Bezier::updateBuffers()
     {
         glGenVertexArrays(1, &controlVAO);
         glGenVertexArrays(1, &curveVAO);
+        glGenVertexArrays(1, &hullVAO);
         glGenBuffers(1, &controlVBO);
         glGenBuffers(1, &curveVBO);
+        glGenBuffers(1, &hullVBO);
         buffersInitialized = true;
     }
 
@@ -221,6 +229,20 @@ void Bezier::updateBuffers()
 
     // Enable the vertex attribute we just configured
     glEnableVertexAttribArray(0);
+    
+    if (convexHull.size() != 0)
+    {
+        // Again for the hull
+        glBindVertexArray(hullVAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, hullVBO);
+        glBufferData(GL_ARRAY_BUFFER, convexHull.size() * sizeof(Vertex), convexHull.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+        glEnableVertexAttribArray(0);
+
+        // Enable the vertex attribute we just configured
+        glEnableVertexAttribArray(0);
+    }
 }
 
 const void Bezier::drawControlPoints(Shader& shader) const
@@ -247,6 +269,8 @@ const void Bezier::drawControlPoints(Shader& shader) const
     {
         std::cout << "OpenGL error after drawing: " << error << std::endl;
     }
+
+    std::cout << "Number of points in convex hull : " << convexHull.size() << std::endl;
 }
 
 const void Bezier::drawGeneratedCurve(Shader& shader) const
@@ -281,6 +305,18 @@ const void Bezier::drawGeneratedCurvePreview(Shader& shader) const
 
     shader.setColor("uColor", 0.0f, 1.0f, 1.0f, 1.0f);
     glDrawArrays(GL_LINE_STRIP, 0, generatedCurve.size());
+}
+
+const void Bezier::drawConvexHull(Shader& shader) const
+{
+    shader.use();
+    glBindVertexArray(hullVAO);
+
+    shader.setColor("uColor", 0.0f, 1.0f, 0.5f, 0.25f);
+    glDrawArrays(GL_LINE_LOOP, 0, convexHull.size());
+
+    shader.setColor("uColor", 1.0f, 1.0f, 1.0f, 0.25f);
+    glDrawArrays(GL_POINTS, 0, convexHull.size());
 }
 
 void Bezier::generateCurve()

@@ -273,6 +273,7 @@ int main()
 		{
 			bezier.drawControlPoints(shader);
 			bezier.drawGeneratedCurve(shader);
+			bezier.drawConvexHull(shader);
 		}
 
 		// ImGui Rendering

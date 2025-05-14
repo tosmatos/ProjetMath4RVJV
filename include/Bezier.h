@@ -10,9 +10,10 @@ class Bezier
 private:
 	std::vector<Vertex> controlPoints; // Control points, what the user defined
 	std::vector<Vertex> generatedCurve; // That's the actual curve when the user's finished
+	std::vector<Vertex> convexHull;
 
-	unsigned int controlVAO, curveVAO; // Vertex Array Object for saving VBO settings
-	unsigned int controlVBO, curveVBO; // Vertex Buffer Object for each drawn shape
+	unsigned int controlVAO, curveVAO, hullVAO; // Vertex Array Object for saving VBO settings
+	unsigned int controlVBO, curveVBO, hullVBO; // Vertex Buffer Object for each drawn shape
 
 	bool buffersInitialized = false;
 
@@ -36,14 +37,16 @@ public:
 	void addControlPoint(Vertex vertex);
 
 	void updateBuffers();
-	const void drawControlPoints(Shader& shader) const;
+	const void drawControlPoints(Shader& shader) const;	
 	const void drawGeneratedCurve(Shader& shader) const;
 	const void drawControlPointsPreview(Shader& shader) const;
 	const void drawGeneratedCurvePreview(Shader& shader) const;
+	const void drawConvexHull(Shader& shader) const;
 
 	const std::vector<Vertex>& getControlPoints() const { return controlPoints; };
 	const std::vector<Vertex>& getGeneratedCurve() const { return generatedCurve; };
 	void setControlPoints(std::vector<Vertex> controlPointsVector) { controlPoints = controlPointsVector; };
+	void setConvexHull(std::vector<Vertex> newConvexHull) { convexHull = newConvexHull; };
 
 	void generateCurve(); // When control points are set, this will be called
 	const int getAlgorithm() const { return algorithm; };
