@@ -40,7 +40,6 @@ private:
 
     Vertex calculateCenter(const std::vector<Vertex>& vertices);
 
-    float scaleSensitivity = 1.0f;
     std::vector<Vertex> transformOriginalVertices;
     bool isCurrentlyTransformingShape = false;
 
@@ -113,7 +112,5 @@ public:
     void applyScaleFromOriginal(int shapeIndex, bool isPolygon, float totalScaleFactorX, float totalScaleFactorY);
     void applyRotationFromOriginal(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
     void applyShearFromOriginal(int shapeIndex, bool isPolygon, float totalShearX, float totalShearY);
-
-    const float getScaleSensitivity() const { return scaleSensitivity; };
     
 };

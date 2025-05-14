@@ -478,19 +478,19 @@ void GUI::handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder)
 		float totalMouseDeltaX = ndcX - initialScaleMouseX;
 		float totalMouseDeltaY = ndcY - initialScaleMouseY;
 
-		float scaleSensitivity = polybuilder.getScaleSensitivity();
-
 		// Apply scale sensitivity directly to the mouse delta
-		float targetTotalScaleFactorX = 1.0f + totalMouseDeltaX * scaleSensitivity;
-		float targetTotalScaleFactorY = 1.0f + totalMouseDeltaY * scaleSensitivity;
+		float targetTotalScaleFactorX = 1.0f + totalMouseDeltaX;
+		float targetTotalScaleFactorY = 1.0f + totalMouseDeltaY;
 
 		polybuilder.applyScaleFromOriginal(selectedShapeIndex, isShapePolygon,
 			targetTotalScaleFactorX, targetTotalScaleFactorY);
 		break;
 	}
 	case ROTATE:
+	{
 		polybuilder.applyRotationFromOriginal(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
 		break;
+	}		
 	case SHEAR:
 	{
 		float totalShearX = ndcX - initialScaleMouseX; // Maybe add sensitivity here as well
