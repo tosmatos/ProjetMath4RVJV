@@ -131,11 +131,20 @@ void GUI::drawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
 				polybuilder.decrementBezierStepSize(index);
 
 			ImGui::SetItemTooltip("Decrement Step Size by 0.01");
+
+			ImGui::SameLine();
+			if (ImGui::Button(("[H]##" + std::to_string(index)).c_str()))
+				polybuilder.toggleHullDisplay(index);
+
+			ImGui::SetItemTooltip("Toggle Convex Hull Display");
+
 			ImGui::SameLine();
 			if (ImGui::Button(("X##" + std::to_string(index)).c_str()))
 				indicesToRemove.push_back(index);
 				
 			ImGui::SetItemTooltip("Delete Bézier Curve");
+
+			
 
 			ImGui::SameLine();
 			ImGui::Text("Generated in %.7f seconds.", generationTime);

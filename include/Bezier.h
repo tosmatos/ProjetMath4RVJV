@@ -25,6 +25,8 @@ private:
 	void generatePascalCurve();
 	void generateDeCasteljauCurve();
 
+	bool shouldShowConvexHull = false;
+
 public:
 	//PolyType type; // Not sure this will be useful for now
 
@@ -60,6 +62,9 @@ public:
 	const double getGenerationTime() const { return generationTime; };
 
 	void duplicateControlPoint(int index);
+
+	void toggleConvexHullDisplay() { shouldShowConvexHull = !shouldShowConvexHull; };
+	const bool getShouldShowConvexHull() const { return shouldShowConvexHull; };
 
 	// Not sure if those two are gonna be necessary or useful
 	//bool isClockwise() const;

@@ -108,6 +108,7 @@ public:
     void swapBezierAlgorithm(size_t index);
     void incrementBezierStepSize(size_t index);
     void decrementBezierStepSize(size_t index);
+    void toggleHullDisplay(size_t index);
 
     void duplicateControlPoint(int shapeIndex, int vertexIndex);
 

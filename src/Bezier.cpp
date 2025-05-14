@@ -269,8 +269,6 @@ const void Bezier::drawControlPoints(Shader& shader) const
     {
         std::cout << "OpenGL error after drawing: " << error << std::endl;
     }
-
-    std::cout << "Number of points in convex hull : " << convexHull.size() << std::endl;
 }
 
 const void Bezier::drawGeneratedCurve(Shader& shader) const
