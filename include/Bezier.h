@@ -51,8 +51,8 @@ public:
 
 	const float getStepSize() const { return stepSize; };
 	void setStepSize(float step) { stepSize = step; };
-	void incrementStepSize() { stepSize += 0.001f; generateCurve(); };
-	void decrementStepSize() { stepSize -= 0.001f; generateCurve(); };
+	void incrementStepSize();
+	void decrementStepSize();
 
 	const double getGenerationTime() const { return generationTime; };
 

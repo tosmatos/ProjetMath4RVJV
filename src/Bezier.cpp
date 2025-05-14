@@ -308,6 +308,24 @@ void Bezier::generateCurve()
     //std::cout << "Generation took " << std::fixed << std::setprecision(7) << generationTime << " seconds." << std::endl;
 }
 
+void Bezier::incrementStepSize()
+{
+    if (stepSize >= 1.0f)
+        return;
+
+    stepSize += 0.001f;
+    generateCurve();
+}
+
+void Bezier::decrementStepSize()
+{
+    if (stepSize <= 0.001f)
+        return;
+
+    stepSize -= 0.001f;
+    generateCurve();
+}
+
 void Bezier::duplicateControlPoint(int index)
 {
     controlPoints.insert(controlPoints.begin() + index, controlPoints[index]);
