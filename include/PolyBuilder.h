@@ -112,7 +112,7 @@ public:
 
     void applyScaleFromOriginal(int shapeIndex, bool isPolygon, float totalScaleFactorX, float totalScaleFactorY);
     void applyRotationFromOriginal(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
-    void applyShearFromOriginal(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
+    void applyShearFromOriginal(int shapeIndex, bool isPolygon, float totalShearX, float totalShearY);
 
     const float getScaleSensitivity() const { return scaleSensitivity; };
     

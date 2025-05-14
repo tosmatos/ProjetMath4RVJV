@@ -480,30 +480,24 @@ void GUI::handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder)
 
 		float scaleSensitivity = polybuilder.getScaleSensitivity();
 
-		/*std::cout << "Initial mouse movement: " << totalMouseDeltaX << ", " << totalMouseDeltaY << std::endl;
-		std::cout << "Scale sensitivity: " << scaleSensitivity << std::endl;*/
-
 		// Apply scale sensitivity directly to the mouse delta
 		float targetTotalScaleFactorX = 1.0f + totalMouseDeltaX * scaleSensitivity;
 		float targetTotalScaleFactorY = 1.0f + totalMouseDeltaY * scaleSensitivity;
 
-		// Clamp to avoid extreme scaling
-		const float minScale = 0.1f;
-		targetTotalScaleFactorX = std::max(targetTotalScaleFactorX, minScale);
-		targetTotalScaleFactorY = std::max(targetTotalScaleFactorY, minScale);
-
-		std::cout << "Target Total Delta X,Y : " << targetTotalScaleFactorX << "," << targetTotalScaleFactorY << std::endl;
-
 		polybuilder.applyScaleFromOriginal(selectedShapeIndex, isShapePolygon,
 			targetTotalScaleFactorX, targetTotalScaleFactorY);
 		break;
-	}		
+	}
 	case ROTATE:
 		polybuilder.applyRotationFromOriginal(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
 		break;
 	case SHEAR:
-		polybuilder.applyShearFromOriginal(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
+	{
+		float totalShearX = ndcX - initialScaleMouseX; // Maybe add sensitivity here as well
+		float totalShearY = ndcY - initialScaleMouseY;
+		polybuilder.applyShearFromOriginal(selectedShapeIndex, isShapePolygon, totalShearX, totalShearY);
 		break;
+	}
 	}
 
 	// Update clipped polygons (based on current active clipping algorithm)
@@ -569,21 +563,13 @@ bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mo
 	// Determine transformation type based on modifiers
 	// & is bitwise AND operator. If both bits are 1, result is true
 	if (mods & GLFW_MOD_CONTROL)
-	{
 		currentTransformationType = SCALE;
-	}
 	else if (mods & GLFW_MOD_SHIFT)
-	{
 		currentTransformationType = ROTATE;
-	}
 	else if (mods & GLFW_MOD_ALT)
-	{
 		currentTransformationType = SHEAR;
-	}
 	else
-	{
 		currentTransformationType = TRANSLATE;
-	}
 
 	// Check if we're hovering over a window polygon
 	double xPos, yPos;
@@ -630,7 +616,7 @@ bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mo
 				lastMouseX = ndcX;
 				lastMouseY = ndcY;
 
-				if (currentTransformationType == SCALE)
+				if (currentTransformationType != TRANSLATE)
 				{
 					initialScaleMouseX = ndcX;
 					initialScaleMouseY = ndcY;
@@ -676,7 +662,7 @@ bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mo
 				lastMouseX = ndcX;
 				lastMouseY = ndcY;
 
-				if (currentTransformationType == SCALE)
+				if (currentTransformationType != TRANSLATE)
 				{
 					initialScaleMouseX = ndcX;
 					initialScaleMouseY = ndcY;

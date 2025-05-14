@@ -148,7 +148,7 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, bool isPolygon, float t
     Matrix3x3 translateToOrigin = createTranslationMatrix(-center.x, -center.y);
     Matrix3x3 scalingMatrix = createScalingMatrix(totalScaleFactorX, totalScaleFactorY);
     Matrix3x3 translateBack = createTranslationMatrix(center.x, center.y);
-    Matrix3x3 finalMatrix = translateToOrigin * scalingMatrix * translateBack;
+    Matrix3x3 finalMatrix = translateBack * scalingMatrix * translateToOrigin;
 
     for (Vertex& vertex : newVertices)
     {
@@ -184,25 +184,25 @@ void PolyBuilder::applyRotationFromOriginal(int shapeIndex, bool isPolygon, floa
     // TODO : implement this !
 }
 
-void PolyBuilder::applyShearFromOriginal(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
+void PolyBuilder::applyShearFromOriginal(int shapeIndex, bool isPolygon, float totalShearX, float totalShearY)
 {
-    Matrix3x3 shearingMatrix = createShearingMatrix(deltaX, deltaY);
-
-    std::vector<Vertex> vertices;
-    if (isPolygon)
+    if (!isCurrentlyTransformingShape || transformOriginalVertices.empty())
     {
-        auto poly = finishedPolygons[shapeIndex];
-        vertices = poly.getVertices();
-    }
-    else
-    {
-        auto bezier = finishedBeziers[shapeIndex];
-        vertices = bezier.getControlPoints();
+        return; // Not in a scaling operation or no original vertices
     }
 
-    for (Vertex& vertex : vertices)
+    std::vector<Vertex> newVertices = transformOriginalVertices; // Work on a copy of the original
+
+    Vertex center = calculateCenter(transformOriginalVertices); // Center of the *original* shape
+
+    Matrix3x3 translateToOrigin = createTranslationMatrix(-center.x, -center.y);
+    Matrix3x3 shearingMatrix = createShearingMatrix(totalShearX, totalShearY);
+    Matrix3x3 translateBack = createTranslationMatrix(center.x, center.y);
+    Matrix3x3 finalMatrix = translateBack * shearingMatrix * translateToOrigin;
+
+    for (Vertex& vertex : newVertices)
     {
-        Vertex transformedPoint = multiplyMatrixVertex(shearingMatrix, vertex);
+        Vertex transformedPoint = multiplyMatrixVertex(finalMatrix, vertex);
         vertex.x = transformedPoint.x;
         vertex.y = transformedPoint.y;
     }
@@ -210,13 +210,13 @@ void PolyBuilder::applyShearFromOriginal(int shapeIndex, bool isPolygon, float d
     if (isPolygon)
     {
         Polygon& poly = finishedPolygons[shapeIndex];
-        poly.setVertices(vertices);
+        poly.setVertices(newVertices);
         poly.updateBuffers();
     }
     else
     {
         Bezier& bezier = finishedBeziers[shapeIndex];
-        bezier.setControlPoints(vertices);
+        bezier.setControlPoints(newVertices);
         bezier.generateCurve(); // Updates buffers internally
     }
 }
