@@ -225,7 +225,6 @@ void Bezier::generateCurve()
 void Bezier::generatePascalCurve()
 {
     //std::cout << "Generating curve with Pascal algorithm..." << std::endl;
-    auto start = std::chrono::steady_clock::now(); // type is time_point
 
     // the degree of the bézier curve
     int degree = controlPoints.size() - 1;

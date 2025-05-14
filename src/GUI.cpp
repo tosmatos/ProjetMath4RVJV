@@ -112,6 +112,7 @@ void GUI::drawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
 			int curvePoints = bezier.getGeneratedCurve().size();
 			int algorithm = bezier.getAlgorithm();
 			std::string algoString = algorithm == 0 ? "Pascal" : "DeCasteljau";
+			double generationTime = bezier.getGenerationTime();
 
 			ImGui::Text("%d : Step Size = %.3f, Control Points : %d, Curve Points : %d, Algorithm : %s",
 				static_cast<int>(index), stepSize, controlPoints, curvePoints, algoString.c_str());
@@ -135,6 +136,9 @@ void GUI::drawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
 				indicesToRemove.push_back(index);
 				
 			ImGui::SetItemTooltip("Delete Bézier Curve");
+
+			ImGui::SameLine();
+			ImGui::Text("Generated in %.7f seconds.", generationTime);
 
 			ImGui::Separator();
 		}

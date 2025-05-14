@@ -54,6 +54,8 @@ public:
 	void incrementStepSize() { stepSize += 0.001f; generateCurve(); };
 	void decrementStepSize() { stepSize -= 0.001f; generateCurve(); };
 
+	const double getGenerationTime() const { return generationTime; };
+
 	// Not sure if those two are gonna be necessary or useful
 	//bool isClockwise() const;
 	//void reverseOrientation(); // Makes polygon clockwise if counter clockwise and the opposite
