@@ -42,6 +42,34 @@ void PolyBuilder::decrementBezierStepSize(size_t index)
         finishedBeziers[index].decrementStepSize();
 }
 
+/* Why translation can be done with one matrix while others cannot:
+ * Translation is an affine transformation, while scale, rotation and shear are linear transformations.
+ *
+ * Linear transformations have two critical properties:
+ * 1. They preserve the origin (0,0) -> (0,0)
+ * 2. They preserve vector addition and scalar multiplication
+ *
+ * For operations like scaling and rotation around a shape's center, we need to:
+ *   a) Translate to origin
+ *   b) Apply the linear transformation
+ *   c) Translate back to original position
+ *
+ * This connects to homogeneous coordinates where we distinguish:
+ * - Points: positions in space (x,y,1)
+ * - Vectors: directions with magnitude (x,y,0)
+ *
+ * In homogeneous coordinates, a 3x3 transformation matrix has form:
+ * | a b tx |
+ * | c d ty |
+ * | 0 0 1  |
+ *
+ * - For points (w=1): Both the linear part (a,b,c,d) AND translation (tx,ty) apply
+ * - For vectors (w=0): Only the linear part applies, translation is ignored
+ *
+ * This is why we need to track original vertices for linear transformations—to prevent
+ * unwanted compounding effects when applying multiple transformations.
+ */
+
 void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
 {
     Matrix3x3 translationMatrix = createTranslationMatrix(deltaX, deltaY);
