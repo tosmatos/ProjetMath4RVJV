@@ -56,6 +56,7 @@ namespace GUI {
 	void handleNonSeedFill(PolyBuilder& polyBuilder);
 	void handleSeedFill(PolyBuilder& polyBuilder, float ndcX, float ndcY);
 	void drawBuildingHelpTextbox(GLFWwindow* window, bool* open = nullptr);
+	void drawTransformationHelpTextbox(GLFWwindow* window, bool* open = nullptr);
 
 	void tryDuplicateVertex(GLFWwindow* window, PolyBuilder& polybuilder);
 }

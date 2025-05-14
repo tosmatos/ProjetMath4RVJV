@@ -196,6 +196,7 @@ int main()
 		GUI::drawFillSettingsPanel(&showFillSettings); // Fill settings panel
 		if (polybuilder.isBuilding())
 			GUI::drawBuildingHelpTextbox(window);
+		GUI::drawTransformationHelpTextbox(window);
 
 		// Rendering
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
