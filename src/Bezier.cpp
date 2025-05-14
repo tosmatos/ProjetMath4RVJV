@@ -38,6 +38,92 @@ long long static combinations(int n, int k)
     return res;
 }
 
+void Bezier::generatePascalCurve()
+{
+    //std::cout << "Generating curve with Pascal algorithm..." << std::endl;
+
+    // the degree of the bézier curve
+    int degree = controlPoints.size() - 1;
+
+    // Compute number of segments beforehand
+    // Because if it becomes too small, errors accumualte and the loop never finishes
+    int numSegments = static_cast<int>(1.0f / stepSize);
+
+    // t represents the position along the curve
+    for (int i = 0; i <= numSegments; i++)
+    {
+        // We calculate t here
+        float t = static_cast<float>(i) / numSegments;
+
+        Vertex pointOnCurve; // Initialize the result vertex
+
+        // sum of the contributions of each control point
+        for (int j = 0; j <= degree; ++j)
+        {
+            // Calculate the Bernstein polynomial term for the j-th control point and current 't'
+            // The formula is: BinomialCoefficient(n, j) * (1-t)^(n-j) * t^j
+            // Where n is the degree of the curve
+            // C.f Maths Chap 1 Courbes - 3 Base de bernstein
+            float bernsteinTerm = static_cast<float>(combinations(degree, j)) *
+                std::pow(1.0 - t, degree - j) *
+                std::pow(t, j);
+
+            // Add the weighted control point to the current point on the curve
+            pointOnCurve += controlPoints[j] * bernsteinTerm;
+        }
+
+        generatedCurve.push_back(pointOnCurve);
+    }
+
+    // Update buffers to send the new curve data to the GPU
+    updateBuffers();
+}
+
+// For now this takes longer than Pascal, and the reason is probably the vector creation and copying in the loop.
+// New bonus point to do !
+void Bezier::generateDeCasteljauCurve()
+{
+    //std::cout << "Generating curve with DeCasteljau algorithm..." << std::endl;
+
+    // Compute number of segments beforehand
+    // Because if it becomes too small, errors accumualte and the loop never finishes
+    int numSegments = static_cast<int>(1.0f / stepSize);
+
+    // t represents the position along the curve
+    for (int i = 0; i <= numSegments; i++)
+    {
+        // We calculate t here
+        float t = static_cast<float>(i) / numSegments;
+
+        Vertex pointOnCurve;
+
+        // Initialize the temp list with all points by default.
+        // Will get one point smaller with each loop
+        std::vector<Vertex> currentPoints = controlPoints;
+
+        while (currentPoints.size() > 1)
+        {
+            std::vector<Vertex> newPoints;
+
+            for (int j = 0; j < currentPoints.size() - 1; j++)
+            {
+                Vertex Pa = currentPoints[j];
+                Vertex Pb = currentPoints[j + 1];
+                Vertex Pab = Pa * (1.0f - t) + Pb * t; // (1−t)⋅* Pa​ + t *⋅Pb formule interpolation linéaire decasteljau
+                newPoints.push_back(Pab);
+            }
+
+            currentPoints = newPoints;
+        }
+
+        // After that loop, there's only one point in currentPoints.
+        // That's the one we add to the generatedCurve vector
+        generatedCurve.push_back(currentPoints[0]);
+    }
+
+    updateBuffers();
+}
+
 Bezier::Bezier()
 {
 
@@ -222,88 +308,8 @@ void Bezier::generateCurve()
     //std::cout << "Generation took " << std::fixed << std::setprecision(7) << generationTime << " seconds." << std::endl;
 }
 
-void Bezier::generatePascalCurve()
+void Bezier::duplicateControlPoint(int index)
 {
-    //std::cout << "Generating curve with Pascal algorithm..." << std::endl;
-
-    // the degree of the bézier curve
-    int degree = controlPoints.size() - 1;
-
-    // Compute number of segments beforehand
-    // Because if it becomes too small, errors accumualte and the loop never finishes
-    int numSegments = static_cast<int>(1.0f / stepSize);
-
-    // t represents the position along the curve
-    for (int i = 0; i <= numSegments; i++)
-    {
-        // We calculate t here
-        float t = static_cast<float>(i) / numSegments;
-
-        Vertex pointOnCurve; // Initialize the result vertex
-
-        // sum of the contributions of each control point
-        for (int j = 0; j <= degree; ++j)
-        {
-            // Calculate the Bernstein polynomial term for the j-th control point and current 't'
-            // The formula is: BinomialCoefficient(n, j) * (1-t)^(n-j) * t^j
-            // Where n is the degree of the curve
-            // C.f Maths Chap 1 Courbes - 3 Base de bernstein
-            float bernsteinTerm = static_cast<float>(combinations(degree, j)) *
-                std::pow(1.0 - t, degree - j) *
-                std::pow(t, j);
-
-            // Add the weighted control point to the current point on the curve
-            pointOnCurve += controlPoints[j] * bernsteinTerm;
-        }
-
-        generatedCurve.push_back(pointOnCurve);
-    }
-
-    // Update buffers to send the new curve data to the GPU
-    updateBuffers();
-}
-
-// For now this takes longer than Pascal, and the reason is probably the vector creation and copying in the loop.
-// New bonus point to do !
-void Bezier::generateDeCasteljauCurve()
-{
-    //std::cout << "Generating curve with DeCasteljau algorithm..." << std::endl;
-
-    // Compute number of segments beforehand
-    // Because if it becomes too small, errors accumualte and the loop never finishes
-    int numSegments = static_cast<int>(1.0f / stepSize);
-
-    // t represents the position along the curve
-    for (int i = 0; i <= numSegments; i++)
-    {
-        // We calculate t here
-        float t = static_cast<float>(i) / numSegments;
-
-        Vertex pointOnCurve;
-
-        // Initialize the temp list with all points by default.
-        // Will get one point smaller with each loop
-        std::vector<Vertex> currentPoints = controlPoints;
-
-        while (currentPoints.size() > 1)
-        {
-            std::vector<Vertex> newPoints;
-
-            for (int j = 0; j < currentPoints.size() - 1; j++)
-            {
-                Vertex Pa = currentPoints[j];
-                Vertex Pb = currentPoints[j + 1];
-                Vertex Pab = Pa * (1.0f - t) + Pb * t; // (1−t)⋅* Pa​ + t *⋅Pb formule interpolation linéaire decasteljau
-                newPoints.push_back(Pab);
-            }
-
-            currentPoints = newPoints;
-        }
-
-        // After that loop, there's only one point in currentPoints.
-        // That's the one we add to the generatedCurve vector
-        generatedCurve.push_back(currentPoints[0]);
-    }
-
-    updateBuffers();
+    controlPoints.insert(controlPoints.begin() + index, controlPoints[index]);
+    generateCurve();
 }

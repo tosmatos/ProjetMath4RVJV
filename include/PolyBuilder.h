@@ -102,6 +102,8 @@ public:
     void incrementBezierStepSize(size_t index);
     void decrementBezierStepSize(size_t index);
 
+    void duplicateControlPoint(int shapeIndex, int vertexIndex);
+
     // Translation is an affine transformation
     void translate(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
 

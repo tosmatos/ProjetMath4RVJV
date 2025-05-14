@@ -35,6 +35,9 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 
 	if (key == GLFW_KEY_C && action == GLFW_PRESS && polybuilder.isBuilding())
 		polybuilder.cancel();
+
+	if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS)
+		GUI::tryDuplicateVertex(window, polybuilder);
 }
 
 static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)

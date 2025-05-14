@@ -51,8 +51,11 @@ namespace GUI {
 	void handleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder);
 	void drawHoverTooltip(GLFWwindow* window, PolyBuilder& polybuilder);
 	void drawFillSettingsPanel(bool* open = nullptr);
+
 	void handleFillClick(GLFWwindow* window, PolyBuilder& polyBuilder, double xPos, double yPos);
 	void handleNonSeedFill(PolyBuilder& polyBuilder);
 	void handleSeedFill(PolyBuilder& polyBuilder, float ndcX, float ndcY);
 	void drawBuildingHelpTextbox(GLFWwindow* window, bool* open = nullptr);
+
+	void tryDuplicateVertex(GLFWwindow* window, PolyBuilder& polybuilder);
 }

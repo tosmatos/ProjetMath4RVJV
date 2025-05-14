@@ -971,3 +971,39 @@ void GUI::drawBuildingHelpTextbox(GLFWwindow* window, bool* open) // Added GLFWw
 
 	ImGui::End();
 }
+
+void GUI::tryDuplicateVertex(GLFWwindow* window, PolyBuilder& polybuilder)
+{
+	double xPos, yPos;
+	glfwGetCursorPos(window, &xPos, &yPos);
+
+	int displayW, displayH;
+	glfwGetFramebufferSize(window, &displayW, &displayH);
+
+	// Convert mouse pos to NDC
+	float ndcX = (2.0f * xPos) / displayW - 1.0f;
+	float ndcY = 1.0f - (2.0f * yPos) / displayH;
+
+	// Check proximity to vertices
+	const float hoverRadius = 0.02f;
+
+	auto finishedBeziers = polybuilder.getFinishedBeziers();
+
+	for (size_t i = 0; i < finishedBeziers.size(); i++)
+	{
+		Bezier bezier = finishedBeziers[i];
+		auto controlPoints = bezier.getControlPoints();
+
+		for (size_t j = 0; j < controlPoints.size(); j++)
+		{
+			Vertex vert = controlPoints[j];
+			float dx = vert.x - ndcX;
+			float dy = vert.y - ndcY;
+			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+			{
+				polybuilder.duplicateControlPoint(static_cast<int>(i), static_cast<int>(j));
+				break;
+			}
+		}
+	}
+}

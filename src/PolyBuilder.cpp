@@ -42,6 +42,12 @@ void PolyBuilder::decrementBezierStepSize(size_t index)
         finishedBeziers[index].decrementStepSize();
 }
 
+void PolyBuilder::duplicateControlPoint(int shapeIndex, int vertexIndex)
+{
+    if (shapeIndex < finishedBeziers.size())
+        finishedBeziers[shapeIndex].duplicateControlPoint(vertexIndex);
+}
+
 /* Why translation can be done with one matrix while others cannot:
  * Translation is an affine transformation, while scale, rotation and shear are linear transformations.
  *

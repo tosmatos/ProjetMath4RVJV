@@ -56,6 +56,8 @@ public:
 
 	const double getGenerationTime() const { return generationTime; };
 
+	void duplicateControlPoint(int index);
+
 	// Not sure if those two are gonna be necessary or useful
 	//bool isClockwise() const;
 	//void reverseOrientation(); // Makes polygon clockwise if counter clockwise and the opposite
