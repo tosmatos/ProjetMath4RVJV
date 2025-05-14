@@ -62,6 +62,7 @@ Bezier& Bezier::operator=(const Bezier& other)
         if (buffersInitialized)
         {
             glDeleteVertexArrays(1, &controlVAO);
+            glDeleteVertexArrays(1, &curveVAO);
             glDeleteBuffers(1, &controlVBO);
             glDeleteBuffers(1, &curveVBO);
             buffersInitialized = false;
@@ -85,6 +86,7 @@ Bezier::~Bezier()
         // When polygon is destroyed, clean up the OpenGL buffers
         // This prevents memory leaks in the GPU
         glDeleteVertexArrays(1, &controlVAO);
+        glDeleteVertexArrays(1, &curveVAO);
         glDeleteBuffers(1, &controlVBO);
         glDeleteBuffers(1, &curveVBO);
     }
