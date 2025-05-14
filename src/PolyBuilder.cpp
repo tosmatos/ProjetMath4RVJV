@@ -295,6 +295,48 @@ void PolyBuilder::applyShearFromOriginal(int shapeIndex, bool isPolygon, float t
     }
 }
 
+// Jarvis March Algorithm https://en.wikipedia.org/wiki/Gift_wrapping_algorithm
+std::vector<Vertex> PolyBuilder::computeJarvisHull(std::vector<Vertex> points)
+{
+    std::vector<Vertex> resultHull;
+    int pointsSize = points.size();
+    int leftmost = 0; // leftmost index
+
+    // Find leftmost point. i = 1 cause point initialized to first point in list
+    for (int i = 1; i < pointsSize; i++)
+    {
+        if (points[i].x < points[leftmost].x)
+            leftmost = i;
+    }
+
+    int currentPoint = leftmost;
+    int nextPoint;
+
+	do
+	{
+        resultHull.push_back(points[currentPoint]);
+
+        // % pointsSize allows us to loop back to 0 when reaching end of points
+        nextPoint = (currentPoint + 1) % pointsSize;
+
+        for (int i = 0; i < pointsSize; i++)
+        {
+            if (i == currentPoint) continue; // Skip current point
+
+            int o = orientation(points[currentPoint], points[i], points[nextPoint]);
+            // If point i is counter clockwise OR collinear and further away than nextPoint
+            if (o == 2 || (o == 0 && squaredDistance(points[currentPoint], points[i]) > squaredDistance(points[currentPoint], points[nextPoint])))
+                nextPoint = i;
+
+        }
+
+        currentPoint = nextPoint;
+
+	} while (currentPoint != leftmost);
+
+    return resultHull;
+}
+
 void PolyBuilder::appendVertex(double xPos, double yPos)
 {
     if (!buildingPoly)
@@ -341,7 +383,12 @@ void PolyBuilder::finishPolygon()
     if (!buildingPoly)
         return;
 
-    std::cout << "Polygon is " << (tempPolygon.isClockwise() ? "clockwise" : "counter-clockwise.") << std::endl;
+    if (tempPolygon.isClockwise())
+    {
+        std::cout << "Polygon is clockwise. Reversing it to counter-clockwise." << std::endl;
+        tempPolygon.reverseOrientation();
+    }
+    
 
     switch (polyType)
     {
@@ -391,6 +438,18 @@ Vertex PolyBuilder::calculateCenter(const std::vector<Vertex>& vertices)
         sumY += vert.y;
     }
     return { sumX / vertices.size(), sumY / vertices.size() };
+}
+
+float PolyBuilder::squaredDistance(const Vertex& v1, const Vertex& v2)
+{
+    return (v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y);
+}
+
+int PolyBuilder::orientation(const Vertex& p, const Vertex& q, const Vertex& r)
+{
+    float value = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+    if (value == 0) return 0; // Collinear
+    return (value > 0) ? 1 : 2; // Counter clockwise : clockwise
 }
 
 void PolyBuilder::cancel()

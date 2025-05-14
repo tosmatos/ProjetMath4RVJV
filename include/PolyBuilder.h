@@ -43,6 +43,13 @@ private:
     std::vector<Vertex> transformOriginalVertices;
     bool isCurrentlyTransformingShape = false;
 
+    // Helper to get squared distance, to check if collinear
+    float squaredDistance(const Vertex& v1, const Vertex& v2);
+    // Helper to get relative orientation orientation
+    // Basically : does traversing p to q and then q to r make a left turn, right turn or collinear 
+    // 0 = Collinear, 1 = Counter-Clockwise (left turn), 2 = Clockwise (right turn)
+    int orientation(const Vertex& p, const Vertex& q, const Vertex& r);
+
 public:
     bool bezierMode;
 
@@ -115,4 +122,7 @@ public:
     void applyScaleFromOriginal(int shapeIndex, bool isPolygon, float totalScaleFactorX, float totalScaleFactorY);
     void applyRotationFromOriginal(int shapeIndex, bool isPolygon, float totalRotationAngle);
     void applyShearFromOriginal(int shapeIndex, bool isPolygon, float totalShearX, float totalShearY);
+
+    // Convex hull algorithms
+    std::vector<Vertex> computeJarvisHull(std::vector<Vertex> points);
 };
