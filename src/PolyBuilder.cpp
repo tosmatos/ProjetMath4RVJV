@@ -107,19 +107,14 @@ void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float 
     }
 }
 
-void PolyBuilder::rotate(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
-{
-    // TODO : implement this !
-}
-
-void PolyBuilder::startScalingShape(int shapeIndex, bool isPolygon)
+void PolyBuilder::startTransformingShape(int shapeIndex, bool isPolygon)
 {
     if (isPolygon)
     {
         if (shapeIndex >= 0 && shapeIndex < finishedPolygons.size())
         {
             transformOriginalVertices = finishedPolygons[shapeIndex].getVertices();
-            isCurrentlyScalingShape = true;
+            isCurrentlyTransformingShape = true;
         }
     }
     else
@@ -127,21 +122,21 @@ void PolyBuilder::startScalingShape(int shapeIndex, bool isPolygon)
         if (shapeIndex >= 0 && shapeIndex < finishedBeziers.size())
         {
             transformOriginalVertices = finishedBeziers[shapeIndex].getControlPoints();
-            isCurrentlyScalingShape = true;
+            isCurrentlyTransformingShape = true;
         }
     }
 }
 
-void PolyBuilder::stopScalingShape()
+void PolyBuilder::stopTransformingShape()
 {
-    isCurrentlyScalingShape = false;
+    isCurrentlyTransformingShape = false;
     transformOriginalVertices.clear();
 }
 
 // This will replace your current `scale` method for this drag interaction
 void PolyBuilder::applyScaleFromOriginal(int shapeIndex, bool isPolygon, float totalScaleFactorX, float totalScaleFactorY)
 {
-    if (!isCurrentlyScalingShape || transformOriginalVertices.empty())
+    if (!isCurrentlyTransformingShape || transformOriginalVertices.empty())
     {
         return; // Not in a scaling operation or no original vertices
     }
@@ -184,7 +179,12 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, bool isPolygon, float t
     }
 }
 
-void PolyBuilder::shear(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
+void PolyBuilder::applyRotationFromOriginal(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
+{
+    // TODO : implement this !
+}
+
+void PolyBuilder::applyShearFromOriginal(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
 {
     Matrix3x3 shearingMatrix = createShearingMatrix(deltaX, deltaY);
 

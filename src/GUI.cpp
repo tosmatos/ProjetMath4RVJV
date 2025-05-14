@@ -499,10 +499,10 @@ void GUI::handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder)
 		break;
 	}		
 	case ROTATE:
-		polybuilder.rotate(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
+		polybuilder.applyRotationFromOriginal(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
 		break;
 	case SHEAR:
-		polybuilder.shear(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
+		polybuilder.applyShearFromOriginal(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
 		break;
 	}
 
@@ -634,7 +634,7 @@ bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mo
 				{
 					initialScaleMouseX = ndcX;
 					initialScaleMouseY = ndcY;
-					polybuilder.startScalingShape(selectedShapeIndex, isShapePolygon);
+					polybuilder.startTransformingShape(selectedShapeIndex, isShapePolygon);
 					initialShapeWidth = maxX - minX;
 					initialShapeHeight = maxY - minY;
 				}
@@ -680,7 +680,7 @@ bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mo
 				{
 					initialScaleMouseX = ndcX;
 					initialScaleMouseY = ndcY;
-					polybuilder.startScalingShape(selectedShapeIndex, isShapePolygon);
+					polybuilder.startTransformingShape(selectedShapeIndex, isShapePolygon);
 					initialShapeWidth = maxX - minX;
 					initialShapeHeight = maxY - minY;
 				}
@@ -699,7 +699,7 @@ void GUI::endDrag(PolyBuilder& polybuilder)
 	isDraggingVertex = false;
 	selectedShapeIndex = -1;
 	selectedVertexIndex = -1;
-	polybuilder.stopScalingShape();
+	polybuilder.stopTransformingShape();
 }
 
 void GUI::deleteVertex(GLFWwindow* window, PolyBuilder& polybuilder, double xPos, double yPos)

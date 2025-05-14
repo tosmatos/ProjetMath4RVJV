@@ -42,7 +42,7 @@ private:
 
     float scaleSensitivity = 1.0f;
     std::vector<Vertex> transformOriginalVertices;
-    bool isCurrentlyScalingShape = false;
+    bool isCurrentlyTransformingShape = false;
 
 public:
     bool bezierMode;
@@ -103,13 +103,17 @@ public:
     void incrementBezierStepSize(size_t index);
     void decrementBezierStepSize(size_t index);
 
+    // Translation is an affine transformation
     void translate(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
-    void rotate(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
-    void scale(int shapeIndex, bool isPolygon, float scaleFactorX, float scaleFactorY);
-    void shear(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
+
+    // For linear transformations
+    void startTransformingShape(int shapeIndex, bool isPolygon);
+    void stopTransformingShape();
+
+    void applyScaleFromOriginal(int shapeIndex, bool isPolygon, float totalScaleFactorX, float totalScaleFactorY);
+    void applyRotationFromOriginal(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
+    void applyShearFromOriginal(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
 
     const float getScaleSensitivity() const { return scaleSensitivity; };
-    void startScalingShape(int shapeIndex, bool isPolygon);
-    void applyScaleFromOriginal(int shapeIndex, bool isPolygon, float totalScaleFactorX, float totalScaleFactorY);
-    void stopScalingShape();
+    
 };
