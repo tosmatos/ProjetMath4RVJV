@@ -25,7 +25,7 @@ private:
 	void generatePascalCurve();
 	void generateDeCasteljauCurve();
 
-	bool shouldShowConvexHull = false;
+	bool showConvexHull = false;
 
 public:
 	//PolyType type; // Not sure this will be useful for now
@@ -47,7 +47,7 @@ public:
 
 	const std::vector<Vertex>& getControlPoints() const { return controlPoints; };
 	const std::vector<Vertex>& getGeneratedCurve() const { return generatedCurve; };
-	void setControlPoints(std::vector<Vertex> controlPointsVector) { controlPoints = controlPointsVector; };
+	void setControlPoints(std::vector<Vertex> controlPointsVector) { controlPoints = controlPointsVector; generateConvexHull(); };
 	void setConvexHull(std::vector<Vertex> newConvexHull) { convexHull = newConvexHull; };
 
 	void generateCurve(); // When control points are set, this will be called
@@ -63,8 +63,10 @@ public:
 
 	void duplicateControlPoint(int index);
 
-	void toggleConvexHullDisplay() { shouldShowConvexHull = !shouldShowConvexHull; };
-	const bool getShouldShowConvexHull() const { return shouldShowConvexHull; };
+	void generateConvexHull();
+
+	void toggleConvexHullDisplay() { showConvexHull = !showConvexHull; };
+	const bool getShowConvexHull() const { return showConvexHull; };
 
 	// Not sure if those two are gonna be necessary or useful
 	//bool isClockwise() const;

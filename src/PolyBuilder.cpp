@@ -301,48 +301,6 @@ void PolyBuilder::applyShearFromOriginal(int shapeIndex, bool isPolygon, float t
     }
 }
 
-// Jarvis March Algorithm https://en.wikipedia.org/wiki/Gift_wrapping_algorithm
-std::vector<Vertex> PolyBuilder::computeJarvisHull(std::vector<Vertex> points)
-{
-    std::vector<Vertex> resultHull;
-    int pointsSize = points.size();
-    int leftmost = 0; // leftmost index
-
-    // Find leftmost point. i = 1 cause point initialized to first point in list
-    for (int i = 1; i < pointsSize; i++)
-    {
-        if (points[i].x < points[leftmost].x)
-            leftmost = i;
-    }
-
-    int currentPoint = leftmost;
-    int nextPoint;
-
-	do
-	{
-        resultHull.push_back(points[currentPoint]);
-
-        // % pointsSize allows us to loop back to 0 when reaching end of points
-        nextPoint = (currentPoint + 1) % pointsSize;
-
-        for (int i = 0; i < pointsSize; i++)
-        {
-            if (i == currentPoint) continue; // Skip current point
-
-            int o = orientation(points[currentPoint], points[i], points[nextPoint]);
-            // If point i is counter clockwise OR collinear and further away than nextPoint
-            if (o == 2 || (o == 0 && squaredDistance(points[currentPoint], points[i]) > squaredDistance(points[currentPoint], points[nextPoint])))
-                nextPoint = i;
-
-        }
-
-        currentPoint = nextPoint;
-
-	} while (currentPoint != leftmost);
-
-    return resultHull;
-}
-
 void PolyBuilder::appendVertex(double xPos, double yPos)
 {
     if (!buildingPoly)
@@ -424,9 +382,8 @@ void PolyBuilder::finishBezier()
     if (!buildingPoly)
         return;
 
-    bezier = tempBezier;    
-    auto hull = computeJarvisHull(bezier.getControlPoints());
-    bezier.setConvexHull(hull);    
+    bezier = tempBezier;
+    bezier.generateConvexHull();
     bezier.generateCurve(); // Generate buffers is called from generate curve
     finishedBeziers.push_back(bezier);
     buildingPoly = false;
@@ -448,85 +405,11 @@ Vertex PolyBuilder::calculateCenter(const std::vector<Vertex>& vertices)
     return { sumX / vertices.size(), sumY / vertices.size() };
 }
 
-float PolyBuilder::squaredDistance(const Vertex& v1, const Vertex& v2)
-{
-    return (v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y);
-}
-
-int PolyBuilder::orientation(const Vertex& p, const Vertex& q, const Vertex& r)
-{
-    float value = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
-    if (value == 0) return 0; // Collinear
-    return (value > 0) ? 1 : 2; // Counter clockwise : clockwise
-}
-
 void PolyBuilder::cancel()
 {
     buildingPoly = false;
     tempPolygon = Polygon();
     tempBezier = Bezier();
-}
-
-
-void PolyBuilder::movePolygon(int polyIndex, float deltaX, float deltaY)
-{
-    // Check for valid index
-    if (polyIndex < 0 || polyIndex >= finishedPolygons.size())
-        return;
-
-    // Get a reference to the polygon to modify
-    Polygon& poly = finishedPolygons[polyIndex];
-
-    // Get a modifiable copy of the vertices
-    std::vector<Vertex> modifiedVertices = poly.getVertices();
-
-    // Apply translation to each vertex
-    for (auto& vertex : modifiedVertices)
-    {
-        vertex.x += deltaX;
-        vertex.y += deltaY;
-    }
-
-    // Update the polygon with the new vertices
-    poly.setVertices(modifiedVertices);
-
-    // Re-initialize the OpenGL buffers
-    poly.updateBuffers();
-}
-
-void PolyBuilder::updateVertexPosition(int shapeIndex, int vertexIndex, bool isPolygon, float deltaX, float deltaY)
-{
-    //std::cout << "Updating vertex position" << std::endl;
-
-    std::vector<Vertex> vertices;
-    if (isPolygon)
-    {
-        auto poly = finishedPolygons[shapeIndex];
-        vertices = poly.getVertices();
-    }
-    else
-    {
-        auto bezier = finishedBeziers[shapeIndex];
-        vertices = bezier.getControlPoints();
-    }
-
-    Vertex vertexToUpdate = vertices[vertexIndex];
-    vertexToUpdate.x += deltaX;
-    vertexToUpdate.y += deltaY;
-    vertices[vertexIndex] = vertexToUpdate;
-
-    if (isPolygon)
-    {
-        Polygon& poly = finishedPolygons[shapeIndex];
-        poly.setVertices(vertices);
-        poly.updateBuffers();
-    }
-    else
-    {
-        Bezier& bezier = finishedBeziers[shapeIndex];
-        bezier.setControlPoints(vertices);
-        bezier.generateCurve(); // calls update buffers internally
-    }
 }
 
 void PolyBuilder::deleteVertex(int shapeIndex, int vertexIndex, bool isPolygon)

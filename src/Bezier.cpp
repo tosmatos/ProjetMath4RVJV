@@ -38,6 +38,22 @@ long long static combinations(int n, int k)
     return res;
 }
 
+// Helper to get squared distance, to check if collinear
+float squaredDistance(const Vertex& v1, const Vertex& v2)
+{
+    return (v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y);
+}
+
+// Helper to get relative orientation orientation
+// Basically : does traversing p to q and then q to r make a left turn, right turn or collinear 
+// 0 = Collinear, 1 = Counter-Clockwise (left turn), 2 = Clockwise (right turn)
+int orientation(const Vertex& p, const Vertex& q, const Vertex& r)
+{
+    float value = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+    if (value == 0) return 0; // Collinear
+    return (value > 0) ? 1 : 2; // Counter clockwise : clockwise
+}
+
 void Bezier::generatePascalCurve()
 {
     //std::cout << "Generating curve with Pascal algorithm..." << std::endl;
@@ -364,4 +380,47 @@ void Bezier::duplicateControlPoint(int index)
 {
     controlPoints.insert(controlPoints.begin() + index, controlPoints[index]);
     generateCurve();
+}
+
+// Jarvis March Algorithm https://en.wikipedia.org/wiki/Gift_wrapping_algorithm
+void Bezier::generateConvexHull()
+{
+    std::vector<Vertex> resultHull;
+    int pointsSize = controlPoints.size();
+    int leftmost = 0; // leftmost index
+
+    // Find leftmost point. i = 1 cause point initialized to first point in list
+    for (int i = 1; i < pointsSize; i++)
+    {
+        if (controlPoints[i].x < controlPoints[leftmost].x)
+            leftmost = i;
+    }
+
+    int currentPoint = leftmost;
+    int nextPoint;
+
+    do
+    {
+        resultHull.push_back(controlPoints[currentPoint]);
+
+        // % pointsSize allows us to loop back to 0 when reaching end of points
+        nextPoint = (currentPoint + 1) % pointsSize;
+
+        for (int i = 0; i < pointsSize; i++)
+        {
+            if (i == currentPoint) continue; // Skip current point
+
+            int o = orientation(controlPoints[currentPoint], controlPoints[i], controlPoints[nextPoint]);
+            // If point i is counter clockwise OR collinear and further away than nextPoint
+            if (o == 2 || (o == 0 && squaredDistance(controlPoints[currentPoint], controlPoints[i]) > squaredDistance(controlPoints[currentPoint], controlPoints[nextPoint])))
+                nextPoint = i;
+
+        }
+
+        currentPoint = nextPoint;
+
+    } while (currentPoint != leftmost);
+
+    convexHull = resultHull;
+    updateBuffers();
 }

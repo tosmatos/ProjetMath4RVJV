@@ -273,7 +273,7 @@ int main()
 		{
 			bezier.drawControlPoints(shader);
 			bezier.drawGeneratedCurve(shader);
-			if (bezier.getShouldShowConvexHull())
+			if (bezier.getShowConvexHull())
 				bezier.drawConvexHull(shader);
 		}
 
