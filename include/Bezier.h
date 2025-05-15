@@ -47,6 +47,7 @@ public:
 
 	const std::vector<Vertex>& getControlPoints() const { return controlPoints; };
 	const std::vector<Vertex>& getGeneratedCurve() const { return generatedCurve; };
+	const std::vector<Vertex>& getConvexHull() const { return convexHull; };
 	void setControlPoints(std::vector<Vertex> controlPointsVector) { controlPoints = controlPointsVector; generateConvexHull(); };
 	void setConvexHull(std::vector<Vertex> newConvexHull) { convexHull = newConvexHull; };
 

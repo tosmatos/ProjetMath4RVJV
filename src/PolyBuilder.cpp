@@ -301,6 +301,52 @@ void PolyBuilder::applyShearFromOriginal(int shapeIndex, bool isPolygon, float t
     }
 }
 
+bool PolyBuilder::testIntersection(const std::vector<Vertex> shapeA, const std::vector<Vertex> shapeB)
+{
+    // Make list of all normal vectors
+    // Those are our potential separating axes
+    std::vector<Vertex> normals;
+    normals.resize(shapeA.size() + shapeB.size());
+
+    for (int i = 0; i < shapeA.size(); i++)
+    {
+        Vertex p1 = shapeA[i];
+        Vertex p2 = shapeA[i + 1 == shapeA.size() ? 0 : i + 1]; // Loop back to first vertex
+        Vertex edge = p1 - p2; // edge vector
+        // TODO : figure out if normal is pointing the right way
+        // TODO : Normalize that shit
+        Vertex normal = { -edge.y, edge.x };
+        normals.push_back(normal);
+    }
+
+    for (int i = 0; i < shapeB.size(); i++)
+    {
+        Vertex p1 = shapeB[i];
+        Vertex p2 = shapeB[i + 1 == shapeB.size() ? 0 : i + 1]; // Loop back to first vertex
+        Vertex edge = p1 - p2; // edge vector
+        // TODO : figure out if normal is pointing the right way
+        // TODO : Normalize that shit
+        Vertex normal = { -edge.y, edge.x };
+        normals.push_back(normal);
+    }    
+
+    // Project each polygon onto each potential separating axes
+    for (const Vertex& axis : normals)
+    {
+        Vertex projectionIntervalA = { 99.0f, -99.0f };
+        Vertex projectionIntervalB = { 99.0f, -99.0f };
+
+        for (const Vertex& vertex : shapeA)
+        {
+            float projection; // TODO : dot project on vertex and axis
+        }
+    }
+
+    // Check for overlap. If two projected overlap DONT intersect, return false !
+    // If there's overlap on every axis, return true
+    return false;
+}
+
 void PolyBuilder::appendVertex(double xPos, double yPos)
 {
     if (!buildingPoly)

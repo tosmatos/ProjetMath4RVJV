@@ -111,4 +111,7 @@ public:
     void applyScaleFromOriginal(int shapeIndex, bool isPolygon, float totalScaleFactorX, float totalScaleFactorY);
     void applyRotationFromOriginal(int shapeIndex, bool isPolygon, float totalRotationAngle);
     void applyShearFromOriginal(int shapeIndex, bool isPolygon, float totalShearX, float totalShearY);
+
+    // SAT implementation to test intersection on two convex shapes
+    bool testIntersection(const std::vector<Vertex> shapeA, const std::vector<Vertex> shapeB);
 };
