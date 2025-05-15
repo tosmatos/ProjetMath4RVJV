@@ -84,6 +84,7 @@ void PolyBuilder::duplicateControlPoint(int shapeIndex, int vertexIndex)
 
 void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
 {
+    foundIntersections.clear();
     Matrix3x3 translationMatrix = createTranslationMatrix(deltaX, deltaY);
 
     std::vector<Vertex> vertices;
@@ -121,6 +122,7 @@ void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float 
 
 void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, bool isPolygon, float deltaX, float deltaY)
 {
+    foundIntersections.clear();
     Matrix3x3 translationMatrix = createTranslationMatrix(deltaX, deltaY);
 
     std::vector<Vertex> vertices;
@@ -171,6 +173,7 @@ void PolyBuilder::startTransformingShape(int shapeIndex, bool isPolygon)
         {
             transformOriginalVertices = finishedBeziers[shapeIndex].getControlPoints();
             isCurrentlyTransformingShape = true;
+            foundIntersections.clear();
         }
     }
 }
@@ -181,7 +184,6 @@ void PolyBuilder::stopTransformingShape()
     transformOriginalVertices.clear();
 }
 
-// This will replace your current `scale` method for this drag interaction
 void PolyBuilder::applyScaleFromOriginal(int shapeIndex, bool isPolygon, float totalScaleFactorX, float totalScaleFactorY)
 {
     if (!isCurrentlyTransformingShape || transformOriginalVertices.empty())
@@ -301,6 +303,26 @@ void PolyBuilder::applyShearFromOriginal(int shapeIndex, bool isPolygon, float t
     }
 }
 
+void PolyBuilder::tryFindingIntersections()
+{
+    if (finishedBeziers.size() < 2)
+        return;
+
+    for (int i = 0; i < finishedBeziers.size() - 1; i++)
+    {
+        std::vector<Vertex> hullA = finishedBeziers[i].getConvexHull();
+        std::vector<Vertex> hullB = finishedBeziers[i + 1].getConvexHull();
+
+        bool result = testIntersection(hullA, hullB);
+
+        if (result)
+        {
+            // TODO : if hulls intersects, find if curves do
+            foundIntersections.push_back(u8"Intersection found on Bézier " + std::to_string(i) + " and " + std::to_string(i + 1));
+        }
+    }
+}
+
 bool PolyBuilder::testIntersection(const std::vector<Vertex> shapeA, const std::vector<Vertex> shapeB)
 {
     // Make list of all normal vectors
@@ -313,8 +335,6 @@ bool PolyBuilder::testIntersection(const std::vector<Vertex> shapeA, const std::
         Vertex p1 = shapeA[i];
         Vertex p2 = shapeA[i + 1 == shapeA.size() ? 0 : i + 1]; // Loop back to first vertex
         Vertex edge = p1 - p2; // edge vector
-        // TODO : figure out if normal is pointing the right way
-        // TODO : Normalize that shit
         Vertex normal = { -edge.y, edge.x };
         normals.push_back(normal);
     }
@@ -324,8 +344,6 @@ bool PolyBuilder::testIntersection(const std::vector<Vertex> shapeA, const std::
         Vertex p1 = shapeB[i];
         Vertex p2 = shapeB[i + 1 == shapeB.size() ? 0 : i + 1]; // Loop back to first vertex
         Vertex edge = p1 - p2; // edge vector
-        // TODO : figure out if normal is pointing the right way
-        // TODO : Normalize that shit
         Vertex normal = { -edge.y, edge.x };
         normals.push_back(normal);
     }    

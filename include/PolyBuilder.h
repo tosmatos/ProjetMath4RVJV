@@ -43,6 +43,10 @@ private:
     std::vector<Vertex> transformOriginalVertices;
     bool isCurrentlyTransformingShape = false;
 
+    // SAT implementation to test intersection on two convex shapes
+    bool testIntersection(const std::vector<Vertex> shapeA, const std::vector<Vertex> shapeB);
+    std::vector<std::string> foundIntersections;
+
 public:
     bool bezierMode;
 
@@ -112,6 +116,6 @@ public:
     void applyRotationFromOriginal(int shapeIndex, bool isPolygon, float totalRotationAngle);
     void applyShearFromOriginal(int shapeIndex, bool isPolygon, float totalShearX, float totalShearY);
 
-    // SAT implementation to test intersection on two convex shapes
-    bool testIntersection(const std::vector<Vertex> shapeA, const std::vector<Vertex> shapeB);
+    void tryFindingIntersections();
+    const std::vector<std::string> getFoundIntersections() const { return foundIntersections; };
 };
