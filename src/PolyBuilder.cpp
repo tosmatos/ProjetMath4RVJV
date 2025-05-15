@@ -333,18 +333,41 @@ bool PolyBuilder::testIntersection(const std::vector<Vertex> shapeA, const std::
     // Project each polygon onto each potential separating axes
     for (const Vertex& axis : normals)
     {
-        Vertex projectionIntervalA = { 99.0f, -99.0f };
-        Vertex projectionIntervalB = { 99.0f, -99.0f };
+        float minProjA = 99.0f;
+        float maxProjA = -99.0f;
 
         for (const Vertex& vertex : shapeA)
         {
-            float projection; // TODO : dot project on vertex and axis
+            // TODO : maybe make a dot product function somewhere ?
+            float projection = (vertex.x * axis.x) + (vertex.y * axis.y);
+
+            if (projection < minProjA)
+                minProjA = projection;
+            if (projection > maxProjA)
+                maxProjA = projection;
         }
+
+        float minProjB = 99.0f;
+        float maxProjB = -99.0f;
+
+        for (const Vertex& vertex : shapeB)
+        {
+            // TODO : maybe make a dot product function somewhere ?
+            float projection = (vertex.x * axis.x) + (vertex.y * axis.y);
+
+            if (projection < minProjB)
+                minProjB = projection;
+            if (projection > maxProjB)
+                maxProjB = projection;
+        }
+
+        // If there's no overlap, then we found a separating axis, so no intersection
+        if (maxProjA < minProjB || maxProjB < minProjA)
+            return false;
     }
 
-    // Check for overlap. If two projected overlap DONT intersect, return false !
-    // If there's overlap on every axis, return true
-    return false;
+    // If there's overlap on every axis, there's an intersection
+    return true;
 }
 
 void PolyBuilder::appendVertex(double xPos, double yPos)
