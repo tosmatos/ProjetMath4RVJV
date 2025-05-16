@@ -43,8 +43,11 @@ private:
     std::vector<Vertex> transformOriginalVertices;
     bool isCurrentlyTransformingShape = false;
 
-    // SAT implementation to test intersection on two convex shapes
-    bool testIntersection(const std::vector<Vertex> shapeA, const std::vector<Vertex> shapeB);
+    // SAT implementation to test intersection on two convex shapes, our bézier hulls
+    bool testHullIntersection(const std::vector<Vertex> shapeA, const std::vector<Vertex> shapeB);
+    // Actual recursive subdivision implementation for finding bézier intersections, if hulls intersect
+    std::vector<Vertex> findBezierIntersections(const Bezier& curve1, const Bezier& curve2,
+        float floatnessThreshold, int maxDepth);
     std::vector<std::string> foundIntersections;
 
 public:

@@ -69,6 +69,16 @@ public:
 	void toggleConvexHullDisplay() { showConvexHull = !showConvexHull; };
 	const bool getShowConvexHull() const { return showConvexHull; };
 
+	// Intersection helper functions
+	// Returns two Bézier curves representing the subdivision or the original curve at point t
+	std::pair<Bezier, Bezier> subdivide(float t) const;
+	// Returns true if two line segments intersect, and intersection point gets set
+	// TODO : Figure out it that could be moved to a utility class or something.
+	bool lineSegmentsIntersects(const Vertex& p1, const Vertex& q1,
+		const Vertex& p2, const Vertex& q2, Vertex& intersectionPoint);
+	// Determines a curve's "flatness", to know if it can be approximated as a line
+	float calculateFlatness(const Bezier& curve);
+
 	// Not sure if those two are gonna be necessary or useful
 	//bool isClockwise() const;
 	//void reverseOrientation(); // Makes polygon clockwise if counter clockwise and the opposite

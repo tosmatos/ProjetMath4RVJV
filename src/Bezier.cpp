@@ -424,3 +424,18 @@ void Bezier::generateConvexHull()
     convexHull = resultHull;
     updateBuffers();
 }
+
+std::pair<Bezier, Bezier> Bezier::subdivide(float t) const
+{
+    return std::pair<Bezier, Bezier>();
+}
+
+bool Bezier::lineSegmentsIntersects(const Vertex& p1, const Vertex& q1, const Vertex& p2, const Vertex& q2, Vertex& intersectionPoint)
+{
+    return false;
+}
+
+float Bezier::calculateFlatness(const Bezier& curve)
+{
+    return 0.0f;
+}

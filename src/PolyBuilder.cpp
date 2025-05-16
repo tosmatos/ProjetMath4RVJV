@@ -313,7 +313,7 @@ void PolyBuilder::tryFindingIntersections()
         std::vector<Vertex> hullA = finishedBeziers[i].getConvexHull();
         std::vector<Vertex> hullB = finishedBeziers[i + 1].getConvexHull();
 
-        bool result = testIntersection(hullA, hullB);
+        bool result = testHullIntersection(hullA, hullB);
 
         if (result)
         {
@@ -323,7 +323,7 @@ void PolyBuilder::tryFindingIntersections()
     }
 }
 
-bool PolyBuilder::testIntersection(const std::vector<Vertex> shapeA, const std::vector<Vertex> shapeB)
+bool PolyBuilder::testHullIntersection(const std::vector<Vertex> shapeA, const std::vector<Vertex> shapeB)
 {
     // Make list of all normal vectors
     // Those are our potential separating axes
@@ -386,6 +386,11 @@ bool PolyBuilder::testIntersection(const std::vector<Vertex> shapeA, const std::
 
     // If there's overlap on every axis, there's an intersection
     return true;
+}
+
+std::vector<Vertex> PolyBuilder::findBezierIntersections(const Bezier& curve1, const Bezier& curve2, float floatnessThreshold, int maxDepth)
+{
+    return std::vector<Vertex>();
 }
 
 void PolyBuilder::appendVertex(double xPos, double yPos)
