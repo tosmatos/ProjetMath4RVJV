@@ -424,18 +424,131 @@ void Bezier::generateConvexHull()
     convexHull = resultHull;
     updateBuffers();
 }
-
 std::pair<Bezier, Bezier> Bezier::subdivide(float t) const
 {
-    return std::pair<Bezier, Bezier>();
+    Bezier leftCurve, rightCurve;
+
+    // Get the number of control points in the original curve
+    int n = controlPoints.size();
+
+    // Temporary array to store intermediate points during De Casteljau's algorithm
+    std::vector<Vertex> temp = controlPoints;
+
+    // These will store our new control points
+    std::vector<Vertex> leftPoints(n);
+    std::vector<Vertex> rightPoints(n);
+
+    // The first control point of the left curve is the first control point of the original
+    leftPoints[0] = controlPoints[0];
+
+    // The last control point of the right curve is the last control point of the original
+    rightPoints[n - 1] = controlPoints[n - 1];
+
+    // Apply De Casteljau's algorithm
+    for (int r = 1; r <= n - 1; r++)
+    {
+        // At each step, we calculate a new set of points
+        for (int i = 0; i <= n - 1 - r; i++)
+        {
+            temp[i] = temp[i] * (1.0f - t) + temp[i + 1] * t;
+        }
+
+        // Store the leftmost point for the left curve
+        leftPoints[r] = temp[0];
+
+        // Store the rightmost point for the right curve
+        rightPoints[n - 1 - r] = temp[n - 1 - r];
+    }
+
+    // Set the control points for our new curves
+    for (int i = 0; i < n; i++)
+    {
+        leftCurve.addControlPoint(leftPoints[i]);
+        rightCurve.addControlPoint(rightPoints[n - 1 - i]);  // We need to reverse this array
+    }
+
+    return { leftCurve, rightCurve };
 }
 
-bool Bezier::lineSegmentsIntersects(const Vertex& p1, const Vertex& q1, const Vertex& p2, const Vertex& q2, Vertex& intersectionPoint)
+bool Bezier::lineSegmentsIntersect(const Vertex& segmentA_start, const Vertex& segmentA_end,
+    const Vertex& segmentB_start, const Vertex& segmentB_end, Vertex& intersectionPoint)
 {
+    // Calculate the direction vectors of our two line segments
+    Vertex directionA(segmentA_end.x - segmentA_start.x, segmentA_end.y - segmentA_start.y);
+    Vertex directionB(segmentB_end.x - segmentB_start.x, segmentB_end.y - segmentB_start.y);
+
+    // We'll use the cross product to determine if the lines are parallel
+    // TODO : Cross product exists in Clipper.cpp. Find a way to make it clean and portable
+    float crossProduct = directionA.x * directionB.y - directionA.y * directionB.x;
+
+    // If the cross product is nearly zero, the lines are parallel or collinear
+    // We use a small epsilon value to account for floating point precision
+    if (std::abs(crossProduct) < 1e-6)
+        return false;  // Parallel lines don't intersect
+
+    // Calculate the vector from start of segment A to start of segment B
+    Vertex startDifference(segmentB_start.x - segmentA_start.x, segmentB_start.y - segmentA_start.y);
+
+    // Calculate how far along segment A the intersection occurs (from 0 to 1)
+    // We use the formula: t = (startDifference × directionB) / (directionA × directionB)
+    // Where × is the 2D cross product
+    float intersectionRatioA = (startDifference.x * directionB.y - startDifference.y * directionB.x) / crossProduct;
+
+    // Calculate how far along segment B the intersection occurs (from 0 to 1)
+    // We use the formula: u = (startDifference × directionA) / (directionA × directionB)
+    float intersectionRatioB = (startDifference.x * directionA.y - startDifference.y * directionA.x) / crossProduct;
+
+    // Check if the intersection point is within both segments
+    // For the intersection to be on both segments, both ratios must be between 0 and 1
+    if (intersectionRatioA >= 0 && intersectionRatioA <= 1 && intersectionRatioB >= 0 && intersectionRatioB <= 1)
+    {
+        // Calculate the intersection point using the ratio along segment A
+        // Doesn't matter if we use intersectionRatioA or B for getting the point
+        intersectionPoint.x = segmentA_start.x + intersectionRatioA * directionA.x;
+        intersectionPoint.y = segmentA_start.y + intersectionRatioA * directionA.y;
+        return true;  // We found an intersection!
+    }
+
     return false;
 }
 
 float Bezier::calculateFlatness(const Bezier& curve)
 {
-    return 0.0f;
+    // Maximum distance from any control point to the line connecting endpoints
+    float maxDistance = 0.0f;
+
+    const Vertex& start = curve.controlPoints.front();
+    const Vertex& end = curve.controlPoints.back();
+
+    // Calculate the line from start to end
+    float lineLength = std::sqrt(squaredDistance(start, end));
+
+    // If the curve is a point or nearly a point, return zero flatness
+    if (lineLength < 1e-6)
+    {
+        return 0.0f;
+    }
+
+    // For each control point (except start and end)
+    for (size_t i = 1; i < curve.controlPoints.size() - 1; i++)
+    {
+        const Vertex& point = curve.controlPoints[i];
+
+        // Calculate distance to line
+        float distance = 0.0f;
+
+        if (lineLength > 0)
+        {
+            // Vector from start to end
+            float dx = end.x - start.x;
+            float dy = end.y - start.y;
+
+            // Calculate perpendicular distance
+            distance = std::abs((point.y - start.y) * dx - (point.x - start.x) * dy) / lineLength;
+        }
+
+        maxDistance = std::max(maxDistance, distance);
+    }
+
+    return maxDistance;
 }
