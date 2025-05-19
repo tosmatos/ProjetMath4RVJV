@@ -1,4 +1,5 @@
 ﻿#include "Bezier.h"
+#include "MathUtils.h"
 
 #include <algorithm>
 #include <glad/glad.h>
@@ -7,52 +8,7 @@
 #include <chrono> // For calculating generation time
 #include <iomanip> // For number of digits when printing time
 
-// Helper function to calculate binomial coefficient C(n, k)
-// This is the mathematical representation of the numbers in Pascal's triangle.
-// C(n, k) = n! / (k! * (n-k)!)
-// See Maths Chap 1 Courbes - 3 Base de bernstein
-long long static combinations(int n, int k)
-{
-    // Handle invalid inputs
-    if (k < 0 || k > n)
-    {
-        return 0;
-    }
-    // C(n, 0) and C(n, n) are always 1
-    if (k == 0 || k == n)
-    {
-        return 1;
-    }
-    // Use symmetry: C(n, k) = C(n, n-k) to reduce calculations
-    // Choisir k éléments parmi n est la même chose que choisir de ne pas choisir n−k éléments parmi n.
-    if (k > n / 2)
-    {
-        k = n - k;
-    }
-    // Calculate the binomial coefficient iteratively
-    long long res = 1;
-    for (int i = 1; i <= k; ++i)
-    {
-        res = res * (n - i + 1) / i;
-    }
-    return res;
-}
-
-// Helper to get squared distance, to check if collinear
-float squaredDistance(const Vertex& v1, const Vertex& v2)
-{
-    return (v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y);
-}
-
-// Helper to get relative orientation orientation
-// Basically : does traversing p to q and then q to r make a left turn, right turn or collinear 
-// 0 = Collinear, 1 = Counter-Clockwise (left turn), 2 = Clockwise (right turn)
-int orientation(const Vertex& p, const Vertex& q, const Vertex& r)
-{
-    float value = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
-    if (value == 0) return 0; // Collinear
-    return (value > 0) ? 1 : 2; // Counter clockwise : clockwise
-}
+using namespace MathUtils;
 
 void Bezier::generatePascalCurve()
 {
@@ -512,13 +468,13 @@ bool Bezier::lineSegmentsIntersect(const Vertex& segmentA_start, const Vertex& s
     return false;
 }
 
-float Bezier::calculateFlatness(const Bezier& curve)
+float Bezier::calculateFlatness() const
 {
     // Maximum distance from any control point to the line connecting endpoints
     float maxDistance = 0.0f;
 
-    const Vertex& start = curve.controlPoints.front();
-    const Vertex& end = curve.controlPoints.back();
+    const Vertex& start = controlPoints.front();
+    const Vertex& end = controlPoints.back();
 
     // Calculate the line from start to end
     float lineLength = std::sqrt(squaredDistance(start, end));
@@ -530,9 +486,9 @@ float Bezier::calculateFlatness(const Bezier& curve)
     }
 
     // For each control point (except start and end)
-    for (size_t i = 1; i < curve.controlPoints.size() - 1; i++)
+    for (size_t i = 1; i < controlPoints.size() - 1; i++)
     {
-        const Vertex& point = curve.controlPoints[i];
+        const Vertex& point = controlPoints[i];
 
         // Calculate distance to line
         float distance = 0.0f;

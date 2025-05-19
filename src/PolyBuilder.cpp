@@ -1,8 +1,13 @@
 #include "PolyBuilder.h"
+#include "MathUtils.h"
+
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
 #include <iostream>
 #include <string>
+#include <functional>
+
+using namespace MathUtils;
 
 void PolyBuilder::startPolygon(PolyType type)
 {

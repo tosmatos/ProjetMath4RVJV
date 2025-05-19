@@ -77,7 +77,7 @@ public:
 	bool lineSegmentsIntersect(const Vertex& segmentA_start, const Vertex& segmentA_end,
 		const Vertex& segmentB_start, const Vertex& segmentB_end, Vertex& intersectionPoint);
 	// Determines a curve's "flatness", to know if it can be approximated as a line
-	float calculateFlatness(const Bezier& curve);
+	float calculateFlatness() const;
 
 	// Not sure if those two are gonna be necessary or useful
 	//bool isClockwise() const;
