@@ -102,6 +102,7 @@ Bezier::Bezier(const Bezier& other) : controlPoints(other.controlPoints), buffer
     
     generatedCurve = other.generatedCurve;
     convexHull = other.convexHull;
+    generationTime = other.generationTime;
     //type = other.type;
     if (other.buffersInitialized)
     {
@@ -126,6 +127,7 @@ Bezier& Bezier::operator=(const Bezier& other)
         controlPoints = other.controlPoints;
         generatedCurve = other.generatedCurve;
         convexHull = other.convexHull;
+        generationTime = other.generationTime;
         
         //type = other.type;
         if (other.buffersInitialized)

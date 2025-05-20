@@ -2,12 +2,53 @@
 #include "MathUtils.h"
 
 #include <cmath>
+#include <iostream>
 
 using namespace MathUtils;
 
 void CubicBezierSequence::addCurve(const Bezier& curve)
 {
     curves.push_back(curve);
+}
+
+void CubicBezierSequence::incrementStepSize()
+{
+    for (auto& curve : curves)
+    {
+        curve.incrementStepSize();
+    }
+    stepSize = curves[0].getStepSize(); // Replicate change on this
+    calculateGenerationTime();
+}
+
+void CubicBezierSequence::decrementStepSize()
+{
+    for (auto& curve : curves)
+    {
+        curve.decrementStepSize();
+    }
+    stepSize = curves[0].getStepSize();
+    calculateGenerationTime();
+}
+
+void CubicBezierSequence::swapAlgorithm()
+{
+    for (auto& curve : curves)
+    {
+        curve.swapAlgorithm();
+    }
+    algorithm = curves[0].getAlgorithm();
+    calculateGenerationTime();
+}
+
+void CubicBezierSequence::calculateGenerationTime()
+{
+    generationTime = 0.0f;
+    for (auto curve : curves)
+    {
+        std::cout << "Generation time for curve : " << curve.getGenerationTime() << std::endl;
+        generationTime += curve.getGenerationTime();
+    }
 }
 
 void CubicBezierSequence::enforceConstraints() {

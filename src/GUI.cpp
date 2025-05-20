@@ -98,18 +98,23 @@ void GUI::drawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
 		ImGuiWindowFlags_NoResize |
 		ImGuiWindowFlags_AlwaysAutoResize))
 	{
-		if (polybuilder.getFinishedBeziers().empty())
+		if (polybuilder.getFinishedBeziers().empty() && polybuilder.getFinishedBezierSequences().empty())
 			ImGui::Text("No Bézier curve.");
 		else
 		{
 			if (polybuilder.getFinishedBeziers().size() > 1 && ImGui::Button("Calculate intersections"))
 				polybuilder.tryFindingIntersections();
 			if (polybuilder.getFoundIntersectionsText().size() > 0)
+			{
 				for (std::string intersection : polybuilder.getFoundIntersectionsText())
 				{
 					ImGui::Text(intersection.c_str());
 				}
+			}			
 		}
+
+		if (!polybuilder.getFinishedBeziers().empty())
+			ImGui::Text("Béziers Curves (Free Degree)");
 
 		// Store indices to remove
 		std::vector<size_t> indicesToRemove;
@@ -168,6 +173,68 @@ void GUI::drawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
 			std::cout << "Removing bézier curve " << index << "..." << std::endl;
 			polybuilder.removeFinishedBezier(index);
 		}
+
+		if (!polybuilder.getFinishedBezierSequences().empty())
+		{
+			ImGui::Separator();
+			ImGui::Text("Bézier Curves (Cubic Sequences)");
+		}
+
+		indicesToRemove.clear();
+
+		for (size_t index = 0; index < polybuilder.getFinishedBezierSequences().size(); index++)
+		{
+			const auto& bezierSequence = polybuilder.getFinishedBezierSequences()[index];
+			int continuityType = bezierSequence.getContinuityType();
+			int numberOfCurves = bezierSequence.getNumberOfCurves();
+			float stepSize = bezierSequence.getStepSize();
+			int algorithm = bezierSequence.getAlgorithm();
+			std::string algoString = algorithm == 0 ? "Pascal" : "DeCasteljau";
+			std::string continuityTypeString = "C0";
+			double generationTime = bezierSequence.getGenerationTime();
+
+			if (continuityType == 1)
+				continuityTypeString = "C1";
+			else if (continuityType == 2)
+				continuityTypeString = "C2";
+
+			ImGui::Text("%d : Step Size = %.3f, Continuity Type : %s, Curves : %d, Algorithm : %s",
+				static_cast<int>(index), stepSize, continuityTypeString.c_str(), numberOfCurves, algoString.c_str());
+
+			if (ImGui::Button(("<->##" + std::to_string(index)).c_str()))
+				polybuilder.swapSequenceAlgorithm(index);
+
+			ImGui::SetItemTooltip("Swap Algorithm");
+			ImGui::SameLine();
+			if (ImGui::Button(("+##" + std::to_string(index)).c_str()))
+				polybuilder.incrementSequenceStepSize(index);
+
+			ImGui::SetItemTooltip("Increment Step Size by 0.01");
+			ImGui::SameLine();
+			if (ImGui::Button(("-##" + std::to_string(index)).c_str()))
+				polybuilder.decrementSequenceStepSize(index);
+
+			ImGui::SetItemTooltip("Decrement Step Size by 0.01");
+
+			ImGui::SameLine();
+			if (ImGui::Button(("X##" + std::to_string(index)).c_str()))
+				indicesToRemove.push_back(index);
+
+			ImGui::SetItemTooltip("Delete Bézier Curve");
+
+			ImGui::SameLine();
+			ImGui::Text("Generated in %.7f seconds.", generationTime);
+
+			ImGui::Separator();
+		}
+
+		std::sort(indicesToRemove.begin(), indicesToRemove.end(), std::greater<size_t>());
+		for (size_t index : indicesToRemove)
+		{
+			std::cout << "Removing bézier curve " << index << "..." << std::endl;
+			polybuilder.removeFinishedSequence(index);
+		}
+
 	}
 	ImGui::End();
 }
@@ -246,7 +313,7 @@ void GUI::handleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder)
 		if (ImGui::MenuItem("Create Bézier (Free Degree)"))
 			polybuilder.startBezierCurve();
 
-		if (ImGui::MenuItem("Create Bézier Sequence"))
+		if (ImGui::MenuItem("Create Bézier (Cubic Sequence)"))
 			polybuilder.startCubicSequence();
 
 		ImGui::Separator();

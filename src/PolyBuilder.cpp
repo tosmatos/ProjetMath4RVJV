@@ -53,6 +53,30 @@ void PolyBuilder::toggleHullDisplay(size_t index)
         finishedBeziers[index].toggleConvexHullDisplay();
 }
 
+void PolyBuilder::swapSequenceAlgorithm(size_t index)
+{
+    if (index < finishedSequences.size())
+        finishedSequences[index].swapAlgorithm();
+}
+
+void PolyBuilder::incrementSequenceStepSize(size_t index)
+{
+    if (index < finishedSequences.size())
+        finishedSequences[index].incrementStepSize();
+}
+
+void PolyBuilder::decrementSequenceStepSize(size_t index)
+{
+    if (index < finishedSequences.size())
+        finishedSequences[index].decrementStepSize();
+}
+
+void PolyBuilder::removeFinishedSequence(size_t index)
+{
+    if (index < finishedSequences.size())
+        finishedSequences.erase(finishedSequences.begin() + index);
+}
+
 void PolyBuilder::duplicateControlPoint(int shapeIndex, int vertexIndex)
 {
     if (shapeIndex < finishedBeziers.size())
@@ -545,6 +569,7 @@ void PolyBuilder::finishCubicSequence() {
 
     // Add the completed sequence to our collection
     if (!currentSequence.getCurves().empty()) {
+        currentSequence.calculateGenerationTime();
         finishedSequences.push_back(currentSequence);
     }
 

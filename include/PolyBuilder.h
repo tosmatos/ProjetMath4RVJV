@@ -121,7 +121,13 @@ public:
     void toggleCubicSequenceMode() { cubicSequenceMode = !cubicSequenceMode; };
     int getContinuityType() const { return continuityType; };
     void setContinuityType(int type) { if (type >= 0 && type <= 2) continuityType = type; };
-    std::vector<CubicBezierSequence> getFinishedBezierSequences() { return finishedSequences; };
+    std::vector<CubicBezierSequence>& getFinishedBezierSequences() { return finishedSequences; };
+
+    void swapSequenceAlgorithm(size_t index);
+    void incrementSequenceStepSize(size_t index);
+    void decrementSequenceStepSize(size_t index);
+    void removeFinishedSequence(size_t index);
+
     void duplicateControlPoint(int shapeIndex, int vertexIndex);
 
     // Translation is an affine transformation
