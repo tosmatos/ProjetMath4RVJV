@@ -1,48 +1,79 @@
-#include "CubicBezierSequence.h"
+﻿#include "CubicBezierSequence.h"
+#include "MathUtils.h"
+
+#include <cmath>
+
+using namespace MathUtils;
 
 void CubicBezierSequence::addCurve(const Bezier& curve)
 {
     curves.push_back(curve);
 }
 
-void CubicBezierSequence::enforceConstraints()
-{
+void CubicBezierSequence::enforceConstraints() {
     if (curves.size() < 2) return;
+
+    // Constants to control curve shape
+    const float percentage = 0.4f;      // Use 40% of previous segment length
+    const float maxDistance = 0.2f;     // Maximum control point distance (in normalized coords)
 
     for (size_t i = 1; i < curves.size(); i++) {
         Bezier& prevCurve = curves[i - 1];
         Bezier& nextCurve = curves[i];
+
         std::vector<Vertex> prevCurveControlPoints = prevCurve.getControlPoints();
         std::vector<Vertex> nextCurveControlPoints = nextCurve.getControlPoints();
 
-        // Make sure both curves have 4 control points (cubic)
         if (prevCurveControlPoints.size() != 4 || nextCurveControlPoints.size() != 4)
             continue;
 
-        // C0 continuity (always enforce this)
-        nextCurveControlPoints[0] = prevCurveControlPoints[3];
+        const Vertex& P1 = prevCurveControlPoints[1];
+        const Vertex& P2 = prevCurveControlPoints[2];
+        const Vertex& P3 = prevCurveControlPoints[3]; // Same as Q0
+
+        // C0 continuity - curves meet at a point
+        nextCurveControlPoints[0] = P3;
 
         if (continuityType >= 1) {
-            // C1 continuity
-            // Calculate Q1 based on P3 and P2
-            Vertex P2 = prevCurveControlPoints[2];
-            Vertex P3 = prevCurveControlPoints[3]; // Same as Q0
+            // Calculate tangent vector
+            Vertex tangent = P3 - P2;
+            float tangentLength = std::sqrt(tangent.x * tangent.x + tangent.y * tangent.y);
 
-            // Q1 = P3 + (P3 - P2) = 2*P3 - P2
-            nextCurveControlPoints[1] = P3 * 2.0f - P2;
+            if (tangentLength > 0.001f) {
+                // Normalize the tangent
+                Vertex tangentDir = tangent * (1.0f / tangentLength);
 
-            if (continuityType >= 2) {
-                // C2 continuity
-                Vertex P1 = prevCurveControlPoints[1];
-                // Q2 = 2*Q1 - Q0 - P2 + P1
-                nextCurveControlPoints[2] = nextCurveControlPoints[1] * 2.0f -
-                    nextCurveControlPoints[0] - P2 + P1;
+                // Calculate desired length with absolute cap
+                float desiredLength = std::min(tangentLength * percentage, maxDistance);
+
+                // Place Q1 along the tangent with controlled length
+                nextCurveControlPoints[1] = P3 + tangentDir * desiredLength;
+
+                if (continuityType >= 2) {
+                    // For C2, we need to respect curvature but control magnitude
+
+                    // Get distance from P1 to P2
+                    float distP1P2 = std::sqrt(
+                        (P2.x - P1.x) * (P2.x - P1.x) +
+                        (P2.y - P1.y) * (P2.y - P1.y)
+                    );
+
+                    // Limit the influence of P1
+                    float cappedP1P2 = std::min(distP1P2, maxDistance);
+
+                    // Apply C2 constraint with controlled magnitude
+                    Vertex Q1 = nextCurveControlPoints[1];
+
+                    // Use a simplified C2 formula that prevents compounding
+                    float Q1Q2Length = std::min(desiredLength, maxDistance * 0.8f);
+
+                    // Place Q2 to maintain C2 but with bounded distance
+                    nextCurveControlPoints[2] = Q1 + tangentDir * Q1Q2Length;
+                }
             }
         }
 
-        prevCurve.setControlPoints(prevCurveControlPoints);
         nextCurve.setControlPoints(nextCurveControlPoints);
-        // Regenerate the curve after modifying control points
         nextCurve.generateCurve();
     }
 }

@@ -14,9 +14,19 @@ struct Vertex
 		return Vertex{ x - other.x, y - other.y };
 	}
 
-	Vertex operator*(float b)
+	Vertex operator-(float b) const
+	{
+		return Vertex(x - b, y - b);
+	}
+
+	Vertex operator*(float b) const
 	{
 		return Vertex{ x * b, y * b };
+	}
+
+	Vertex operator*(Vertex other) const
+	{
+		return Vertex{ x * other.x, y * other.y };
 	}
 
 	Vertex& operator+=(Vertex other)
