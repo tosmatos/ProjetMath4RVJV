@@ -438,14 +438,15 @@ void PolyBuilder::appendVertex(double xPos, double yPos)
     {
         tempPolygon.addVertex(normalizedX, normalizedY);
         tempPolygon.updateBuffers();
-    }
-        
+    }        
 }
 
 void PolyBuilder::finish()
 {
     if (bezierMode)
         finishBezier();
+    else if (cubicSequenceMode)
+        finishCubicSequence();
     else
         finishPolygon();
 }
@@ -506,42 +507,48 @@ void PolyBuilder::startCubicSequence()
 {
     cubicSequenceMode = true;
     currentSequence = CubicBezierSequence();
+    tempBezier = Bezier();
     buildingShape = true;
 }
 
-void PolyBuilder::appendToCubicSequence(float x, float y)
-{
-    std::vector<Bezier> curves = currentSequence.getCurves();
+void PolyBuilder::appendToCubicSequence(float x, float y) {
+    std::vector<Bezier>& curves = currentSequence.getCurves();
 
-    if (curves.empty()) {
-        // Starting the first curve
-        tempBezier.addControlPoint(x, y);
-
-        // If we have 4 points, we can complete the first curve
-        if (tempBezier.getControlPoints().size() == 4) {
-            tempBezier.generateCurve();
-            currentSequence.addCurve(tempBezier);
-            tempBezier = Bezier();
-
-            // Start the next curve with the last point of the previous one
-            tempBezier.addControlPoint(curves.back().getControlPoints().back());
-        }
+    if (tempBezier.getControlPoints().empty() && !curves.empty()) {
+        // Starting a new curve in the sequence, use the last point from previous curve
+        tempBezier.addControlPoint(curves.back().getControlPoints().back());
     }
-    else {
-        // We're adding to an existing sequence
-        tempBezier.addControlPoint(x, y);
 
-        // If we have 3 more points (plus the shared one = 4 total)
-        if (tempBezier.getControlPoints().size() == 4) {
-            tempBezier.generateCurve();
-            currentSequence.addCurve(tempBezier);
-            currentSequence.enforceConstraints(); // Apply continuity constraints
+    // Add the new point
+    tempBezier.addControlPoint(x, y);
 
-            tempBezier = Bezier();
-            // Start the next curve with the last point of the previous one
-            tempBezier.addControlPoint(curves.back().getControlPoints().back());
-        }
+    // If we now have 4 points, we have a complete cubic curve
+    if (tempBezier.getControlPoints().size() == 4) {
+        tempBezier.generateCurve();
+        tempBezier.updateBuffers();
+        currentSequence.addCurve(tempBezier);
+        currentSequence.enforceConstraints(); // Apply continuity constraints
+
+        // Reset for the next curve
+        tempBezier = Bezier();
     }
+}
+
+void PolyBuilder::finishCubicSequence() {
+    // If we have a partially completed curve (less than 4 points), discard it
+    if (tempBezier.getControlPoints().size() < 4) {
+        tempBezier = Bezier();
+    }
+
+    // Add the completed sequence to our collection
+    if (!currentSequence.getCurves().empty()) {
+        finishedSequences.push_back(currentSequence);
+    }
+
+    // Reset state
+    currentSequence = CubicBezierSequence();
+    cubicSequenceMode = false;
+    buildingShape = false;
 }
 
 // For transformations that should take place on the center, like scaling or shearing

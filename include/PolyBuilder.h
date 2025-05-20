@@ -114,9 +114,11 @@ public:
 
     void startCubicSequence();
     void appendToCubicSequence(float x, float y);
+    void finishCubicSequence();
+
     void toggleCubicSequenceMode() { cubicSequenceMode = !cubicSequenceMode; };
     void incrementContinuityType(); // TODO : See if setting it directly isn't better
-
+    std::vector<CubicBezierSequence> getFinishedBezierSequences() { return finishedSequences; };
     void duplicateControlPoint(int shapeIndex, int vertexIndex);
 
     // Translation is an affine transformation

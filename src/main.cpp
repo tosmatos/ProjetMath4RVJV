@@ -270,13 +270,19 @@ int main()
                 polybuilder.tempPolygon.drawPreview(shader);
         }
 
-        // Draw béziers
+        // Draw béziers (free degree)
         for (const auto& bezier : polybuilder.getFinishedBeziers())
         {
             bezier.drawControlPoints(shader);
             bezier.drawGeneratedCurve(shader);
             if (bezier.getShowConvexHull())
                 bezier.drawConvexHull(shader);
+        }
+
+        // Draw béziers sequences
+        for (const auto& bezierSequence : polybuilder.getFinishedBezierSequences())
+        {
+            bezierSequence.draw(shader);
         }
 
         polybuilder.drawIntersectionMarkers(shader);

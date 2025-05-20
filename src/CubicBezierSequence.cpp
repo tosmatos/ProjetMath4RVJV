@@ -73,6 +73,11 @@ bool CubicBezierSequence::isConstrainedPoint(int curveIndex, int pointIndex)
     return false;
 }
 
-void CubicBezierSequence::draw(Shader& shader)
+void CubicBezierSequence::draw(Shader& shader) const
 {
+    for (auto curve : curves)
+    {
+        curve.drawControlPoints(shader);
+        curve.drawGeneratedCurve(shader);
+    }
 }

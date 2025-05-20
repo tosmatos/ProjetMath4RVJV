@@ -29,5 +29,5 @@ public:
     bool isConstrainedPoint(int curveIndex, int pointIndex);
 
     // Draw all curves
-    void draw(Shader& shader);
+    void draw(Shader& shader) const;
 };
