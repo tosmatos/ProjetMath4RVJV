@@ -11,6 +11,8 @@ private:
     int continuityType = 0; // 0 for C0, 1 for C1, 2 for C2
 
 public:
+    CubicBezierSequence(int continuityType = 0) : continuityType(continuityType) {};
+
     // Add a new curve to the sequence
     void addCurve(const Bezier& curve);
 
@@ -19,6 +21,7 @@ public:
     // Enforce continuity constraints on all curves
     void enforceConstraints();
 
+    int getContinuityType() const { return continuityType; };
     // Set the continuity type (0=C0, 1=C1, 2=C2)
     void setContinuityType(int type);
 

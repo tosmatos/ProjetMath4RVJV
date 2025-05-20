@@ -41,6 +41,7 @@ private:
     void finishBezier();
 
     bool cubicSequenceMode;
+    int continuityType = 0;
     CubicBezierSequence currentSequence;
     std::vector<CubicBezierSequence> finishedSequences;
 
@@ -117,7 +118,8 @@ public:
     void finishCubicSequence();
 
     void toggleCubicSequenceMode() { cubicSequenceMode = !cubicSequenceMode; };
-    void incrementContinuityType(); // TODO : See if setting it directly isn't better
+    int getContinuityType() const { return continuityType; };
+    void setContinuityType(int type) { if (type >= 0 && type <= 2) continuityType = type; };
     std::vector<CubicBezierSequence> getFinishedBezierSequences() { return finishedSequences; };
     void duplicateControlPoint(int shapeIndex, int vertexIndex);
 

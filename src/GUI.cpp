@@ -209,6 +209,24 @@ void GUI::drawFillSettingsPanel(bool* open)
 	ImGui::End();
 }
 
+void GUI::drawBezierSettingsPanel(PolyBuilder& polybuilder, bool* open)
+{
+	ImGui::SetNextWindowPos(ImVec2(400, 10), ImGuiCond_Always);
+	ImGui::SetNextWindowBgAlpha(0.3f);
+
+	if (ImGui::Begin("Bézier Settings", open,
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		const char* continuityTypes[] = { "C0", "C1", "C2" };
+		static int currentContinuityType = polybuilder.getContinuityType();
+
+		if (ImGui::Combo("Continuity Type", &currentContinuityType, continuityTypes, IM_ARRAYSIZE(continuityTypes)))
+			polybuilder.setContinuityType(currentContinuityType);
+	}
+	ImGui::End();
+}
+
 void GUI::handleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder)
 {
 	if (*openContextMenu)

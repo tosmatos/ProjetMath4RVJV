@@ -194,6 +194,7 @@ int main()
         GUI::handleContextMenu(&openContextMenu, polybuilder); // Right click menu
         GUI::drawHoverTooltip(window, polybuilder); // Tooltip when hovering vertices
         GUI::drawFillSettingsPanel(&showFillSettings); // Fill settings panel
+        GUI::drawBezierSettingsPanel(polybuilder);
         if (polybuilder.isBuilding())
             GUI::drawBuildingHelpTextbox(window);
         GUI::drawTransformationHelpTextbox(window);

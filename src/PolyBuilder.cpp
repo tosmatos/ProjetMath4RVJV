@@ -506,7 +506,7 @@ void PolyBuilder::finishBezier()
 void PolyBuilder::startCubicSequence()
 {
     cubicSequenceMode = true;
-    currentSequence = CubicBezierSequence();
+    currentSequence = CubicBezierSequence(continuityType);
     tempBezier = Bezier();
     buildingShape = true;
 }
@@ -546,7 +546,7 @@ void PolyBuilder::finishCubicSequence() {
     }
 
     // Reset state
-    currentSequence = CubicBezierSequence();
+    currentSequence = CubicBezierSequence(continuityType);
     cubicSequenceMode = false;
     buildingShape = false;
 }
