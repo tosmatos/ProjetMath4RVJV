@@ -12,14 +12,14 @@ using namespace MathUtils;
 void PolyBuilder::startPolygon(PolyType type)
 {
     polyType = type;
-    buildingPoly = true;
+    buildingShape = true;
     tempPolygon = Polygon();
 }
 
 void PolyBuilder::startBezierCurve()
 {
     tempBezier = Bezier();
-    buildingPoly = true;
+    buildingShape = true;
     toggleBezierMode();
 }
 
@@ -409,7 +409,7 @@ bool PolyBuilder::testHullIntersection(const std::vector<Vertex> shapeA, const s
 
 void PolyBuilder::appendVertex(double xPos, double yPos)
 {
-    if (!buildingPoly)
+    if (!buildingShape)
         return;
 
     // Get window size
@@ -429,6 +429,10 @@ void PolyBuilder::appendVertex(double xPos, double yPos)
         if (tempBezier.getControlPoints().size() > 2)
             tempBezier.generateCurve();
         tempBezier.updateBuffers();
+    }
+    else if (cubicSequenceMode)
+    {
+        appendToCubicSequence(normalizedX, normalizedY);
     }
     else
     {
@@ -450,7 +454,7 @@ void PolyBuilder::finishPolygon()
 {
     std::cout << "Finishing polygon ..." << std::endl;
 
-    if (!buildingPoly)
+    if (!buildingShape)
         return;
 
     if (tempPolygon.isClockwise())
@@ -477,7 +481,7 @@ void PolyBuilder::finishPolygon()
         break;
     }
 
-    buildingPoly = false;
+    buildingShape = false;
     tempPolygon = Polygon();
 }
 
@@ -485,7 +489,7 @@ void PolyBuilder::finishBezier()
 {
     std::cout << "Finishing Bézier ..." << std::endl;
 
-    if (!buildingPoly)
+    if (!buildingShape)
         return;
 
     bezier = tempBezier;
@@ -493,9 +497,51 @@ void PolyBuilder::finishBezier()
     bezier.generateCurve();
     bezier.updateBuffers();
     finishedBeziers.push_back(bezier);
-    buildingPoly = false;
+    buildingShape = false;
     toggleBezierMode();
     tempBezier = Bezier();
+}
+
+void PolyBuilder::startCubicSequence()
+{
+    cubicSequenceMode = true;
+    currentSequence = CubicBezierSequence();
+    buildingShape = true;
+}
+
+void PolyBuilder::appendToCubicSequence(float x, float y)
+{
+    std::vector<Bezier> curves = currentSequence.getCurves();
+
+    if (curves.empty()) {
+        // Starting the first curve
+        tempBezier.addControlPoint(x, y);
+
+        // If we have 4 points, we can complete the first curve
+        if (tempBezier.getControlPoints().size() == 4) {
+            tempBezier.generateCurve();
+            currentSequence.addCurve(tempBezier);
+            tempBezier = Bezier();
+
+            // Start the next curve with the last point of the previous one
+            tempBezier.addControlPoint(curves.back().getControlPoints().back());
+        }
+    }
+    else {
+        // We're adding to an existing sequence
+        tempBezier.addControlPoint(x, y);
+
+        // If we have 3 more points (plus the shared one = 4 total)
+        if (tempBezier.getControlPoints().size() == 4) {
+            tempBezier.generateCurve();
+            currentSequence.addCurve(tempBezier);
+            currentSequence.enforceConstraints(); // Apply continuity constraints
+
+            tempBezier = Bezier();
+            // Start the next curve with the last point of the previous one
+            tempBezier.addControlPoint(curves.back().getControlPoints().back());
+        }
+    }
 }
 
 // For transformations that should take place on the center, like scaling or shearing
@@ -514,7 +560,7 @@ Vertex PolyBuilder::calculateCenter(const std::vector<Vertex>& vertices)
 
 void PolyBuilder::cancel()
 {
-    buildingPoly = false;
+    buildingShape = false;
     tempPolygon = Polygon();
     tempBezier = Bezier();
 }
@@ -686,7 +732,7 @@ bool PolyBuilder::isValidPolygonIndex(int index) const
 
 bool PolyBuilder::isBuilding() const
 {
-    return buildingPoly;
+    return buildingShape;
 }
 
 std::vector<Vertex> PolyBuilder::findBezierIntersections(const Bezier& curve1, const Bezier& curve2,

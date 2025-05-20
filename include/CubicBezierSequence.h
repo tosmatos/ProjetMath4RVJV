@@ -14,6 +14,8 @@ public:
     // Add a new curve to the sequence
     void addCurve(const Bezier& curve);
 
+    std::vector<Bezier> getCurves();
+
     // Enforce continuity constraints on all curves
     void enforceConstraints();
 
@@ -22,6 +24,9 @@ public:
 
     // Move a control point, maintaining continuity
     void moveControlPoint(int curveIndex, int pointIndex, const Vertex& newPosition);
+
+    // Returns false if the point can be moved, considering current continuity type
+    bool isConstrainedPoint(int curveIndex, int pointIndex);
 
     // Draw all curves
     void draw(Shader& shader);

@@ -5,6 +5,7 @@
 #include "PolyTypes.h"
 #include "Polygon.h"
 #include "Bezier.h"
+#include "CubicBezierSequence.h"
 #include "Matrix.h"
 #include "IntersectionMarkers.h"
 
@@ -26,7 +27,7 @@ class PolyBuilder
 {
 private:
     PolyType polyType;
-    bool buildingPoly;    
+    bool buildingShape;    
     Polygon polygon;
     Polygon window;
     std::vector<Polygon> finishedPolygons;
@@ -38,6 +39,10 @@ private:
     std::vector<Bezier> finishedBeziers;
 
     void finishBezier();
+
+    bool cubicSequenceMode;
+    CubicBezierSequence currentSequence;
+    std::vector<CubicBezierSequence> finishedSequences;
 
     Vertex calculateCenter(const std::vector<Vertex>& vertices);
 
@@ -102,11 +107,15 @@ public:
     const std::vector<Bezier>& getFinishedBeziers() const { return finishedBeziers; };
     void removeFinishedBezier(size_t index);
 
-
     void swapBezierAlgorithm(size_t index);
     void incrementBezierStepSize(size_t index);
     void decrementBezierStepSize(size_t index);
     void toggleHullDisplay(size_t index);
+
+    void startCubicSequence();
+    void appendToCubicSequence(float x, float y);
+    void toggleCubicSequenceMode() { cubicSequenceMode = !cubicSequenceMode; };
+    void incrementContinuityType(); // TODO : See if setting it directly isn't better
 
     void duplicateControlPoint(int shapeIndex, int vertexIndex);
 

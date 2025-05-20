@@ -225,8 +225,12 @@ void GUI::handleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder)
 		if (ImGui::MenuItem("Create Window"))
 			polybuilder.startPolygon(PolyType::WINDOW);
 
-		if (ImGui::MenuItem("Create Bézier"))
+		if (ImGui::MenuItem("Create Bézier (Free Degree)"))
 			polybuilder.startBezierCurve();
+
+		if (ImGui::MenuItem("Create Bézier Sequence"))
+			//TODO : Add bézier sequence start
+			return;
 
 		ImGui::Separator();
 		if (polybuilder.isBuilding())
