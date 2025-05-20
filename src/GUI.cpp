@@ -19,7 +19,7 @@ namespace GUI
 
 	bool isDraggingVertex = false;
 	bool isDraggingShape = false;
-	bool isShapePolygon = false;
+	ShapeType shapeType = SHAPE_POLYGON;
 	int selectedShapeIndex = -1;
 	int selectedVertexIndex = -1;
 	TransformationType currentTransformationType = TRANSLATE;
@@ -578,7 +578,7 @@ void GUI::handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder)
 	switch (currentTransformationType)
 	{
 	case TRANSLATE:
-		polybuilder.translate(selectedShapeIndex, isShapePolygon, deltaX, deltaY);
+		polybuilder.translate(selectedShapeIndex, shapeType, deltaX, deltaY);
 		break;
 	case SCALE:
 	{ // Need braces because I declare variables in here
@@ -590,21 +590,21 @@ void GUI::handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder)
 		float targetTotalScaleFactorX = 1.0f + totalMouseDeltaX;
 		float targetTotalScaleFactorY = 1.0f + totalMouseDeltaY;
 
-		polybuilder.applyScaleFromOriginal(selectedShapeIndex, isShapePolygon,
+		polybuilder.applyScaleFromOriginal(selectedShapeIndex, shapeType,
 			targetTotalScaleFactorX, targetTotalScaleFactorY);
 		break;
 	}
 	case ROTATE:
 	{
 		float totalRotationAngle = ndcX - initialScaleMouseX;
-		polybuilder.applyRotationFromOriginal(selectedShapeIndex, isShapePolygon, -totalRotationAngle);
+		polybuilder.applyRotationFromOriginal(selectedShapeIndex, shapeType, -totalRotationAngle);
 		break;
 	}		
 	case SHEAR:
 	{
 		float totalShearX = ndcX - initialScaleMouseX; // Maybe add sensitivity here as well
 		float totalShearY = ndcY - initialScaleMouseY;
-		polybuilder.applyShearFromOriginal(selectedShapeIndex, isShapePolygon, totalShearX, totalShearY);
+		polybuilder.applyShearFromOriginal(selectedShapeIndex, shapeType, totalShearX, totalShearY);
 		break;
 	}
 	}
@@ -664,7 +664,7 @@ void GUI::handleVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder)
 	lastMouseX = ndcX;
 	lastMouseY = ndcY;
 
-	polybuilder.translateVertex(selectedShapeIndex, selectedVertexIndex, isShapePolygon, deltaX, deltaY);
+	polybuilder.translateVertex(selectedShapeIndex, selectedVertexIndex, shapeType, deltaX, deltaY);
 }
 
 bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mods)
@@ -721,7 +721,7 @@ bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mo
 			{
 				isDraggingShape = true;
 				selectedShapeIndex = static_cast<int>(i);
-				isShapePolygon = true;
+				shapeType = SHAPE_POLYGON;
 				lastMouseX = ndcX;
 				lastMouseY = ndcY;
 
@@ -729,7 +729,7 @@ bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mo
 				{
 					initialScaleMouseX = ndcX;
 					initialScaleMouseY = ndcY;
-					polybuilder.startTransformingShape(selectedShapeIndex, isShapePolygon);
+					polybuilder.startTransformingShape(selectedShapeIndex, shapeType);
 					initialShapeWidth = maxX - minX;
 					initialShapeHeight = maxY - minY;
 				}
@@ -767,7 +767,7 @@ bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mo
 			{
 				isDraggingShape = true;
 				selectedShapeIndex = static_cast<int>(i);
-				isShapePolygon = false;
+				shapeType = SHAPE_BEZIER;
 				lastMouseX = ndcX;
 				lastMouseY = ndcY;
 
@@ -775,13 +775,51 @@ bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mo
 				{
 					initialScaleMouseX = ndcX;
 					initialScaleMouseY = ndcY;
-					polybuilder.startTransformingShape(selectedShapeIndex, isShapePolygon);
+					polybuilder.startTransformingShape(selectedShapeIndex, shapeType);
 					initialShapeWidth = maxX - minX;
 					initialShapeHeight = maxY - minY;
 				}
 
 				return true;
 			}
+		}
+	}
+
+	auto bezierSeqs = polybuilder.getFinishedBezierSequences();
+	for (size_t i = 0; i < bezierSeqs.size(); i++) {
+		// Calculate bounding box for the entire sequence
+		float minX = std::numeric_limits<float>::max();
+		float maxX = std::numeric_limits<float>::min();
+		float minY = std::numeric_limits<float>::max();
+		float maxY = std::numeric_limits<float>::min();
+
+		// Iterate through each curve in the sequence and update bounds
+		for (const auto& curve : bezierSeqs[i].getCurves()) {
+			for (const auto& point : curve.getControlPoints()) {
+				minX = std::min(minX, point.x);
+				maxX = std::max(maxX, point.x);
+				minY = std::min(minY, point.y);
+				maxY = std::max(maxY, point.y);
+			}
+		}
+
+		// Check if point is in bounding box
+		if (ndcX >= minX && ndcX <= maxX && ndcY >= minY && ndcY <= maxY) {
+			isDraggingShape = true;
+			selectedShapeIndex = static_cast<int>(i);
+			shapeType = SHAPE_BEZIER_SEQUENCE;
+			lastMouseX = ndcX;
+			lastMouseY = ndcY;
+
+			if (currentTransformationType != TRANSLATE) {
+				initialScaleMouseX = ndcX;
+				initialScaleMouseY = ndcY;
+				polybuilder.startTransformingShape(selectedShapeIndex, shapeType);
+				initialShapeWidth = maxX - minX;
+				initialShapeHeight = maxY - minY;
+			}
+
+			return true;
 		}
 	}
 
@@ -825,7 +863,8 @@ void GUI::deleteVertex(GLFWwindow* window, PolyBuilder& polybuilder, double xPos
 			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
 			{
 				std::cout << "Deleting vertex" << std::endl;
-				polybuilder.deleteVertex(i, j, true);
+				shapeType = SHAPE_POLYGON;
+				polybuilder.deleteVertex(i, j, shapeType);
 				return;
 			}
 		}
@@ -846,7 +885,8 @@ void GUI::deleteVertex(GLFWwindow* window, PolyBuilder& polybuilder, double xPos
 			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
 			{
 				std::cout << "Deleting vertex" << std::endl;
-				polybuilder.deleteVertex(i, j, false);
+				shapeType = SHAPE_BEZIER;
+				polybuilder.deleteVertex(i, j, shapeType);
 				return;
 			}
 		}
@@ -884,7 +924,7 @@ bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, doubl
 				selectedShapeIndex = i;
 				selectedVertexIndex = j;
 				foundMatch = true;
-				isShapePolygon = true;
+				shapeType = SHAPE_POLYGON;
 				isDraggingVertex = true;
 				lastMouseX = ndcX;
 				lastMouseY = ndcY;
@@ -915,7 +955,7 @@ bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, doubl
 				selectedShapeIndex = i;
 				selectedVertexIndex = j;
 				foundMatch = true;
-				isShapePolygon = false;
+				shapeType = SHAPE_BEZIER;
 				isDraggingVertex = true;
 				lastMouseX = ndcX;
 				lastMouseY = ndcY;

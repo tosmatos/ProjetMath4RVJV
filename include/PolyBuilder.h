@@ -71,7 +71,7 @@ public:
     void finish();
     void cancel();
 
-    void deleteVertex(int shapeIndex, int vertexIndex, bool isPolygon);
+    void deleteVertex(int shapeIndex, int vertexIndex, ShapeType shapeType);
 
     // Add a filled polygon to our storage
     void addFilledPolygon(const Polygon& poly,
@@ -131,16 +131,16 @@ public:
     void duplicateControlPoint(int shapeIndex, int vertexIndex);
 
     // Translation is an affine transformation
-    void translate(int shapeIndex, bool isPolygon, float deltaX, float deltaY);
-    void translateVertex(int shapeIndex, int vertexIndex, bool isPolygon, float deltaX, float deltaY);
+    void translate(int shapeIndex, ShapeType shapeType, float deltaX, float deltaY);
+    void translateVertex(int shapeIndex, int vertexIndex, ShapeType shapeType, float deltaX, float deltaY);
 
     // For linear transformations
-    void startTransformingShape(int shapeIndex, bool isPolygon);
+    void startTransformingShape(int shapeIndex, ShapeType shapeType);
     void stopTransformingShape();
 
-    void applyScaleFromOriginal(int shapeIndex, bool isPolygon, float totalScaleFactorX, float totalScaleFactorY);
-    void applyRotationFromOriginal(int shapeIndex, bool isPolygon, float totalRotationAngle);
-    void applyShearFromOriginal(int shapeIndex, bool isPolygon, float totalShearX, float totalShearY);
+    void applyScaleFromOriginal(int shapeIndex, ShapeType shapeType, float totalScaleFactorX, float totalScaleFactorY);
+    void applyRotationFromOriginal(int shapeIndex, ShapeType shapeType, float totalRotationAngle);
+    void applyShearFromOriginal(int shapeIndex, ShapeType shapeType, float totalShearX, float totalShearY);
 
     void tryFindingIntersections();
     const std::vector<std::string> getFoundIntersectionsText() const { return foundIntersectionsText; };

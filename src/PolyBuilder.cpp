@@ -111,22 +111,26 @@ void PolyBuilder::duplicateControlPoint(int shapeIndex, int vertexIndex)
  * unwanted compounding effects when applying multiple transformations.
  */
 
-void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
+void PolyBuilder::translate(int shapeIndex, ShapeType shapeType, float deltaX, float deltaY)
 {
     foundIntersectionsText.clear();
     intersections.clear();
     Matrix3x3 translationMatrix = createTranslationMatrix(deltaX, deltaY);
 
     std::vector<Vertex> vertices;
-    if (isPolygon)
+    switch (shapeType)
     {
+    case SHAPE_POLYGON:
         Polygon& poly = finishedPolygons[shapeIndex];
         vertices = poly.getVertices();
-    }
-    else
-    {
+        break;
+    case SHAPE_BEZIER:
         Bezier& bezier = finishedBeziers[shapeIndex];
         vertices = bezier.getControlPoints();
+        break;
+    case SHAPE_BEZIER_SEQUENCE:
+        // TODO : this case
+        break;
     }
 
     for (Vertex& vertex : vertices)
@@ -136,37 +140,45 @@ void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float 
         vertex.y = transformedPoint.y;
     }
 
-    if (isPolygon)
+    switch (shapeType)
     {
+    case SHAPE_POLYGON:
         Polygon& poly = finishedPolygons[shapeIndex];
         poly.setVertices(vertices);
         poly.updateBuffers();
-    }
-    else
-    {
+        break;
+    case SHAPE_BEZIER:
         Bezier& bezier = finishedBeziers[shapeIndex];
         bezier.setControlPoints(vertices);
         bezier.generateCurve();
         bezier.updateBuffers();
+        break;
+    case SHAPE_BEZIER_SEQUENCE:
+        // TODO : this case
+        break;
     }
 }
 
-void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, bool isPolygon, float deltaX, float deltaY)
+void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, ShapeType shapeType, float deltaX, float deltaY)
 {
     foundIntersectionsText.clear();
     intersections.clear();
     Matrix3x3 translationMatrix = createTranslationMatrix(deltaX, deltaY);
 
     std::vector<Vertex> vertices;
-    if (isPolygon)
+    switch (shapeType)
     {
+    case SHAPE_POLYGON:
         Polygon& poly = finishedPolygons[shapeIndex];
         vertices = poly.getVertices();
-    }
-    else
-    {
+        break;
+    case SHAPE_BEZIER:
         Bezier& bezier = finishedBeziers[shapeIndex];
         vertices = bezier.getControlPoints();
+        break;
+    case SHAPE_BEZIER_SEQUENCE:
+        // TODO : this case
+        break;
     }
 
     Vertex& vertex = vertices[vertexIndex];
@@ -175,33 +187,37 @@ void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, bool isPolygo
     vertex.x = transformedPoint.x;
     vertex.y = transformedPoint.y;
 
-    if (isPolygon)
+    switch (shapeType)
     {
+    case SHAPE_POLYGON:
         Polygon& poly = finishedPolygons[shapeIndex];
         poly.setVertices(vertices);
         poly.updateBuffers();
-    }
-    else
-    {
+        break;
+    case SHAPE_BEZIER:
         Bezier& bezier = finishedBeziers[shapeIndex];
         bezier.setControlPoints(vertices);
         bezier.generateCurve();
         bezier.updateBuffers();
+        break;
+    case SHAPE_BEZIER_SEQUENCE:
+        // TODO : this case
+        break;
     }
 }
 
-void PolyBuilder::startTransformingShape(int shapeIndex, bool isPolygon)
+void PolyBuilder::startTransformingShape(int shapeIndex, ShapeType shapeType)
 {
-    if (isPolygon)
+    switch (shapeType)
     {
+    case SHAPE_POLYGON:
         if (shapeIndex >= 0 && shapeIndex < finishedPolygons.size())
         {
             transformOriginalVertices = finishedPolygons[shapeIndex].getVertices();
             isCurrentlyTransformingShape = true;
         }
-    }
-    else
-    {
+        break;
+    case SHAPE_BEZIER:
         if (shapeIndex >= 0 && shapeIndex < finishedBeziers.size())
         {
             transformOriginalVertices = finishedBeziers[shapeIndex].getControlPoints();
@@ -209,6 +225,10 @@ void PolyBuilder::startTransformingShape(int shapeIndex, bool isPolygon)
             foundIntersectionsText.clear();
             intersections.clear();
         }
+        break;
+    case SHAPE_BEZIER_SEQUENCE:
+        //TODO : this case 
+        break;
     }
 }
 
@@ -218,7 +238,7 @@ void PolyBuilder::stopTransformingShape()
     transformOriginalVertices.clear();
 }
 
-void PolyBuilder::applyScaleFromOriginal(int shapeIndex, bool isPolygon, float totalScaleFactorX, float totalScaleFactorY)
+void PolyBuilder::applyScaleFromOriginal(int shapeIndex, ShapeType shapeType, float totalScaleFactorX, float totalScaleFactorY)
 {
     if (!isCurrentlyTransformingShape || transformOriginalVertices.empty())
     {
@@ -242,18 +262,17 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, bool isPolygon, float t
         vertex.y = transformedPoint.y;
     }
 
-    // Update the live shape with the newly calculated vertices
-    if (isPolygon)
+    switch (shapeType)
     {
+    case SHAPE_POLYGON:
         if (shapeIndex >= 0 && shapeIndex < finishedPolygons.size())
         {
             Polygon& poly = finishedPolygons[shapeIndex];
             poly.setVertices(newVertices);
             poly.updateBuffers();
         }
-    }
-    else
-    {
+        break;
+    case SHAPE_BEZIER:
         if (shapeIndex >= 0 && shapeIndex < finishedBeziers.size())
         {
             Bezier& bezier = finishedBeziers[shapeIndex];
@@ -261,10 +280,14 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, bool isPolygon, float t
             bezier.generateCurve();
             bezier.updateBuffers();
         }
+        break;
+    case SHAPE_BEZIER_SEQUENCE:
+        // TODO : this case
+        break;
     }
 }
 
-void PolyBuilder::applyRotationFromOriginal(int shapeIndex, bool isPolygon, float totalRotationAngle)
+void PolyBuilder::applyRotationFromOriginal(int shapeIndex, ShapeType shapeType, float totalRotationAngle)
 {
     if (!isCurrentlyTransformingShape || transformOriginalVertices.empty())
     {
@@ -287,22 +310,26 @@ void PolyBuilder::applyRotationFromOriginal(int shapeIndex, bool isPolygon, floa
         vertex.y = transformedPoint.y;
     }
 
-    if (isPolygon)
+    switch (shapeType)
     {
+    case SHAPE_POLYGON:
         Polygon& poly = finishedPolygons[shapeIndex];
         poly.setVertices(newVertices);
         poly.updateBuffers();
-    }
-    else
-    {
+        break;
+    case SHAPE_BEZIER:
         Bezier& bezier = finishedBeziers[shapeIndex];
         bezier.setControlPoints(newVertices);
         bezier.generateCurve();
         bezier.updateBuffers();
+        break;
+    case SHAPE_BEZIER_SEQUENCE:
+        // TODO : this case
+        break;
     }
 }
 
-void PolyBuilder::applyShearFromOriginal(int shapeIndex, bool isPolygon, float totalShearX, float totalShearY)
+void PolyBuilder::applyShearFromOriginal(int shapeIndex, ShapeType shapeType, float totalShearX, float totalShearY)
 {
     if (!isCurrentlyTransformingShape || transformOriginalVertices.empty())
     {
@@ -325,18 +352,22 @@ void PolyBuilder::applyShearFromOriginal(int shapeIndex, bool isPolygon, float t
         vertex.y = transformedPoint.y;
     }
 
-    if (isPolygon)
+    switch (shapeType)
     {
+    case SHAPE_POLYGON:
         Polygon& poly = finishedPolygons[shapeIndex];
         poly.setVertices(newVertices);
         poly.updateBuffers();
-    }
-    else
-    {
+        break;
+    case SHAPE_BEZIER:
         Bezier& bezier = finishedBeziers[shapeIndex];
         bezier.setControlPoints(newVertices);
         bezier.generateCurve();
         bezier.updateBuffers();
+        break;
+    case SHAPE_BEZIER_SEQUENCE:
+        // TODO : this case
+        break;
     }
 }
 
@@ -600,12 +631,13 @@ void PolyBuilder::cancel()
     tempBezier = Bezier();
 }
 
-void PolyBuilder::deleteVertex(int shapeIndex, int vertexIndex, bool isPolygon)
+void PolyBuilder::deleteVertex(int shapeIndex, int vertexIndex, ShapeType shapeType)
 {
     std::vector<Vertex> vertices;
 
-    if (isPolygon)
+    switch (shapeType)
     {
+    case SHAPE_POLYGON:
         if (shapeIndex < 0 || shapeIndex >= finishedPolygons.size())
         {
             std::cerr << "Error: Invalid polygon index " << shapeIndex << std::endl;
@@ -633,9 +665,8 @@ void PolyBuilder::deleteVertex(int shapeIndex, int vertexIndex, bool isPolygon)
 
         poly.setVertices(vertices);
         poly.updateBuffers();
-    }
-    else
-    {
+        break;
+    case SHAPE_BEZIER:
         // Check index validity for the Bezier list
         if (shapeIndex < 0 || shapeIndex >= finishedBeziers.size())
         {
@@ -664,6 +695,10 @@ void PolyBuilder::deleteVertex(int shapeIndex, int vertexIndex, bool isPolygon)
         bezier.setControlPoints(vertices);
         bezier.generateCurve();
         bezier.updateBuffers();
+        break;
+    case SHAPE_BEZIER_SEQUENCE:
+        // TODO : this case
+        break;
     }
 }
 

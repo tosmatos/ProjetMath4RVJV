@@ -17,7 +17,7 @@ namespace GUI {
 
 	extern bool isDraggingShape;
 	extern bool isDraggingVertex;
-	extern bool isShapePolygon;
+	extern ShapeType shapeType;
 	extern int selectedShapeIndex;
 	extern int selectedVertexIndex;
 
