@@ -27,4 +27,7 @@ namespace MathUtils
     bool is_inside(Vertex point, Vertex a, Vertex b, bool isWindowClockwise);
     // Get intersection point
     Vertex intersection(Vertex a1, Vertex a2, Vertex b1, Vertex b2);
+    // Returns true if two line segments intersect, and intersection point gets set
+    bool lineSegmentsIntersect(const Vertex& segmentA_start, const Vertex& segmentA_end,
+        const Vertex& segmentB_start, const Vertex& segmentB_end, Vertex& intersectionPoint);
 }

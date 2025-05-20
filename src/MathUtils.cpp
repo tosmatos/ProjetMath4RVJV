@@ -1,5 +1,7 @@
 ﻿#include "MathUtils.h"
 
+#include <cmath>
+
 namespace MathUtils
 {
     long long combinations(int n, int k)
@@ -73,5 +75,47 @@ namespace MathUtils
     Vertex intersection(Vertex a1, Vertex a2, Vertex b1, Vertex b2)
     {
         return ((b1 - b2) * cross2D(a1, a2) - (a1 - a2) * cross2D(b1, b2)) * (1.0f / cross2D(a1 - a2, b1 - b2));
+    }
+
+    bool lineSegmentsIntersect(const Vertex& segmentA_start, const Vertex& segmentA_end,
+        const Vertex& segmentB_start, const Vertex& segmentB_end, Vertex& intersectionPoint)
+    {
+        // Calculate the direction vectors of our two line segments
+        Vertex directionA(segmentA_end.x - segmentA_start.x, segmentA_end.y - segmentA_start.y);
+        Vertex directionB(segmentB_end.x - segmentB_start.x, segmentB_end.y - segmentB_start.y);
+
+        // We'll use the cross product to determine if the lines are parallel
+        // TODO : Cross product exists in Clipper.cpp. Find a way to make it clean and portable
+        float crossProduct = directionA.x * directionB.y - directionA.y * directionB.x;
+
+        // If the cross product is nearly zero, the lines are parallel or collinear
+        // We use a small epsilon value to account for floating point precision
+        if (std::abs(crossProduct) < 1e-6)
+            return false;  // Parallel lines don't intersect
+
+        // Calculate the vector from start of segment A to start of segment B
+        Vertex startDifference(segmentB_start.x - segmentA_start.x, segmentB_start.y - segmentA_start.y);
+
+        // Calculate how far along segment A the intersection occurs (from 0 to 1)
+        // We use the formula: t = (startDifference × directionB) / (directionA × directionB)
+        // Where × is the 2D cross product
+        float intersectionRatioA = (startDifference.x * directionB.y - startDifference.y * directionB.x) / crossProduct;
+
+        // Calculate how far along segment B the intersection occurs (from 0 to 1)
+        // We use the formula: u = (startDifference × directionA) / (directionA × directionB)
+        float intersectionRatioB = (startDifference.x * directionA.y - startDifference.y * directionA.x) / crossProduct;
+
+        // Check if the intersection point is within both segments
+        // For the intersection to be on both segments, both ratios must be between 0 and 1
+        if (intersectionRatioA >= 0 && intersectionRatioA <= 1 && intersectionRatioB >= 0 && intersectionRatioB <= 1)
+        {
+            // Calculate the intersection point using the ratio along segment A
+            // Doesn't matter if we use intersectionRatioA or B for getting the point
+            intersectionPoint.x = segmentA_start.x + intersectionRatioA * directionA.x;
+            intersectionPoint.y = segmentA_start.y + intersectionRatioA * directionA.y;
+            return true;  // We found an intersection!
+        }
+
+        return false;
     }
 }

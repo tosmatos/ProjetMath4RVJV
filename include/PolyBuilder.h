@@ -48,7 +48,8 @@ private:
     // Actual recursive subdivision implementation for finding bézier intersections, if hulls intersect
     std::vector<Vertex> findBezierIntersections(const Bezier& curve1, const Bezier& curve2,
         float floatnessThreshold, int maxDepth);
-    std::vector<std::string> foundIntersections;
+    std::vector<Vertex> foundIntersections;
+    std::vector<std::string> foundIntersectionsText;
 
 public:
     bool bezierMode;
@@ -100,6 +101,7 @@ public:
     const std::vector<Bezier>& getFinishedBeziers() const { return finishedBeziers; };
     void removeFinishedBezier(size_t index);
 
+
     void swapBezierAlgorithm(size_t index);
     void incrementBezierStepSize(size_t index);
     void decrementBezierStepSize(size_t index);
@@ -120,5 +122,5 @@ public:
     void applyShearFromOriginal(int shapeIndex, bool isPolygon, float totalShearX, float totalShearY);
 
     void tryFindingIntersections();
-    const std::vector<std::string> getFoundIntersections() const { return foundIntersections; };
+    const std::vector<std::string> getFoundIntersectionsText() const { return foundIntersectionsText; };
 };

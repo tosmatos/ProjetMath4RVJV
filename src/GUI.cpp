@@ -104,8 +104,8 @@ void GUI::drawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
 		{
 			if (polybuilder.getFinishedBeziers().size() > 1 && ImGui::Button("Calculate intersections"))
 				polybuilder.tryFindingIntersections();
-			if (polybuilder.getFoundIntersections().size() > 0)
-				for (std::string intersection : polybuilder.getFoundIntersections())
+			if (polybuilder.getFoundIntersectionsText().size() > 0)
+				for (std::string intersection : polybuilder.getFoundIntersectionsText())
 				{
 					ImGui::Text(intersection.c_str());
 				}

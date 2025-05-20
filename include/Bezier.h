@@ -72,10 +72,6 @@ public:
 	// Intersection helper functions
 	// Returns two Bézier curves representing the subdivision or the original curve at point t
 	std::pair<Bezier, Bezier> subdivide(float t) const;
-	// Returns true if two line segments intersect, and intersection point gets set
-	// TODO : Figure out it that could be moved to a utility class or something.
-	bool lineSegmentsIntersect(const Vertex& segmentA_start, const Vertex& segmentA_end,
-		const Vertex& segmentB_start, const Vertex& segmentB_end, Vertex& intersectionPoint);
 	// Determines a curve's "flatness", to know if it can be approximated as a line
 	float calculateFlatness() const;
 

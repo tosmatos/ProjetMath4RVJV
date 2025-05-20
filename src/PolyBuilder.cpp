@@ -89,7 +89,7 @@ void PolyBuilder::duplicateControlPoint(int shapeIndex, int vertexIndex)
 
 void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
 {
-    foundIntersections.clear();
+    foundIntersectionsText.clear();
     Matrix3x3 translationMatrix = createTranslationMatrix(deltaX, deltaY);
 
     std::vector<Vertex> vertices;
@@ -127,7 +127,7 @@ void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float 
 
 void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, bool isPolygon, float deltaX, float deltaY)
 {
-    foundIntersections.clear();
+    foundIntersectionsText.clear();
     Matrix3x3 translationMatrix = createTranslationMatrix(deltaX, deltaY);
 
     std::vector<Vertex> vertices;
@@ -178,7 +178,7 @@ void PolyBuilder::startTransformingShape(int shapeIndex, bool isPolygon)
         {
             transformOriginalVertices = finishedBeziers[shapeIndex].getControlPoints();
             isCurrentlyTransformingShape = true;
-            foundIntersections.clear();
+            foundIntersectionsText.clear();
         }
     }
 }
@@ -322,8 +322,9 @@ void PolyBuilder::tryFindingIntersections()
 
         if (result)
         {
-            // TODO : if hulls intersects, find if curves do
-            foundIntersections.push_back(u8"Intersection found on Bézier " + std::to_string(i) + " and " + std::to_string(i + 1));
+            foundIntersections = findBezierIntersections(finishedBeziers[i], finishedBeziers[i + 1], 0.005f, 10);
+            if (!foundIntersections.empty())
+                foundIntersectionsText.push_back(u8"Intersection found on Bézier " + std::to_string(i) + " and " + std::to_string(i + 1));
         }
     }
 }
@@ -391,11 +392,6 @@ bool PolyBuilder::testHullIntersection(const std::vector<Vertex> shapeA, const s
 
     // If there's overlap on every axis, there's an intersection
     return true;
-}
-
-std::vector<Vertex> PolyBuilder::findBezierIntersections(const Bezier& curve1, const Bezier& curve2, float floatnessThreshold, int maxDepth)
-{
-    return std::vector<Vertex>();
 }
 
 void PolyBuilder::appendVertex(double xPos, double yPos)
@@ -676,4 +672,75 @@ bool PolyBuilder::isValidPolygonIndex(int index) const
 bool PolyBuilder::isBuilding() const
 {
     return buildingPoly;
+}
+
+std::vector<Vertex> PolyBuilder::findBezierIntersections(const Bezier& curve1, const Bezier& curve2,
+    float flatnessThreshold, int maxDepth) {
+    std::vector<Vertex> intersections;
+
+    // Helper function for recursive subdivision
+    std::function<void(const Bezier&, const Bezier&, int)> findIntersectionsRecursive =
+        [&](const Bezier& c1, const Bezier& c2, int depth) {
+
+        // Generate convex hulls for both curves
+        Bezier c1Copy = c1;
+        Bezier c2Copy = c2;
+        c1Copy.generateConvexHull();
+        c2Copy.generateConvexHull();
+
+        // Check if convex hulls intersect
+        // This would use your SAT implementation
+        bool hullsIntersect = testHullIntersection(c1Copy.getConvexHull(), c2Copy.getConvexHull());
+
+        if (!hullsIntersect) {
+            // No intersection, early exit
+            return;
+        }
+
+        // Calculate flatness of both curves
+        // (You'll need to implement this function - see below)
+        float flatness1 = c1.calculateFlatness();
+        float flatness2 = c2.calculateFlatness();
+
+        // Base case: Both curves are approximately flat or maximum depth reached
+        if ((flatness1 < flatnessThreshold && flatness2 < flatnessThreshold) || depth >= maxDepth) {
+            // Treat as line segments
+            Vertex intersection;
+            std::vector<Vertex> c1ControlPoints = c1.getControlPoints();
+            std::vector<Vertex> c2ControlPoints = c2.getControlPoints();
+            if (lineSegmentsIntersect(
+                c1ControlPoints.front(), c1ControlPoints.back(),
+                c2ControlPoints.front(), c2ControlPoints.back(),
+                intersection)) {
+                // Check if this intersection is already in our list (within some epsilon)
+                bool isDuplicate = false;
+                for (const auto& existing : intersections) {
+                    if (squaredDistance(existing, intersection) < 1e-6) {
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+
+                if (!isDuplicate) {
+                    intersections.push_back(intersection);
+                }
+            }
+            return;
+        }
+
+        // Recursive case: Subdivide curves
+        auto [c1Left, c1Right] = c1.subdivide(0.5f);
+        auto [c2Left, c2Right] = c2.subdivide(0.5f);
+
+        // Test all four combinations
+        findIntersectionsRecursive(c1Left, c2Left, depth + 1);
+        findIntersectionsRecursive(c1Left, c2Right, depth + 1);
+        findIntersectionsRecursive(c1Right, c2Left, depth + 1);
+        findIntersectionsRecursive(c1Right, c2Right, depth + 1);
+        };
+
+    // Start the recursive process
+    findIntersectionsRecursive(curve1, curve2, 0);
+
+    return intersections;
 }
