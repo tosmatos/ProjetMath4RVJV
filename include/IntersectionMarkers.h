@@ -45,7 +45,7 @@ public:
         // If there are no points, we're done
         if (points.empty()) return;
 
-        // Create vertices for crosses (8 vertices per point)
+        // Create vertices for crosses (4 vertices per point)
         std::vector<Vertex> crossVertices;
         for (const auto& point : points) {
             // Horizontal line
@@ -77,7 +77,7 @@ public:
 
         glBindVertexArray(vao);
         // Draw pairs of vertices as lines
-        for (int i = 0; i < points.size() * 2; i++) {
+        for (int i = 0; i < points.size(); i++) {
             glDrawArrays(GL_LINES, i * 4, 2);     // Horizontal line
             glDrawArrays(GL_LINES, i * 4 + 2, 2); // Vertical line
         }

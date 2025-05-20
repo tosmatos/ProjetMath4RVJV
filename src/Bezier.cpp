@@ -46,9 +46,6 @@ void Bezier::generatePascalCurve()
 
         generatedCurve.push_back(pointOnCurve);
     }
-
-    // Update buffers to send the new curve data to the GPU
-    updateBuffers();
 }
 
 // For now this takes longer than Pascal, and the reason is probably the vector creation and copying in the loop.
@@ -92,8 +89,6 @@ void Bezier::generateDeCasteljauCurve()
         // That's the one we add to the generatedCurve vector
         generatedCurve.push_back(currentPoints[0]);
     }
-
-    updateBuffers();
 }
 
 Bezier::Bezier()
@@ -390,7 +385,6 @@ void Bezier::generateConvexHull()
     } while (currentPoint != leftmost);
 
     convexHull = resultHull;
-    updateBuffers();
 }
 std::pair<Bezier, Bezier> Bezier::subdivide(float t) const
 {

@@ -279,7 +279,7 @@ int main()
                 bezier.drawConvexHull(shader);
         }
 
-        polybuilder.getIntersectionMarkers().draw(shader);
+        polybuilder.drawIntersectionMarkers(shader);
 
         // ImGui Rendering
         ImGui::Render();

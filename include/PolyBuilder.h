@@ -125,4 +125,5 @@ public:
     void tryFindingIntersections();
     const std::vector<std::string> getFoundIntersectionsText() const { return foundIntersectionsText; };
     const IntersectionMarkers getIntersectionMarkers() const { return intersections; };
+    const void drawIntersectionMarkers(Shader& shader) const { intersections.draw(shader); };
 };

@@ -122,7 +122,8 @@ void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float 
     {
         Bezier& bezier = finishedBeziers[shapeIndex];
         bezier.setControlPoints(vertices);
-        bezier.generateCurve(); // Updates buffers internally
+        bezier.generateCurve();
+        bezier.updateBuffers();
     }
 }
 
@@ -160,7 +161,8 @@ void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, bool isPolygo
     {
         Bezier& bezier = finishedBeziers[shapeIndex];
         bezier.setControlPoints(vertices);
-        bezier.generateCurve(); // Updates buffers internally
+        bezier.generateCurve();
+        bezier.updateBuffers();
     }
 }
 
@@ -232,7 +234,8 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, bool isPolygon, float t
         {
             Bezier& bezier = finishedBeziers[shapeIndex];
             bezier.setControlPoints(newVertices);
-            bezier.generateCurve(); // This should update its buffers
+            bezier.generateCurve();
+            bezier.updateBuffers();
         }
     }
 }
@@ -270,7 +273,8 @@ void PolyBuilder::applyRotationFromOriginal(int shapeIndex, bool isPolygon, floa
     {
         Bezier& bezier = finishedBeziers[shapeIndex];
         bezier.setControlPoints(newVertices);
-        bezier.generateCurve(); // Updates buffers internally
+        bezier.generateCurve();
+        bezier.updateBuffers();
     }
 }
 
@@ -307,7 +311,8 @@ void PolyBuilder::applyShearFromOriginal(int shapeIndex, bool isPolygon, float t
     {
         Bezier& bezier = finishedBeziers[shapeIndex];
         bezier.setControlPoints(newVertices);
-        bezier.generateCurve(); // Updates buffers internally
+        bezier.generateCurve();
+        bezier.updateBuffers();
     }
 }
 
@@ -420,10 +425,10 @@ void PolyBuilder::appendVertex(double xPos, double yPos)
 
     if (bezierMode)
     {
-        tempBezier.addControlPoint(normalizedX, normalizedY);
-        tempBezier.updateBuffers();
+        tempBezier.addControlPoint(normalizedX, normalizedY);        
         if (tempBezier.getControlPoints().size() > 2)
             tempBezier.generateCurve();
+        tempBezier.updateBuffers();
     }
     else
     {
@@ -485,7 +490,8 @@ void PolyBuilder::finishBezier()
 
     bezier = tempBezier;
     bezier.generateConvexHull();
-    bezier.generateCurve(); // Generate buffers is called from generate curve
+    bezier.generateCurve();
+    bezier.updateBuffers();
     finishedBeziers.push_back(bezier);
     buildingPoly = false;
     toggleBezierMode();
@@ -575,7 +581,8 @@ void PolyBuilder::deleteVertex(int shapeIndex, int vertexIndex, bool isPolygon)
         }
 
         bezier.setControlPoints(vertices);
-        bezier.generateCurve(); // Calls update buffers internally
+        bezier.generateCurve();
+        bezier.updateBuffers();
     }
 }
 
