@@ -40,9 +40,8 @@ private:
 
     void finishBezier();
 
-    bool cubicSequenceMode;
-    int continuityType = 0;
-    CubicBezierSequence currentSequence;
+    
+    int continuityType = 0;    
     std::vector<CubicBezierSequence> finishedSequences;
 
     Vertex calculateCenter(const std::vector<Vertex>& vertices);
@@ -60,9 +59,11 @@ private:
 
 public:
     bool bezierMode;
+    bool cubicSequenceMode;
 
     Polygon tempPolygon;
     Bezier tempBezier;
+    CubicBezierSequence currentSequence;
 
     // Function declarations
     void startPolygon(PolyType type);

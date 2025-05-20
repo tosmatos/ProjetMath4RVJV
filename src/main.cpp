@@ -266,7 +266,14 @@ int main()
                 polybuilder.tempBezier.drawControlPointsPreview(shader);
                 if (polybuilder.tempBezier.getControlPoints().size() > 2)
                     polybuilder.tempBezier.drawGeneratedCurvePreview(shader);
-            }				
+            }
+            else if (polybuilder.cubicSequenceMode)
+            {
+                polybuilder.tempBezier.drawControlPointsPreview(shader);
+                if (polybuilder.tempBezier.getControlPoints().size() > 2)
+                    polybuilder.tempBezier.drawGeneratedCurvePreview(shader);
+                polybuilder.currentSequence.drawPreview(shader);
+            }
             else 
                 polybuilder.tempPolygon.drawPreview(shader);
         }

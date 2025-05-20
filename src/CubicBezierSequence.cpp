@@ -81,3 +81,12 @@ void CubicBezierSequence::draw(Shader& shader) const
         curve.drawGeneratedCurve(shader);
     }
 }
+
+void CubicBezierSequence::drawPreview(Shader& shader) const
+{
+    for (auto curve : curves)
+    {
+        curve.drawControlPointsPreview(shader);
+        curve.drawGeneratedCurvePreview(shader);
+    }
+}

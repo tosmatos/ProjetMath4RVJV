@@ -33,4 +33,6 @@ public:
 
     // Draw all curves
     void draw(Shader& shader) const;
+
+    void drawPreview(Shader& shader) const;
 };

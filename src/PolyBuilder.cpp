@@ -521,6 +521,9 @@ void PolyBuilder::appendToCubicSequence(float x, float y) {
 
     // Add the new point
     tempBezier.addControlPoint(x, y);
+    if (tempBezier.getControlPoints().size() > 2)
+        tempBezier.generateCurve();
+    tempBezier.updateBuffers();
 
     // If we now have 4 points, we have a complete cubic curve
     if (tempBezier.getControlPoints().size() == 4) {
