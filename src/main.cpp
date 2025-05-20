@@ -9,7 +9,7 @@
 #include "Shader.h"
 #include "GUI.h"
 #include "Filler.h"
-#include "PolyTypes.h"
+#include "CommonTypes.h"
 #include "Bezier.h"
 
 bool openContextMenu;

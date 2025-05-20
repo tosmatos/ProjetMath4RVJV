@@ -1,6 +1,8 @@
 #pragma once
 #include "Polygon.h"
 #include "PolyBuilder.h"
+#include "CommonTypes.h"
+
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 
@@ -23,13 +25,6 @@ namespace GUI {
 	extern float initialScaleMouseX, initialScaleMouseY;
 	extern float initialShapeWidth, initialShapeHeight;
 
-	enum TransformationType
-	{
-		TRANSLATE,
-		SCALE,
-		ROTATE,
-		SHEAR
-	};
 	extern TransformationType currentTransformationType;
 
     // Functions for real-time shape movement and clipping

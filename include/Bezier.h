@@ -2,7 +2,7 @@
 
 #include <vector>
 #include "Vertex.h"
-#include "PolyTypes.h"
+#include "CommonTypes.h"
 #include "Shader.h"
 
 class Bezier

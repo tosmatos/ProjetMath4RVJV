@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "PolyTypes.h"
+#include "CommonTypes.h"
 #include "Polygon.h"
 #include "Bezier.h"
 #include "CubicBezierSequence.h"

@@ -5,7 +5,6 @@
 
 #include "Clipper.h"
 #include "Filler.h"
-#include "PolyTypes.h"
 
 namespace GUI
 {
