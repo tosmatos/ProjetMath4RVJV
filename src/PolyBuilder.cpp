@@ -96,12 +96,12 @@ void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float 
     std::vector<Vertex> vertices;
     if (isPolygon)
     {
-        auto poly = finishedPolygons[shapeIndex];
+        Polygon& poly = finishedPolygons[shapeIndex];
         vertices = poly.getVertices();
     }
     else
     {
-        auto bezier = finishedBeziers[shapeIndex];
+        Bezier& bezier = finishedBeziers[shapeIndex];
         vertices = bezier.getControlPoints();
     }
 
@@ -136,12 +136,12 @@ void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, bool isPolygo
     std::vector<Vertex> vertices;
     if (isPolygon)
     {
-        auto poly = finishedPolygons[shapeIndex];
+        Polygon& poly = finishedPolygons[shapeIndex];
         vertices = poly.getVertices();
     }
     else
     {
-        auto bezier = finishedBeziers[shapeIndex];
+        Bezier& bezier = finishedBeziers[shapeIndex];
         vertices = bezier.getControlPoints();
     }
 

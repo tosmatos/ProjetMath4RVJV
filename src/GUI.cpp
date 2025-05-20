@@ -229,8 +229,7 @@ void GUI::handleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder)
 			polybuilder.startBezierCurve();
 
 		if (ImGui::MenuItem("Create Bézier Sequence"))
-			//TODO : Add bézier sequence start
-			return;
+			polybuilder.startCubicSequence();
 
 		ImGui::Separator();
 		if (polybuilder.isBuilding())

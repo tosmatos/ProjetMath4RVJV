@@ -14,7 +14,7 @@ public:
     // Add a new curve to the sequence
     void addCurve(const Bezier& curve);
 
-    std::vector<Bezier> getCurves();
+    std::vector<Bezier> getCurves() { return curves; };
 
     // Enforce continuity constraints on all curves
     void enforceConstraints();
