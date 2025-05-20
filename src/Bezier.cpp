@@ -215,6 +215,9 @@ void Bezier::updateBuffers()
         // Enable the vertex attribute we just configured
         glEnableVertexAttribArray(0);
     }
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
 const void Bezier::drawControlPoints(Shader& shader) const
@@ -225,11 +228,11 @@ const void Bezier::drawControlPoints(Shader& shader) const
     GLenum error = glGetError();
     if (error != GL_NO_ERROR)
     {
-        std::cout << "OpenGL error before drawing: " << error << std::endl;
+        std::cout << "drawControlPoints -- OpenGL error before drawing: " << error << std::endl;
     }
 
     glBindVertexArray(controlVAO);
-
+    
     shader.setColor("uColor", 1.0f, 0.0f, 0.5f, 1.0f);
     glDrawArrays(GL_LINE_STRIP, 0, controlPoints.size());
 
@@ -239,8 +242,10 @@ const void Bezier::drawControlPoints(Shader& shader) const
     error = glGetError();
     if (error != GL_NO_ERROR)
     {
-        std::cout << "OpenGL error after drawing: " << error << std::endl;
+        std::cout << "drawControlPoints --  OpenGL error after drawing: " << error << std::endl;
     }
+
+    glBindVertexArray(0); // Unbind to prevent side effects
 }
 
 const void Bezier::drawGeneratedCurve(Shader& shader) const
@@ -251,6 +256,8 @@ const void Bezier::drawGeneratedCurve(Shader& shader) const
 
     shader.setColor("uColor", 0.0f, 0.0f, 1.0f, 1.0f);
     glDrawArrays(GL_LINE_STRIP, 0, generatedCurve.size());
+
+    glBindVertexArray(0); // Unbind to prevent side effects
 }
 
 const void Bezier::drawControlPointsPreview(Shader& shader) const
@@ -265,6 +272,7 @@ const void Bezier::drawControlPointsPreview(Shader& shader) const
     shader.setColor("uColor", 1.0f, 1.0f, 1.0f, 1.0f);
     glDrawArrays(GL_POINTS, 0, controlPoints.size());
 
+    glBindVertexArray(0); // Unbind to prevent side effects
 }
 
 const void Bezier::drawGeneratedCurvePreview(Shader& shader) const
@@ -275,6 +283,8 @@ const void Bezier::drawGeneratedCurvePreview(Shader& shader) const
 
     shader.setColor("uColor", 0.0f, 1.0f, 1.0f, 1.0f);
     glDrawArrays(GL_LINE_STRIP, 0, generatedCurve.size());
+
+    glBindVertexArray(0); // Unbind to prevent side effects
 }
 
 const void Bezier::drawConvexHull(Shader& shader) const
@@ -287,6 +297,8 @@ const void Bezier::drawConvexHull(Shader& shader) const
 
     shader.setColor("uColor", 1.0f, 1.0f, 1.0f, 0.25f);
     glDrawArrays(GL_POINTS, 0, convexHull.size());
+
+    glBindVertexArray(0); // Unbind to prevent side effects
 }
 
 void Bezier::generateCurve()

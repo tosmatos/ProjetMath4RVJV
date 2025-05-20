@@ -90,6 +90,7 @@ void PolyBuilder::duplicateControlPoint(int shapeIndex, int vertexIndex)
 void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float deltaY)
 {
     foundIntersectionsText.clear();
+    intersections.clear();
     Matrix3x3 translationMatrix = createTranslationMatrix(deltaX, deltaY);
 
     std::vector<Vertex> vertices;
@@ -128,6 +129,7 @@ void PolyBuilder::translate(int shapeIndex, bool isPolygon, float deltaX, float 
 void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, bool isPolygon, float deltaX, float deltaY)
 {
     foundIntersectionsText.clear();
+    intersections.clear();
     Matrix3x3 translationMatrix = createTranslationMatrix(deltaX, deltaY);
 
     std::vector<Vertex> vertices;
@@ -179,6 +181,7 @@ void PolyBuilder::startTransformingShape(int shapeIndex, bool isPolygon)
             transformOriginalVertices = finishedBeziers[shapeIndex].getControlPoints();
             isCurrentlyTransformingShape = true;
             foundIntersectionsText.clear();
+            intersections.clear();
         }
     }
 }
@@ -322,9 +325,14 @@ void PolyBuilder::tryFindingIntersections()
 
         if (result)
         {
-            foundIntersections = findBezierIntersections(finishedBeziers[i], finishedBeziers[i + 1], 0.005f, 10);
+            std::vector<Vertex> foundIntersections = findBezierIntersections(finishedBeziers[i], finishedBeziers[i + 1], 0.005f, 10);
             if (!foundIntersections.empty())
+            {
+                for (const auto& intersection : foundIntersections)
+                    intersections.addPoint(intersection);
+
                 foundIntersectionsText.push_back(u8"Intersection found on Bézier " + std::to_string(i) + " and " + std::to_string(i + 1));
+            }                
         }
     }
 }

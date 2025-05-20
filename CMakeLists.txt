@@ -26,7 +26,7 @@ add_executable(ProjetMath4RVJV
     src/filler.cpp
     src/Bezier.cpp
     src/MathUtils.cpp
-)
+ "include/IntersectionMarkers.h")
 
 # Copy shaders to build directory
 add_custom_command(TARGET ProjetMath4RVJV POST_BUILD

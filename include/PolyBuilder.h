@@ -6,6 +6,7 @@
 #include "Polygon.h"
 #include "Bezier.h"
 #include "Matrix.h"
+#include "IntersectionMarkers.h"
 
 // For storing filled polygons
 struct FilledPolygon
@@ -48,7 +49,7 @@ private:
     // Actual recursive subdivision implementation for finding bézier intersections, if hulls intersect
     std::vector<Vertex> findBezierIntersections(const Bezier& curve1, const Bezier& curve2,
         float floatnessThreshold, int maxDepth);
-    std::vector<Vertex> foundIntersections;
+    IntersectionMarkers intersections;
     std::vector<std::string> foundIntersectionsText;
 
 public:
@@ -123,4 +124,5 @@ public:
 
     void tryFindingIntersections();
     const std::vector<std::string> getFoundIntersectionsText() const { return foundIntersectionsText; };
+    const IntersectionMarkers getIntersectionMarkers() const { return intersections; };
 };
