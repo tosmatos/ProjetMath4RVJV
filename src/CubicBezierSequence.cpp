@@ -143,7 +143,7 @@ void CubicBezierSequence::enforceConstraints() {
 
         nextCurve.setControlPoints(nextCurveControlPoints);
         nextCurve.generateCurve();
-        //nextCurve.updateBuffers();
+        nextCurve.updateBuffers();
     }
 }
 

@@ -301,8 +301,15 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, ShapeType shapeType, fl
 
 	if (shapeType == SHAPE_BEZIER_SEQUENCE)
 	{
-		if (sequenceTransformData.originalCurvePoints.empty())
+		if (sequenceTransformData.originalCurvePoints.empty() ||
+			shapeIndex < 0 || shapeIndex >= finishedSequences.size())
 			return;
+
+		// Create a completely fresh copy of the original sequence
+		CubicBezierSequence transformedSequence = finishedSequences[shapeIndex];
+
+		// Get a reference to the curves in our copied sequence
+		std::vector<Bezier>& curves = transformedSequence.getCurves();
 
 		// Flatten all points to calculate center
 		std::vector<Vertex> allPoints;
@@ -312,16 +319,14 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, ShapeType shapeType, fl
 
 		Vertex center = calculateCenter(allPoints);
 
+		// Create transformation matrices
 		Matrix3x3 translateToOrigin = createTranslationMatrix(-center.x, -center.y);
 		Matrix3x3 scalingMatrix = createScalingMatrix(totalScaleFactorX, totalScaleFactorY);
 		Matrix3x3 translateBack = createTranslationMatrix(center.x, center.y);
 		Matrix3x3 finalMatrix = translateBack * scalingMatrix * translateToOrigin;
 
 		// Transform and update each curve
-		CubicBezierSequence& sequence = finishedSequences[shapeIndex];
-		auto& curves = sequence.getCurves();
-
-		for (size_t i = 0; i < sequenceTransformData.originalCurvePoints.size(); i++) {
+		for (size_t i = 0; i < sequenceTransformData.originalCurvePoints.size() && i < curves.size(); i++) {
 			std::vector<Vertex> transformedPoints = sequenceTransformData.originalCurvePoints[i];
 
 			// Transform the points
@@ -329,14 +334,22 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, ShapeType shapeType, fl
 				point = multiplyMatrixVertex(finalMatrix, point);
 			}
 
-			// Update the curve
+			// Update the curve in our copy
 			curves[i].setControlPoints(transformedPoints);
 			curves[i].generateCurve();
-			curves[i].updateBuffers();
 		}
 
-		// Re-enforce constraints
-		sequence.enforceConstraints();
+		// Re-enforce constraints on our copy
+		transformedSequence.enforceConstraints();
+
+		// Update buffers in our copy
+		for (auto& curve : curves) {
+			curve.updateBuffers();
+		}
+
+		// Replace the original with our transformed copy
+		finishedSequences[shapeIndex] = transformedSequence;
+
 		return;
 	}
 
@@ -393,8 +406,15 @@ void PolyBuilder::applyRotationFromOriginal(int shapeIndex, ShapeType shapeType,
 
 	if (shapeType == SHAPE_BEZIER_SEQUENCE)
 	{
-		if (sequenceTransformData.originalCurvePoints.empty())
+		if (sequenceTransformData.originalCurvePoints.empty() ||
+			shapeIndex < 0 || shapeIndex >= finishedSequences.size())
 			return;
+
+		// Create a completely fresh copy
+		CubicBezierSequence transformedSequence = finishedSequences[shapeIndex];
+
+		// Get a reference to the curves in our copied sequence
+		std::vector<Bezier>& curves = transformedSequence.getCurves();
 
 		// Flatten all points to calculate center
 		std::vector<Vertex> allPoints;
@@ -411,10 +431,7 @@ void PolyBuilder::applyRotationFromOriginal(int shapeIndex, ShapeType shapeType,
 		Matrix3x3 finalMatrix = translateBack * rotationMatrix * translateToOrigin;
 
 		// Transform and update each curve
-		CubicBezierSequence& sequence = finishedSequences[shapeIndex];
-		auto& curves = sequence.getCurves();
-
-		for (size_t i = 0; i < sequenceTransformData.originalCurvePoints.size(); i++) {
+		for (size_t i = 0; i < sequenceTransformData.originalCurvePoints.size() && i < curves.size(); i++) {
 			std::vector<Vertex> transformedPoints = sequenceTransformData.originalCurvePoints[i];
 
 			// Transform the points
@@ -422,14 +439,22 @@ void PolyBuilder::applyRotationFromOriginal(int shapeIndex, ShapeType shapeType,
 				point = multiplyMatrixVertex(finalMatrix, point);
 			}
 
-			// Update the curve
+			// Update the curve in our copy
 			curves[i].setControlPoints(transformedPoints);
 			curves[i].generateCurve();
-			curves[i].updateBuffers();
 		}
 
-		// Re-enforce constraints
-		sequence.enforceConstraints();
+		// Re-enforce constraints on our copy
+		transformedSequence.enforceConstraints();
+
+		// Update buffers in our copy
+		for (auto& curve : curves) {
+			curve.updateBuffers();
+		}
+
+		// Replace the original with our transformed copy
+		finishedSequences[shapeIndex] = transformedSequence;
+
 		return;
 	}
 
@@ -479,8 +504,15 @@ void PolyBuilder::applyShearFromOriginal(int shapeIndex, ShapeType shapeType, fl
 
 	if (shapeType == SHAPE_BEZIER_SEQUENCE)
 	{
-		if (sequenceTransformData.originalCurvePoints.empty())
+		if (sequenceTransformData.originalCurvePoints.empty() ||
+			shapeIndex < 0 || shapeIndex >= finishedSequences.size())
 			return;
+
+		// Create a completely fresh copy
+		CubicBezierSequence transformedSequence = finishedSequences[shapeIndex];
+
+		// Get a reference to the curves in our copied sequence
+		std::vector<Bezier>& curves = transformedSequence.getCurves();
 
 		// Flatten all points to calculate center
 		std::vector<Vertex> allPoints;
@@ -490,16 +522,14 @@ void PolyBuilder::applyShearFromOriginal(int shapeIndex, ShapeType shapeType, fl
 
 		Vertex center = calculateCenter(allPoints);
 
+		// Create transformation matrices
 		Matrix3x3 translateToOrigin = createTranslationMatrix(-center.x, -center.y);
-		Matrix3x3 scalingMatrix = createShearingMatrix(totalShearX, totalShearY);
+		Matrix3x3 shearingMatrix = createShearingMatrix(totalShearX, totalShearY);
 		Matrix3x3 translateBack = createTranslationMatrix(center.x, center.y);
-		Matrix3x3 finalMatrix = translateBack * scalingMatrix * translateToOrigin;
+		Matrix3x3 finalMatrix = translateBack * shearingMatrix * translateToOrigin;
 
 		// Transform and update each curve
-		CubicBezierSequence& sequence = finishedSequences[shapeIndex];
-		auto& curves = sequence.getCurves();
-
-		for (size_t i = 0; i < sequenceTransformData.originalCurvePoints.size(); i++) {
+		for (size_t i = 0; i < sequenceTransformData.originalCurvePoints.size() && i < curves.size(); i++) {
 			std::vector<Vertex> transformedPoints = sequenceTransformData.originalCurvePoints[i];
 
 			// Transform the points
@@ -507,14 +537,22 @@ void PolyBuilder::applyShearFromOriginal(int shapeIndex, ShapeType shapeType, fl
 				point = multiplyMatrixVertex(finalMatrix, point);
 			}
 
-			// Update the curve
+			// Update the curve in our copy
 			curves[i].setControlPoints(transformedPoints);
 			curves[i].generateCurve();
-			curves[i].updateBuffers();
 		}
 
-		// Re-enforce constraints
-		sequence.enforceConstraints();
+		// Re-enforce constraints on our copy
+		transformedSequence.enforceConstraints();
+
+		// Update buffers in our copy
+		for (auto& curve : curves) {
+			curve.updateBuffers();
+		}
+
+		// Replace the original with our transformed copy
+		finishedSequences[shapeIndex] = transformedSequence;
+
 		return;
 	}
 
