@@ -52,42 +52,45 @@ void Bezier::generatePascalCurve()
 // New bonus point to do !
 void Bezier::generateDeCasteljauCurve()
 {
-    //std::cout << "Generating curve with DeCasteljau algorithm..." << std::endl;
+    // Calculate how many segments we'll use to approximate the curve
+    int numberOfSegments = static_cast<int>(1.0f / stepSize);
 
-    // Compute number of segments beforehand
-    // Because if it becomes too small, errors accumualte and the loop never finishes
-    int numSegments = static_cast<int>(1.0f / stepSize);
+    // Store the total number of control points
+    int numberOfControlPoints = controlPoints.size();
 
-    // t represents the position along the curve
-    for (int i = 0; i <= numSegments; i++)
+    // Pre-allocate a single temporary array to hold intermediate points
+    // This avoids repeated memory allocation inside the loops
+    std::vector<Vertex> intermediatePoints(numberOfControlPoints);
+
+    // For each point on the curve we want to generate
+    for (int segmentIndex = 0; segmentIndex <= numberOfSegments; segmentIndex++)
     {
-        // We calculate t here
-        float t = static_cast<float>(i) / numSegments;
+        // Calculate the parameter t (ranges from 0 to 1)
+        float parameterT = static_cast<float>(segmentIndex) / numberOfSegments;
 
-        Vertex pointOnCurve;
-
-        // Initialize the temp list with all points by default.
-        // Will get one point smaller with each loop
-        std::vector<Vertex> currentPoints = controlPoints;
-
-        while (currentPoints.size() > 1)
-        {
-            std::vector<Vertex> newPoints;
-
-            for (int j = 0; j < currentPoints.size() - 1; j++)
-            {
-                Vertex Pa = currentPoints[j];
-                Vertex Pb = currentPoints[j + 1];
-                Vertex Pab = Pa * (1.0f - t) + Pb * t; // (1−t)⋅* Pa​ + t *⋅Pb formule interpolation linéaire decasteljau
-                newPoints.push_back(Pab);
-            }
-
-            currentPoints = newPoints;
+        // Initialize our working array with the original control points
+        // We'll modify these values in-place during the algorithm
+        for (int pointIndex = 0; pointIndex < numberOfControlPoints; pointIndex++) {
+            intermediatePoints[pointIndex] = controlPoints[pointIndex];
         }
 
-        // After that loop, there's only one point in currentPoints.
-        // That's the one we add to the generatedCurve vector
-        generatedCurve.push_back(currentPoints[0]);
+        // Apply De Casteljau's algorithm
+        for (int level = 1; level < numberOfControlPoints; level++) {
+            // For each pair of adjacent points at the current level
+            for (int pointIndex = 0; pointIndex < numberOfControlPoints - level; pointIndex++) {
+                // Perform linear interpolation between adjacent points
+                Vertex startPoint = intermediatePoints[pointIndex];
+                Vertex endPoint = intermediatePoints[pointIndex + 1];
+
+                // The formula for linear interpolation: (1-t)*P0 + t*P1
+                intermediatePoints[pointIndex] = startPoint * (1.0f - parameterT) +
+                    endPoint * parameterT;
+            }
+        }
+
+        // After all levels, the only element of intermediatePoints is the point on the curve
+        // corresponding to the current parameter t
+        generatedCurve.push_back(intermediatePoints[0]);
     }
 }
 
