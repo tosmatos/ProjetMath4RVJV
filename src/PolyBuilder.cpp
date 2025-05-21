@@ -121,16 +121,22 @@ void PolyBuilder::translate(int shapeIndex, ShapeType shapeType, float deltaX, f
     switch (shapeType)
     {
     case SHAPE_POLYGON:
+    {
         Polygon& poly = finishedPolygons[shapeIndex];
         vertices = poly.getVertices();
         break;
+    }        
     case SHAPE_BEZIER:
+    {
         Bezier& bezier = finishedBeziers[shapeIndex];
         vertices = bezier.getControlPoints();
         break;
+    }        
     case SHAPE_BEZIER_SEQUENCE:
+    {
         // TODO : this case
         break;
+    }        
     }
 
     for (Vertex& vertex : vertices)
@@ -143,19 +149,25 @@ void PolyBuilder::translate(int shapeIndex, ShapeType shapeType, float deltaX, f
     switch (shapeType)
     {
     case SHAPE_POLYGON:
+    {
         Polygon& poly = finishedPolygons[shapeIndex];
         poly.setVertices(vertices);
         poly.updateBuffers();
         break;
+    }        
     case SHAPE_BEZIER:
+    {
         Bezier& bezier = finishedBeziers[shapeIndex];
         bezier.setControlPoints(vertices);
         bezier.generateCurve();
         bezier.updateBuffers();
         break;
+    }        
     case SHAPE_BEZIER_SEQUENCE:
+    {
         // TODO : this case
         break;
+    }        
     }
 }
 
@@ -169,16 +181,22 @@ void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, ShapeType sha
     switch (shapeType)
     {
     case SHAPE_POLYGON:
+    {
         Polygon& poly = finishedPolygons[shapeIndex];
         vertices = poly.getVertices();
         break;
+    }        
     case SHAPE_BEZIER:
+    {
         Bezier& bezier = finishedBeziers[shapeIndex];
         vertices = bezier.getControlPoints();
         break;
+    }        
     case SHAPE_BEZIER_SEQUENCE:
+    {
         // TODO : this case
         break;
+    }        
     }
 
     Vertex& vertex = vertices[vertexIndex];
@@ -190,19 +208,25 @@ void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, ShapeType sha
     switch (shapeType)
     {
     case SHAPE_POLYGON:
+    {
         Polygon& poly = finishedPolygons[shapeIndex];
         poly.setVertices(vertices);
         poly.updateBuffers();
         break;
+    }        
     case SHAPE_BEZIER:
+    {
         Bezier& bezier = finishedBeziers[shapeIndex];
         bezier.setControlPoints(vertices);
         bezier.generateCurve();
         bezier.updateBuffers();
         break;
+    }        
     case SHAPE_BEZIER_SEQUENCE:
+    {
         // TODO : this case
         break;
+    }        
     }
 }
 
@@ -265,6 +289,7 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, ShapeType shapeType, fl
     switch (shapeType)
     {
     case SHAPE_POLYGON:
+    {
         if (shapeIndex >= 0 && shapeIndex < finishedPolygons.size())
         {
             Polygon& poly = finishedPolygons[shapeIndex];
@@ -272,7 +297,9 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, ShapeType shapeType, fl
             poly.updateBuffers();
         }
         break;
+    }        
     case SHAPE_BEZIER:
+    {
         if (shapeIndex >= 0 && shapeIndex < finishedBeziers.size())
         {
             Bezier& bezier = finishedBeziers[shapeIndex];
@@ -281,9 +308,12 @@ void PolyBuilder::applyScaleFromOriginal(int shapeIndex, ShapeType shapeType, fl
             bezier.updateBuffers();
         }
         break;
+    }        
     case SHAPE_BEZIER_SEQUENCE:
+    {
         // TODO : this case
         break;
+    }        
     }
 }
 
@@ -313,19 +343,25 @@ void PolyBuilder::applyRotationFromOriginal(int shapeIndex, ShapeType shapeType,
     switch (shapeType)
     {
     case SHAPE_POLYGON:
+    {
         Polygon& poly = finishedPolygons[shapeIndex];
         poly.setVertices(newVertices);
         poly.updateBuffers();
         break;
+    }        
     case SHAPE_BEZIER:
+    {
         Bezier& bezier = finishedBeziers[shapeIndex];
         bezier.setControlPoints(newVertices);
         bezier.generateCurve();
         bezier.updateBuffers();
         break;
+    }        
     case SHAPE_BEZIER_SEQUENCE:
+    {
         // TODO : this case
         break;
+    }        
     }
 }
 
@@ -355,19 +391,25 @@ void PolyBuilder::applyShearFromOriginal(int shapeIndex, ShapeType shapeType, fl
     switch (shapeType)
     {
     case SHAPE_POLYGON:
+    {
         Polygon& poly = finishedPolygons[shapeIndex];
         poly.setVertices(newVertices);
         poly.updateBuffers();
         break;
+    }        
     case SHAPE_BEZIER:
+    {
         Bezier& bezier = finishedBeziers[shapeIndex];
         bezier.setControlPoints(newVertices);
         bezier.generateCurve();
         bezier.updateBuffers();
         break;
+    }        
     case SHAPE_BEZIER_SEQUENCE:
+    {
         // TODO : this case
         break;
+    }        
     }
 }
 
@@ -638,6 +680,7 @@ void PolyBuilder::deleteVertex(int shapeIndex, int vertexIndex, ShapeType shapeT
     switch (shapeType)
     {
     case SHAPE_POLYGON:
+    {
         if (shapeIndex < 0 || shapeIndex >= finishedPolygons.size())
         {
             std::cerr << "Error: Invalid polygon index " << shapeIndex << std::endl;
@@ -666,7 +709,9 @@ void PolyBuilder::deleteVertex(int shapeIndex, int vertexIndex, ShapeType shapeT
         poly.setVertices(vertices);
         poly.updateBuffers();
         break;
+    }        
     case SHAPE_BEZIER:
+    {
         // Check index validity for the Bezier list
         if (shapeIndex < 0 || shapeIndex >= finishedBeziers.size())
         {
@@ -696,9 +741,12 @@ void PolyBuilder::deleteVertex(int shapeIndex, int vertexIndex, ShapeType shapeT
         bezier.generateCurve();
         bezier.updateBuffers();
         break;
+    }
     case SHAPE_BEZIER_SEQUENCE:
+    {
         // TODO : this case
         break;
+    }
     }
 }
 
