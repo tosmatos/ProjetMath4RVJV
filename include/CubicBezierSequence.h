@@ -17,6 +17,8 @@ public:
     CubicBezierSequence(int continuityType = 0, float stepSize = 0.01f, int algorithm = 0)
         : continuityType(continuityType), stepSize(stepSize), algorithm(algorithm) {};
 
+    ~CubicBezierSequence();
+
     // Add a new curve to the sequence
     void addCurve(const Bezier& curve);
 
@@ -43,7 +45,7 @@ public:
     void moveControlPoint(int curveIndex, int pointIndex, const Vertex& newPosition);
 
     // Returns false if the point can be moved, considering current continuity type
-    bool isConstrainedPoint(int curveIndex, int pointIndex);
+    bool isConstrainedPoint(int curveIndex, int pointIndex) const;
 
     // Draw all curves
     void draw(Shader& shader) const;

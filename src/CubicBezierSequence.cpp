@@ -6,6 +6,11 @@
 
 using namespace MathUtils;
 
+CubicBezierSequence::~CubicBezierSequence()
+{
+    // Vector handles everything by itself
+}
+
 void CubicBezierSequence::addCurve(const Bezier& curve)
 {
     curves.push_back(curve);
@@ -44,7 +49,7 @@ void CubicBezierSequence::swapAlgorithm()
 void CubicBezierSequence::calculateGenerationTime()
 {
     generationTime = 0.0f;
-    for (auto curve : curves)
+    for (const auto& curve : curves)
     {
         std::cout << "Generation time for curve : " << curve.getGenerationTime() << std::endl;
         generationTime += curve.getGenerationTime();
@@ -134,7 +139,7 @@ void CubicBezierSequence::moveControlPoint(int curveIndex, int pointIndex, const
     // TODO : Figure out it this should be done in PolyBuilder instead
 }
 
-bool CubicBezierSequence::isConstrainedPoint(int curveIndex, int pointIndex)
+bool CubicBezierSequence::isConstrainedPoint(int curveIndex, int pointIndex) const
 {
     if (curveIndex == 0) {
         // First curve has no backward constraints
@@ -151,7 +156,7 @@ bool CubicBezierSequence::isConstrainedPoint(int curveIndex, int pointIndex)
 
 void CubicBezierSequence::draw(Shader& shader) const
 {
-    for (auto curve : curves)
+    for (const auto& curve : curves)
     {
         curve.drawControlPoints(shader);
         curve.drawGeneratedCurve(shader);
@@ -160,7 +165,7 @@ void CubicBezierSequence::draw(Shader& shader) const
 
 void CubicBezierSequence::drawPreview(Shader& shader) const
 {
-    for (auto curve : curves)
+    for (const auto& curve : curves)
     {
         curve.drawControlPointsPreview(shader);
         curve.drawGeneratedCurvePreview(shader);
