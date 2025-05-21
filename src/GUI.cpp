@@ -828,6 +828,26 @@ bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mo
 
 void GUI::endDrag(PolyBuilder& polybuilder)
 {
+	if (isDraggingShape && shapeType == SHAPE_BEZIER_SEQUENCE && selectedShapeIndex >= 0) {
+		auto& sequence = polybuilder.getFinishedBezierSequences()[selectedShapeIndex];
+		auto& curves = sequence.getCurves();
+
+		// Verify each curve's data
+		for (size_t i = 0; i < curves.size(); i++) {
+			auto controlPoints = curves[i].getControlPoints();
+			std::cout << "After drag, curve " << i << " has "
+				<< controlPoints.size() << " control points" << std::endl;
+
+			// Print first and last points to verify data
+			if (!controlPoints.empty()) {
+				std::cout << "  First point: (" << controlPoints.front().x
+					<< ", " << controlPoints.front().y << ")" << std::endl;
+				std::cout << "  Last point: (" << controlPoints.back().x
+					<< ", " << controlPoints.back().y << ")" << std::endl;
+			}
+		}
+	}
+
 	isDraggingShape = false;
 	isDraggingVertex = false;
 	selectedShapeIndex = -1;

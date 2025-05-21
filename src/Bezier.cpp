@@ -350,8 +350,12 @@ void Bezier::duplicateControlPoint(int index)
 // Jarvis March Algorithm https://en.wikipedia.org/wiki/Gift_wrapping_algorithm
 void Bezier::generateConvexHull()
 {
-    std::vector<Vertex> resultHull;
     int pointsSize = controlPoints.size();
+
+    if (pointsSize <= 2)
+        return;
+
+    std::vector<Vertex> resultHull;    
     int leftmost = 0; // leftmost index
 
     // Find leftmost point. i = 1 cause point initialized to first point in list

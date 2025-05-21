@@ -18,6 +18,7 @@ public:
         : continuityType(continuityType), stepSize(stepSize), algorithm(algorithm) {};
 
     ~CubicBezierSequence();
+    CubicBezierSequence& operator=(const CubicBezierSequence& other);
 
     // Add a new curve to the sequence
     void addCurve(const Bezier& curve);

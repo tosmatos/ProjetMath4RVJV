@@ -11,6 +11,24 @@ CubicBezierSequence::~CubicBezierSequence()
     // Vector handles everything by itself
 }
 
+CubicBezierSequence& CubicBezierSequence::operator=(const CubicBezierSequence& other) {
+    if (this != &other) {
+        curves.clear();  // Clear existing curves
+
+        // Deep copy all curves
+        for (const auto& curve : other.curves) {
+            curves.push_back(curve);  // This will use Bezier's copy constructor
+        }
+
+        // Copy other member variables
+        stepSize = other.stepSize;
+        algorithm = other.algorithm;
+        generationTime = other.generationTime;
+        continuityType = other.continuityType;
+    }
+    return *this;
+}
+
 void CubicBezierSequence::addCurve(const Bezier& curve)
 {
     curves.push_back(curve);
@@ -70,8 +88,11 @@ void CubicBezierSequence::enforceConstraints() {
         std::vector<Vertex> prevCurveControlPoints = prevCurve.getControlPoints();
         std::vector<Vertex> nextCurveControlPoints = nextCurve.getControlPoints();
 
-        if (prevCurveControlPoints.size() != 4 || nextCurveControlPoints.size() != 4)
-            continue;
+        if (i >= curves.size() ||
+            prevCurveControlPoints.size() != 4 ||
+            nextCurveControlPoints.size() != 4) {
+            continue; // Skip this iteration if data isn't as expected
+        }
 
         const Vertex& P1 = prevCurveControlPoints[1];
         const Vertex& P2 = prevCurveControlPoints[2];
@@ -97,34 +118,32 @@ void CubicBezierSequence::enforceConstraints() {
 
                 if (continuityType >= 2) {
                     // For C2, we need to respect curvature but control magnitude
-                    // First get vectors
-                    Vertex P1P2 = P2 - P1;
-                    Vertex P2P3 = P3 - P2;
+                    // Calculate second derivative of first curve at P3
+                    Vertex secondDerivP = P3 - P2 * 2 + P1;
 
-                    // Calculate proper scale factor for C2 continuity
-                    float k1 = tangentLength / std::max(0.001f, tangentLength);  // Normalized to 1 for simplicity
+                    // Scale it by k1^2 (k1 is tangent ratio)
+                    float k1 = desiredLength / tangentLength;
+                    float k1Squared = k1 * k1;
 
-                    // C2 requires: (Q2-Q1) = k2 * (P2-P1)
-                    // Where k2 is derived from k1: k2 = k1²
-                    float k2 = k1 * k1;
+                    // Apply C2 formula: Q2 = 2*Q1 - Q0 + k1^2*(P3-2*P2+P1)
+                    nextCurveControlPoints[2] = nextCurveControlPoints[1] * 2 - nextCurveControlPoints[0]
+                        + secondDerivP * k1Squared;
 
-                    // Apply with safety caps
-                    Vertex Q1Q2 = P1P2 * k2;
+                    // Apply max distance constraint if needed
+                    Vertex Q1Q2 = nextCurveControlPoints[2] - nextCurveControlPoints[1];
                     float Q1Q2Length = std::sqrt(Q1Q2.x * Q1Q2.x + Q1Q2.y * Q1Q2.y);
 
                     if (Q1Q2Length > maxDistance) {
-                        // Cap the length for stability
                         Q1Q2 = Q1Q2 * (maxDistance / Q1Q2Length);
+                        nextCurveControlPoints[2] = nextCurveControlPoints[1] + Q1Q2;
                     }
-
-                    nextCurveControlPoints[2] = nextCurveControlPoints[1] + Q1Q2;
                 }
             }
         }
 
         nextCurve.setControlPoints(nextCurveControlPoints);
         nextCurve.generateCurve();
-        nextCurve.updateBuffers();
+        //nextCurve.updateBuffers();
     }
 }
 

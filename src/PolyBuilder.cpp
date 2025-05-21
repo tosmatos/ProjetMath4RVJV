@@ -120,30 +120,32 @@ void PolyBuilder::translate(int shapeIndex, ShapeType shapeType, float deltaX, f
 	// Special handling for Bézier sequences since they contain multiple collections of vertices
 	if (shapeType == SHAPE_BEZIER_SEQUENCE) {
 		if (shapeIndex >= 0 && shapeIndex < finishedSequences.size()) {
-			CubicBezierSequence& sequence = finishedSequences[shapeIndex];
-			auto& curves = sequence.getCurves();
+			// Create a completely fresh copy
+			CubicBezierSequence originalSequence = finishedSequences[shapeIndex];
 
-			// Process each curve in the sequence
+			// Work on the copy, transform all points
+			std::vector<Bezier>& curves = originalSequence.getCurves();
 			for (auto& curve : curves) {
-				std::vector<Vertex> controlPoints = curve.getControlPoints();
-
-				// Transform the control points
-				for (auto& point : controlPoints) {
+				std::vector<Vertex> points = curve.getControlPoints();
+				for (auto& point : points) {
 					Vertex transformedPoint = multiplyMatrixVertex(translationMatrix, point);
 					point.x = transformedPoint.x;
 					point.y = transformedPoint.y;
 				}
-
-				// Update the curve
-				curve.setControlPoints(controlPoints);
+				curve.setControlPoints(points);
 				curve.generateCurve();
+			}
+
+			// Apply constraints and update buffers
+			originalSequence.enforceConstraints();
+			for (auto& curve : curves) {
 				curve.updateBuffers();
 			}
 
-			// Re-enforce continuity constraints
-			sequence.enforceConstraints();
+			// Replace the original with our transformed copy
+			finishedSequences[shapeIndex] = originalSequence;
 		}
-		return; // Early return since we've handled this case completely
+		return;
 	}
 
 	// Standard handling for the other shape types
