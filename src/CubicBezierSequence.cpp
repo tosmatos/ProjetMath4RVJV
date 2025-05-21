@@ -92,30 +92,34 @@ void CubicBezierSequence::enforceConstraints() {
 
                 if (continuityType >= 2) {
                     // For C2, we need to respect curvature but control magnitude
+                    // First get vectors
+                    Vertex P1P2 = P2 - P1;
+                    Vertex P2P3 = P3 - P2;
 
-                    // Get distance from P1 to P2
-                    float distP1P2 = std::sqrt(
-                        (P2.x - P1.x) * (P2.x - P1.x) +
-                        (P2.y - P1.y) * (P2.y - P1.y)
-                    );
+                    // Calculate proper scale factor for C2 continuity
+                    float k1 = tangentLength / std::max(0.001f, tangentLength);  // Normalized to 1 for simplicity
 
-                    // Limit the influence of P1
-                    float cappedP1P2 = std::min(distP1P2, maxDistance);
+                    // C2 requires: (Q2-Q1) = k2 * (P2-P1)
+                    // Where k2 is derived from k1: k2 = k1²
+                    float k2 = k1 * k1;
 
-                    // Apply C2 constraint with controlled magnitude
-                    Vertex Q1 = nextCurveControlPoints[1];
+                    // Apply with safety caps
+                    Vertex Q1Q2 = P1P2 * k2;
+                    float Q1Q2Length = std::sqrt(Q1Q2.x * Q1Q2.x + Q1Q2.y * Q1Q2.y);
 
-                    // Use a simplified C2 formula that prevents compounding
-                    float Q1Q2Length = std::min(desiredLength, maxDistance * 0.8f);
+                    if (Q1Q2Length > maxDistance) {
+                        // Cap the length for stability
+                        Q1Q2 = Q1Q2 * (maxDistance / Q1Q2Length);
+                    }
 
-                    // Place Q2 to maintain C2 but with bounded distance
-                    nextCurveControlPoints[2] = Q1 + tangentDir * Q1Q2Length;
+                    nextCurveControlPoints[2] = nextCurveControlPoints[1] + Q1Q2;
                 }
             }
         }
 
         nextCurve.setControlPoints(nextCurveControlPoints);
         nextCurve.generateCurve();
+        nextCurve.updateBuffers();
     }
 }
 
