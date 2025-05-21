@@ -195,6 +195,59 @@ void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, ShapeType sha
 	intersections.clear();
 	Matrix3x3 translationMatrix = createTranslationMatrix(deltaX, deltaY);
 
+	if (shapeType == SHAPE_BEZIER_SEQUENCE)
+	{
+		if (shapeIndex < 0 || shapeIndex >= finishedSequences.size())
+		{
+			std::cerr << "Error: Invalid sequence index " << shapeIndex << std::endl;
+			return;
+		}
+
+		// Create a complete copy of the sequence to work with
+		CubicBezierSequence transformedSequence = finishedSequences[shapeIndex];
+
+		// Determine which curve and which point within that curve
+		int curveIndex = vertexIndex / 4;  // Integer division to get curve index
+		int pointIndexInCurve = vertexIndex % 4;  // Remainder gives point index within curve
+
+		// Check if this point is constrained
+		if (transformedSequence.isConstrainedPoint(curveIndex, pointIndexInCurve))
+		{
+			std::cout << "Cannot move constrained point in curve " << curveIndex
+				<< " at position " << pointIndexInCurve << std::endl;
+			return;
+		}
+
+		// Get the curve that contains our point from our copy
+		std::vector<Bezier>& curves = transformedSequence.getCurves();
+		if (curveIndex >= 0 && curveIndex < curves.size())
+		{
+			Bezier& curve = curves[curveIndex];
+			std::vector<Vertex> controlPoints = curve.getControlPoints();
+
+			if (pointIndexInCurve >= 0 && pointIndexInCurve < controlPoints.size())
+			{
+				// Apply translation to the specific point
+				Vertex& point = controlPoints[pointIndexInCurve];
+				Vertex transformedPoint = multiplyMatrixVertex(translationMatrix, point);
+				point.x = transformedPoint.x;
+				point.y = transformedPoint.y;
+
+				// Update the curve with the modified control points
+				curve.setControlPoints(controlPoints);
+				curve.generateCurve();
+				curve.updateBuffers();
+
+				// Enforce continuity constraints across the sequence
+				transformedSequence.enforceConstraints();
+
+				// Now that all modifications are done on the copy, replace the original
+				finishedSequences[shapeIndex] = transformedSequence;
+			}
+		}
+		return;
+	}
+
 	std::vector<Vertex> vertices;
 	switch (shapeType)
 	{
@@ -208,11 +261,6 @@ void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, ShapeType sha
 	{
 		Bezier& bezier = finishedBeziers[shapeIndex];
 		vertices = bezier.getControlPoints();
-		break;
-	}
-	case SHAPE_BEZIER_SEQUENCE:
-	{
-		// TODO : this case
 		break;
 	}
 	}
@@ -238,11 +286,6 @@ void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, ShapeType sha
 		bezier.setControlPoints(vertices);
 		bezier.generateCurve();
 		bezier.updateBuffers();
-		break;
-	}
-	case SHAPE_BEZIER_SEQUENCE:
-	{
-		// TODO : this case
 		break;
 	}
 	}

@@ -541,6 +541,51 @@ void GUI::drawHoverTooltip(GLFWwindow* window, PolyBuilder& polybuilder)
 
 		if (foundMatch) break;
 	}
+
+	for (const auto& bezierSeq : polybuilder.getFinishedBezierSequences())
+	{
+		bool foundMatch = false;
+		const std::vector<Bezier>& curves = bezierSeq.getCurves();
+
+		for (size_t curveIndex = 0; curveIndex < curves.size(); curveIndex++)
+		{
+			const auto& curve = curves[curveIndex];
+			const auto& controlPoints = curve.getControlPoints();
+
+			for (size_t pointIndex = 0; pointIndex < controlPoints.size(); pointIndex++)
+			{
+				const auto& vert = controlPoints[pointIndex];
+				float dx = vert.x - ndcX;
+				float dy = vert.y - ndcY;
+
+				if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+				{
+					ImGui::BeginTooltip();
+					ImGui::Text("Position: (%.2f, %.2f)", vert.x, vert.y);
+
+					// Show constraint information
+					if (bezierSeq.isConstrainedPoint(curveIndex, pointIndex))
+					{
+						ImGui::Text("Constrained by %s continuity",
+							bezierSeq.getContinuityType() == 1 ? "C1" :
+							bezierSeq.getContinuityType() == 2 ? "C2" : "C0");
+					}
+					else
+					{
+						ImGui::Text("Freely movable point");
+					}
+
+					ImGui::EndTooltip();
+					foundMatch = true;
+					break;
+				}
+			}
+
+			if (foundMatch) break;
+		}
+
+		if (foundMatch) break;
+	}
 }
 
 void GUI::handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder)
@@ -966,6 +1011,57 @@ bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, doubl
 		if (foundMatch) break;
 	}
 
+	if (foundMatch)
+		return true;
+
+	auto finishedSequences = polybuilder.getFinishedBezierSequences();
+
+	for (size_t i = 0; i < finishedSequences.size(); i++)
+	{
+		CubicBezierSequence& sequence = finishedSequences[i];
+		const std::vector<Bezier>& curves = sequence.getCurves();
+
+		// Loop through each curve in the sequence
+		for (size_t curveIndex = 0; curveIndex < curves.size(); curveIndex++)
+		{
+			const Bezier& curve = curves[curveIndex];
+			std::vector<Vertex> controlPoints = curve.getControlPoints();
+
+			// Check each control point
+			for (size_t pointIndex = 0; pointIndex < controlPoints.size(); pointIndex++)
+			{
+				Vertex vert = controlPoints[pointIndex];
+				float dx = vert.x - ndcX;
+				float dy = vert.y - ndcY;
+
+				if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+				{
+					// Found a match in a Bézier sequence
+					// Calculate the global vertex index in the sequence
+					selectedShapeIndex = i;
+					selectedVertexIndex = curveIndex * 4 + pointIndex; // 4 points per cubic curve
+					foundMatch = true;
+					shapeType = SHAPE_BEZIER_SEQUENCE;
+					isDraggingVertex = true;
+					lastMouseX = ndcX;
+					lastMouseY = ndcY;
+
+					// Optional: Highlight whether this point is constrained
+					if (sequence.isConstrainedPoint(curveIndex, pointIndex))
+					{
+						std::cout << "Note: Selected point is constrained by continuity" << std::endl;
+					}
+
+					break;
+				}
+			}
+
+			if (foundMatch) break;
+		}
+
+		if (foundMatch) break;
+	}
+	
 	if (foundMatch)
 		return true;
 

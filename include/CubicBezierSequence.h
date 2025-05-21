@@ -24,6 +24,7 @@ public:
     void addCurve(const Bezier& curve);
 
     std::vector<Bezier>& getCurves() { return curves; };
+    std::vector<Bezier> getCurves() const { return curves; };
     int getNumberOfCurves() const { return curves.size(); };
     float getStepSize() const { return stepSize; };
     int getAlgorithm() const { return algorithm; };
