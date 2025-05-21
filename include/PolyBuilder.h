@@ -23,6 +23,12 @@ struct FilledPolygon
     {}
 };
 
+// Struct for sequences transformation
+// Allows for "easy" mapping of transformed vertices from all the curves of a sequence
+struct SequenceTransformData {
+    std::vector<std::vector<Vertex>> originalCurvePoints;
+};
+
 class PolyBuilder
 {
 private:
@@ -39,7 +45,6 @@ private:
     std::vector<Bezier> finishedBeziers;
 
     void finishBezier();
-
     
     int continuityType = 0;    
     std::vector<CubicBezierSequence> finishedSequences;
@@ -47,6 +52,7 @@ private:
     Vertex calculateCenter(const std::vector<Vertex>& vertices);
 
     std::vector<Vertex> transformOriginalVertices;
+    SequenceTransformData sequenceTransformData;
     bool isCurrentlyTransformingShape = false;
 
     // SAT implementation to test intersection on two convex shapes, our bézier hulls

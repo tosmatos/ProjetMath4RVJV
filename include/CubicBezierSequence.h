@@ -20,7 +20,7 @@ public:
     // Add a new curve to the sequence
     void addCurve(const Bezier& curve);
 
-    std::vector<Bezier> getCurves() { return curves; };
+    std::vector<Bezier>& getCurves() { return curves; };
     int getNumberOfCurves() const { return curves.size(); };
     float getStepSize() const { return stepSize; };
     int getAlgorithm() const { return algorithm; };
