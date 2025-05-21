@@ -1,9 +1,11 @@
 #pragma once
 
 #include <vector>
+
 #include "Vertex.h"
 #include "CommonTypes.h"
 #include "Shader.h"
+#include "CubicBezierSequence.h"
 
 class Polygon
 {

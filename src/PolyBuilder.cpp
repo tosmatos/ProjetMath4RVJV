@@ -77,6 +77,12 @@ void PolyBuilder::removeFinishedSequence(size_t index)
 		finishedSequences.erase(finishedSequences.begin() + index);
 }
 
+void PolyBuilder::curveToPolygon(size_t index)
+{
+	Polygon curvePoly = createPolygonFromBezierSequence(finishedSequences[index]);
+	addFinishedPolygon(curvePoly);
+}
+
 void PolyBuilder::duplicateControlPoint(int shapeIndex, int vertexIndex)
 {
 	if (shapeIndex < finishedBeziers.size())
@@ -902,7 +908,7 @@ void PolyBuilder::finishCubicSequence() {
 	if (!currentSequence.getCurves().empty()) {
 		if (currentSequence.shouldBeClosed())
 		{
-			currentSequence.makeClosed();
+			currentSequence.makeClosed();			
 			std::cout << "New sequence is closed !" << std::endl;
 		}
 		currentSequence.calculateGenerationTime();
@@ -1185,4 +1191,32 @@ std::vector<Vertex> PolyBuilder::findBezierIntersections(const Bezier& curve1, c
 	findIntersectionsRecursive(curve1, curve2, 0);
 
 	return intersections;
+}
+
+Polygon PolyBuilder::createPolygonFromBezierSequence(const CubicBezierSequence& bezierSequence)
+{
+	Polygon poly;
+
+	// Collect all curve points from all segments
+	for (const auto& curve : bezierSequence.getCurves())
+	{
+		const auto& curvePoints = curve.getGeneratedCurve();
+
+		// Skip the last point of each segment except the final one
+		// to avoid duplicating junction points
+		size_t pointsToAdd = (&curve != &bezierSequence.getCurves().back()) ?
+			curvePoints.size() - 1 : curvePoints.size();
+
+		for (size_t i = 0; i < pointsToAdd; i++)
+		{
+			poly.addVertex(curvePoints[i]);
+		}
+	}
+
+	if (poly.isClockwise())
+		poly.reverseOrientation();
+
+	poly.type = PolyType::BEZIER_CURVE;
+	poly.updateBuffers();
+	return poly;
 }

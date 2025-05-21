@@ -233,7 +233,13 @@ int main()
                 poly.draw();
 
                 shader.setColor("uColor", 1.0f, 1.0f, 1.0f, 1.0f);
-                poly.drawPoints();
+                if (!poly.type == BEZIER_CURVE)
+                    poly.drawPoints();
+            }
+            else if (poly.type == BEZIER_CURVE)
+            {
+                shader.setColor("uColor", 0.0f, 1.0f, 1.0f, 1.0f);
+                poly.draw();
             }
         }
 
@@ -254,7 +260,7 @@ int main()
                 poly.draw();
 
                 shader.setColor("uColor", 1.0f, 1.0f, 1.0f, 0.7f);
-                poly.drawPoints();
+                //poly.drawPoints();
             }
         }
         

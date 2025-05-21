@@ -133,6 +133,7 @@ public:
     void incrementSequenceStepSize(size_t index);
     void decrementSequenceStepSize(size_t index);
     void removeFinishedSequence(size_t index);
+    void curveToPolygon(size_t index);
 
     void duplicateControlPoint(int shapeIndex, int vertexIndex);
 
@@ -152,4 +153,6 @@ public:
     const std::vector<std::string> getFoundIntersectionsText() const { return foundIntersectionsText; };
     const IntersectionMarkers getIntersectionMarkers() const { return intersections; };
     const void drawIntersectionMarkers(Shader& shader) const { intersections.draw(shader); };
+
+    Polygon createPolygonFromBezierSequence(const CubicBezierSequence& bezierSequence);
 };

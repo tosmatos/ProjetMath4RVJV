@@ -223,6 +223,17 @@ void GUI::drawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
 
 			ImGui::SetItemTooltip("Delete Bézier Curve");
 
+			if (isClosed)
+			{
+				ImGui::SameLine();
+				if (ImGui::Button(("POLY##" + std::to_string(index)).c_str()))
+				{
+					polybuilder.curveToPolygon(index);
+					indicesToRemove.push_back(index);
+				}					
+				ImGui::SetItemTooltip("Convert curve to polygon");
+			}		
+
 			ImGui::SameLine();
 			ImGui::Text("Generated in %.7f seconds.", generationTime);
 
@@ -435,8 +446,10 @@ void GUI::performCyrusBeckClipping(PolyBuilder& polybuilder)
 	// Add clipped versions of polygons
 	for (auto& poly : polybuilder.getFinishedPolygons())
 	{
-		if (poly.type == PolyType::POLYGON)
+		if (poly.type == POLYGON || poly.type == BEZIER_CURVE)
 		{
+			if (poly.type == BEZIER_CURVE)
+				std::cout << "Clipping agaisnt a bézier poly " << std::endl;
 			// Clip the polygon and add as a new polygon
 			Polygon clipped = Clipper::clipPolygonCyrusBeck(poly, windowPoly);
 
@@ -476,7 +489,7 @@ void GUI::performSutherlandHodgmanClipping(PolyBuilder& polybuilder)
 	// Add clipped versions of polygons
 	for (auto& poly : polybuilder.getFinishedPolygons())
 	{
-		if (poly.type == PolyType::POLYGON)
+		if (poly.type == PolyType::POLYGON || poly.type == BEZIER_CURVE)
 		{
 			// Clip the polygon and add as a new polygon
 			Polygon clipped = Clipper::clipPolygonSutherlandHodgman(poly, windowPoly);
