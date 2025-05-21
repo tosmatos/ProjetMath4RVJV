@@ -89,10 +89,9 @@ void CubicBezierSequence::enforceConstraints() {
         std::vector<Vertex> prevCurveControlPoints = prevCurve.getControlPoints();
         std::vector<Vertex> nextCurveControlPoints = nextCurve.getControlPoints();
 
-        if (i >= curves.size() ||
-            prevCurveControlPoints.size() != 4 ||
-            nextCurveControlPoints.size() != 4) {
-            continue; // Skip this iteration if data isn't as expected
+        // Skip this iteration
+        if (isClosed && i == curves.size() - 1) {
+            continue;
         }
 
         const Vertex& P1 = prevCurveControlPoints[1];
@@ -145,6 +144,70 @@ void CubicBezierSequence::enforceConstraints() {
         nextCurve.setControlPoints(nextCurveControlPoints);
         nextCurve.generateCurve();
         nextCurve.updateBuffers();
+    }
+
+    if (isClosed) {
+        Bezier& firstCurve = curves[0];
+        Bezier& lastCurve = curves[curves.size() - 1];
+
+        std::vector<Vertex> firstControlPoints = firstCurve.getControlPoints();
+        std::vector<Vertex> lastControlPoints = lastCurve.getControlPoints();
+
+        // Enforce C0 continuity: Make last point match first point
+        lastControlPoints[3] = firstControlPoints[0];
+
+        // Constants to control curve shape - similar to your enforceConstraints method
+        const float percentage = 0.4f;      // Use 40% of previous segment length
+        const float maxDistance = 0.2f;     // Maximum control point distance
+
+        if (continuityType >= 1) {
+            // C1 continuity: Make incoming/outgoing tangents align
+            // Calculate tangent at the beginning of the first curve
+            Vertex tangent = firstControlPoints[1] - firstControlPoints[0];
+            float tangentLength = std::sqrt(tangent.x * tangent.x + tangent.y * tangent.y);
+
+            if (tangentLength > 0.001f) {
+                // Normalize the tangent
+                Vertex tangentDir = tangent * (1.0f / tangentLength);
+
+                // Calculate desired length with absolute cap
+                float desiredLength = std::min(tangentLength * percentage, maxDistance);
+
+                // Place the second-to-last control point to create the same tangent
+                // but in the opposite direction
+                lastControlPoints[2] = lastControlPoints[3] - tangentDir * desiredLength;
+
+                if (continuityType >= 2) {
+                    // C2 continuity: Match curvature at the junction
+                    // Get second derivatives
+                    Vertex secondDerivFirst = firstControlPoints[2] - firstControlPoints[1] * 2.0f + firstControlPoints[0];
+
+                    // Scale the second derivative by the squared ratio of the tangent lengths
+                    float k1 = desiredLength / tangentLength;
+                    float k1Squared = k1 * k1;
+
+                    // Apply C2 formula (derived from matching second derivatives)
+                    // Q1 = junction point (P3 or Q0)
+                    // Q2 = lastControlPoints[2] (already set for C1)
+                    // We need to set Q3 to maintain C2 continuity
+                    lastControlPoints[1] = lastControlPoints[2] * 2.0f - lastControlPoints[3]
+                        + secondDerivFirst * k1Squared;
+
+                    // Apply max distance constraint if needed
+                    Vertex Q2Q1 = lastControlPoints[1] - lastControlPoints[2];
+                    float Q2Q1Length = std::sqrt(Q2Q1.x * Q2Q1.x + Q2Q1.y * Q2Q1.y);
+
+                    if (Q2Q1Length > maxDistance) {
+                        Q2Q1 = Q2Q1 * (maxDistance / Q2Q1Length);
+                        lastControlPoints[1] = lastControlPoints[2] + Q2Q1;
+                    }
+                }
+            }
+        }
+
+        lastCurve.setControlPoints(lastControlPoints);
+        lastCurve.generateCurve();
+        lastCurve.updateBuffers();
     }
 }
 
