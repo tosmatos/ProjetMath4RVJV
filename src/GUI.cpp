@@ -1,25 +1,35 @@
 #include "GUI.h"
 
 #include <iostream>
+#include <algorithm>
 
 #include "Clipper.h"
 #include "Filler.h"
-#include "PolyTypes.h"
 
-// For filling functionality
-static int selectedPolygonIndex = -1;
-static bool awaitingFillSeed = false;
-static ImVec4 fillColor(0.0f, 0.0f, 1.0f, 1.0f);
+namespace GUI
+{
+	// For fill operations
+	int selectedPolygonIndex = -1;
+	bool awaitingFillSeed = false;
+	ImVec4 fillColor(0.0f, 0.0f, 1.0f, 1.0f);
 
-// State for window dragging
-namespace {
-	bool isDraggingWindow = false;
+	// For dragging vertices and shapes
 	float lastMouseX = 0.0f;
 	float lastMouseY = 0.0f;
-	int selectedWindowIndex = -1;
+
+	bool isDraggingVertex = false;
+	bool isDraggingShape = false;
+	ShapeType shapeType = SHAPE_POLYGON;
+	int selectedShapeIndex = -1;
+	int selectedVertexIndex = -1;
+	TransformationType currentTransformationType = TRANSLATE;
+
+	float initialScaleMouseX = 0.0f, initialScaleMouseY = 0.0f;
+	float initialShapeWidth = 0.0f, initialShapeHeight = 0.0f;
 }
 
-void GUI::DrawVertexInfoPanel(PolyBuilder& polybuilder, bool* open) {
+void GUI::drawVertexInfoPanel(PolyBuilder& polybuilder, bool* open)
+{
 	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
 	ImGui::SetNextWindowBgAlpha(0.3f);
 
@@ -27,23 +37,24 @@ void GUI::DrawVertexInfoPanel(PolyBuilder& polybuilder, bool* open) {
 		ImGuiWindowFlags_NoResize |
 		ImGuiWindowFlags_AlwaysAutoResize))
 	{
-		if (polybuilder.GetFinishedPolygons().empty()) {
+		if (polybuilder.getFinishedPolygons().empty())
 			ImGui::Text("No polygons.");
-		}
 
 		static ImVec4 red(1.0f, 0.0f, 0.0f, 1.0f);
 		static ImVec4 green(0.0f, 1.0f, 0.0f, 1.0f);
 		static ImVec4 blue(0.0f, 0.0f, 1.0f, 1.0f);
 		static ImVec4 purple(0.8f, 0.0f, 0.8f, 1.0f);
 
-		for (const auto& poly : polybuilder.GetFinishedPolygons()) {
+		for (const auto& poly : polybuilder.getFinishedPolygons())
+		{
 			const auto& verts = poly.getVertices();
 
 			// Show color swatch based on polygon type
 			ImVec4 polyColor;
 			std::string polyTypeName;
 
-			switch (poly.type) {
+			switch (poly.type)
+			{
 			case PolyType::POLYGON:
 				polyColor = red;
 				polyTypeName = "Polygon";
@@ -66,7 +77,8 @@ void GUI::DrawVertexInfoPanel(PolyBuilder& polybuilder, bool* open) {
 			ImGui::SameLine();
 			ImGui::Text("%s:", polyTypeName.c_str());
 
-			for (size_t i = 0; i < verts.size(); ++i) {
+			for (size_t i = 0; i < verts.size(); ++i)
+			{
 				ImGui::Text("  Vertex %d: (%.2f, %.2f)",
 					static_cast<int>(i + 1), verts[i].x, verts[i].y);
 			}
@@ -76,8 +88,172 @@ void GUI::DrawVertexInfoPanel(PolyBuilder& polybuilder, bool* open) {
 	ImGui::End();
 }
 
-void GUI::DrawFillSettingsPanel(bool* open) {
-	ImGui::SetNextWindowPos(ImVec2(10, 300), ImGuiCond_Always);
+void GUI::drawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
+{
+	ImGui::SetNextWindowPos(ImVec2(10, 30), ImGuiCond_Always);
+	ImGui::SetNextWindowBgAlpha(0.3f);
+
+	if (ImGui::Begin("Béziers Info", open,
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		if (polybuilder.getFinishedBeziers().empty() && polybuilder.getFinishedBezierSequences().empty())
+			ImGui::Text("No Bézier curve.");
+		else
+		{
+			if (polybuilder.getFinishedBeziers().size() > 1 && ImGui::Button("Calculate intersections"))
+				polybuilder.tryFindingIntersections();
+			if (polybuilder.getFoundIntersectionsText().size() > 0)
+			{
+				for (std::string intersection : polybuilder.getFoundIntersectionsText())
+				{
+					ImGui::Text(intersection.c_str());
+				}
+			}			
+		}
+
+		if (!polybuilder.getFinishedBeziers().empty())
+			ImGui::Text("Béziers Curves (Free Degree)");
+
+		// Store indices to remove
+		std::vector<size_t> indicesToRemove;
+
+		for (size_t index = 0; index < polybuilder.getFinishedBeziers().size(); index++)
+		{
+			const auto& bezier = polybuilder.getFinishedBeziers()[index];
+			float stepSize = bezier.getStepSize();
+			int controlPoints = bezier.getControlPoints().size();
+			int curvePoints = bezier.getGeneratedCurve().size();
+			int algorithm = bezier.getAlgorithm();
+			std::string algoString = algorithm == 0 ? "Pascal" : "DeCasteljau";
+			double generationTime = bezier.getGenerationTime();
+
+			ImGui::Text("%d : Step Size = %.3f, Control Points : %d, Curve Points : %d, Algorithm : %s",
+				static_cast<int>(index), stepSize, controlPoints, curvePoints, algoString.c_str());
+
+			if (ImGui::Button(("<->##" + std::to_string(index)).c_str()))
+				polybuilder.swapBezierAlgorithm(index);
+
+			ImGui::SetItemTooltip("Swap Algorithm");
+			ImGui::SameLine();
+			if (ImGui::Button(("+##" + std::to_string(index)).c_str()))
+				polybuilder.incrementBezierStepSize(index);
+
+			ImGui::SetItemTooltip("Increment Step Size by 0.01");
+			ImGui::SameLine();
+			if (ImGui::Button(("-##" + std::to_string(index)).c_str()))
+				polybuilder.decrementBezierStepSize(index);
+
+			ImGui::SetItemTooltip("Decrement Step Size by 0.01");
+
+			ImGui::SameLine();
+			if (ImGui::Button(("[H]##" + std::to_string(index)).c_str()))
+				polybuilder.toggleHullDisplay(index);
+
+			ImGui::SetItemTooltip("Toggle Convex Hull Display");
+
+			ImGui::SameLine();
+			if (ImGui::Button(("X##" + std::to_string(index)).c_str()))
+				indicesToRemove.push_back(index);
+				
+			ImGui::SetItemTooltip("Delete Bézier Curve");			
+
+			ImGui::SameLine();
+			ImGui::Text("Generated in %.7f seconds.", generationTime);
+
+			ImGui::Separator();
+		}
+
+		// Remove curves marked for deletion (from highest index to lowest)
+		// Done afterwards to guarantee that vector won't be changed during loop causing crash
+		std::sort(indicesToRemove.begin(), indicesToRemove.end(), std::greater<size_t>());
+		for (size_t index : indicesToRemove)
+		{
+			std::cout << "Removing bézier curve " << index << "..." << std::endl;
+			polybuilder.removeFinishedBezier(index);
+		}
+
+		if (!polybuilder.getFinishedBezierSequences().empty())
+		{
+			ImGui::Separator();
+			ImGui::Text("Bézier Curves (Cubic Sequences)");
+		}
+
+		indicesToRemove.clear();
+
+		for (size_t index = 0; index < polybuilder.getFinishedBezierSequences().size(); index++)
+		{
+			const auto& bezierSequence = polybuilder.getFinishedBezierSequences()[index];
+			int continuityType = bezierSequence.getContinuityType();
+			int numberOfCurves = bezierSequence.getNumberOfCurves();
+			float stepSize = bezierSequence.getStepSize();
+			int algorithm = bezierSequence.getAlgorithm();
+			std::string algoString = algorithm == 0 ? "Pascal" : "DeCasteljau";
+			std::string continuityTypeString = "C0";
+			double generationTime = bezierSequence.getGenerationTime();
+			bool isClosed = bezierSequence.getIsClosed();
+
+			if (continuityType == 1)
+				continuityTypeString = "C1";
+			else if (continuityType == 2)
+				continuityTypeString = "C2";
+
+			ImGui::Text("%d : Step Size = %.3f, Continuity Type : %s, Curves : %d, Algorithm : %s %s",
+				static_cast<int>(index), stepSize, continuityTypeString.c_str(), numberOfCurves, algoString.c_str(),
+				isClosed ? "[CLOSED]" : "");
+
+			if (ImGui::Button(("<->##" + std::to_string(index)).c_str()))
+				polybuilder.swapSequenceAlgorithm(index);
+
+			ImGui::SetItemTooltip("Swap Algorithm");
+			ImGui::SameLine();
+			if (ImGui::Button(("+##" + std::to_string(index)).c_str()))
+				polybuilder.incrementSequenceStepSize(index);
+
+			ImGui::SetItemTooltip("Increment Step Size by 0.01");
+			ImGui::SameLine();
+			if (ImGui::Button(("-##" + std::to_string(index)).c_str()))
+				polybuilder.decrementSequenceStepSize(index);
+
+			ImGui::SetItemTooltip("Decrement Step Size by 0.01");
+
+			ImGui::SameLine();
+			if (ImGui::Button(("X##" + std::to_string(index)).c_str()))
+				indicesToRemove.push_back(index);
+
+			ImGui::SetItemTooltip("Delete Bézier Curve");
+
+			if (isClosed)
+			{
+				ImGui::SameLine();
+				if (ImGui::Button(("POLY##" + std::to_string(index)).c_str()))
+				{
+					polybuilder.curveToPolygon(index);
+					indicesToRemove.push_back(index);
+				}					
+				ImGui::SetItemTooltip("Convert curve to polygon");
+			}		
+
+			ImGui::SameLine();
+			ImGui::Text("Generated in %.7f seconds.", generationTime);
+
+			ImGui::Separator();
+		}
+
+		std::sort(indicesToRemove.begin(), indicesToRemove.end(), std::greater<size_t>());
+		for (size_t index : indicesToRemove)
+		{
+			std::cout << "Removing bézier curve " << index << "..." << std::endl;
+			polybuilder.removeFinishedSequence(index);
+		}
+
+	}
+	ImGui::End();
+}
+
+void GUI::drawFillSettingsPanel(bool* open)
+{
+	ImGui::SetNextWindowPos(ImVec2(220, 10), ImGuiCond_Always);
 	ImGui::SetNextWindowBgAlpha(0.3f);
 
 	if (ImGui::Begin("Fill Settings", open,
@@ -87,23 +263,24 @@ void GUI::DrawFillSettingsPanel(bool* open) {
 		// Algorithm selection
 		const char* algorithms[] = { "Simple Scanline", "LCA", "Seed Fill", "Recursive Seed Fill" };
 		static int currentAlgorithm = Filler::getSelectedAlgorithm();
-		if (ImGui::Combo("Algorithm", &currentAlgorithm, algorithms, IM_ARRAYSIZE(algorithms))) {
+
+		if (ImGui::Combo("Algorithm", &currentAlgorithm, algorithms, IM_ARRAYSIZE(algorithms)))
 			Filler::setSelectedAlgorithm(currentAlgorithm);
-		}
 
 		// Fill color picker
-		if (ImGui::ColorEdit3("Fill Color", (float*)&fillColor)) {
+		if (ImGui::ColorEdit3("Fill Color", (float*)&fillColor))
 			Filler::setFillColor(fillColor.x, fillColor.y, fillColor.z, fillColor.w);
-		}
 
 		// Status message
-		if (awaitingFillSeed) {
+		if (awaitingFillSeed)
+		{
 			ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f),
 				"Click inside polygon to place fill seed");
 		}
 
 		// Clear selection button
-		if (selectedPolygonIndex != -1 && ImGui::Button("Cancel Fill")) {
+		if (selectedPolygonIndex != -1 && ImGui::Button("Cancel Fill"))
+		{
 			selectedPolygonIndex = -1;
 			awaitingFillSeed = false;
 		}
@@ -111,37 +288,69 @@ void GUI::DrawFillSettingsPanel(bool* open) {
 	ImGui::End();
 }
 
-void GUI::HandleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder) {
-	if (*openContextMenu) {
+void GUI::drawBezierSettingsPanel(PolyBuilder& polybuilder, bool* open)
+{
+	ImGui::SetNextWindowPos(ImVec2(400, 10), ImGuiCond_Always);
+	ImGui::SetNextWindowBgAlpha(0.3f);
+
+	if (ImGui::Begin("Bézier Settings", open,
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		const char* continuityTypes[] = { "C0", "C1", "C2" };
+		static int currentContinuityType = polybuilder.getContinuityType();
+
+		if (ImGui::Combo("Continuity Type", &currentContinuityType, continuityTypes, IM_ARRAYSIZE(continuityTypes)))
+			polybuilder.setContinuityType(currentContinuityType);
+	}
+	ImGui::End();
+}
+
+void GUI::handleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder)
+{
+	if (*openContextMenu)
+	{
 		ImGui::OpenPopup("ContextMenu");
 		*openContextMenu = false;
 	}
 
-	if (ImGui::BeginPopup("ContextMenu")) {
-		if (ImGui::MenuItem("Create Polygon")) {
-			polybuilder.StartPolygon(PolyType::POLYGON);
-		}
-		if (ImGui::MenuItem("Create Window")) {
-			polybuilder.StartPolygon(PolyType::WINDOW);
-		}
+	if (ImGui::BeginPopup("ContextMenu"))
+	{
+		if (ImGui::MenuItem("Create Polygon"))
+			polybuilder.startPolygon(PolyType::POLYGON);
+
+		if (ImGui::MenuItem("Create Window"))
+			polybuilder.startPolygon(PolyType::WINDOW);
+
+		if (ImGui::MenuItem("Create Bézier (Free Degree)"))
+			polybuilder.startBezierCurve();
+
+		if (ImGui::MenuItem("Create Bézier (Cubic Sequence)"))
+			polybuilder.startCubicSequence();
+
 		ImGui::Separator();
-		if (polybuilder.IsBuilding()) {
-			if (ImGui::MenuItem("Cancel Current Build")) {
-				polybuilder.Cancel();
-			}
+		if (polybuilder.isBuilding())
+		{
+			if (ImGui::MenuItem("Cancel Current Build"))
+				polybuilder.cancel();
 		}
 
 		// Fill operations menu
-		if (ImGui::BeginMenu("Fill Operations")) {
-			if (ImGui::MenuItem("Fill All Polygons")) {
+		if (ImGui::BeginMenu("Fill Operations"))
+		{
+			if (ImGui::MenuItem("Fill All Polygons"))
+			{
 				// Clear previous fill results
-				polybuilder.ClearFilledPolygons();
+				polybuilder.clearFilledPolygons();
 
-				for (auto& poly : polybuilder.GetFinishedPolygons()) {
-					if (poly.type == PolyType::POLYGON) {
+				for (auto& poly : polybuilder.getFinishedPolygons())
+				{
+					if (poly.type == PolyType::POLYGON)
+					{
 						std::vector<Vertex> fillPoints;
 
-						switch (Filler::getSelectedAlgorithm()) {
+						switch (Filler::getSelectedAlgorithm())
+						{
 						case Filler::FILL_SCANLINE:
 							fillPoints = Filler::fillPolygon(poly);
 							break;
@@ -159,127 +368,145 @@ void GUI::HandleContextMenu(bool* openContextMenu, PolyBuilder& polybuilder) {
 						Filler::getFillColor(r, g, b, a);
 
 						// Store the filled polygon
-						polybuilder.AddFilledPolygon(poly, fillPoints, r, g, b, a);
+						polybuilder.addFilledPolygon(poly, fillPoints, r, g, b, a);
 					}
 				}
 			}
 
-			if (ImGui::MenuItem("Select Polygon to Fill")) {
+			if (ImGui::MenuItem("Select Polygon to Fill"))
+			{
 				// This will allow the next polygon click to be selected for filling
 				awaitingFillSeed = true;
 			}
 
-			if (ImGui::MenuItem("Clear All Fills")) {
-				polybuilder.ClearFilledPolygons();
-			}
+			if (ImGui::MenuItem("Clear All Fills"))
+				polybuilder.clearFilledPolygons();
 
 			ImGui::EndMenu();
 		}
 
 		if (ImGui::MenuItem("Cyrus–Beck Clip All Polygons"))
-		{
-			PerformCyrusBeckClipping(polybuilder);
-		}
+			performCyrusBeckClipping(polybuilder);
 
 		if (ImGui::MenuItem("Sutherland-Hodgman Clip All Polygons"))
-		{
-			PerformSutherlandHodgmanClipping(polybuilder);
-		}
+			performSutherlandHodgmanClipping(polybuilder);
 
-		if (ImGui::MenuItem("Ear Cutting Decomposition")) {
+		if (ImGui::MenuItem("Ear Cutting Decomposition"))
+		{
 			std::vector<Polygon> newPolygons;
-			for (const auto& poly : polybuilder.GetFinishedPolygons()) {
-				if (poly.type == PolyType::POLYGON) {
+			for (const auto& poly : polybuilder.getFinishedPolygons())
+			{
+				if (poly.type == PolyType::POLYGON)
+				{
 					// Créez une copie du polygone pour le modifier
 					Polygon polyCopy = poly;
 					std::vector<Polygon> triangles = Clipper::earCutting(polyCopy);
-					for (auto& triangle : triangles) {
+					for (auto& triangle : triangles)
+					{
 						triangle.type = PolyType::POLYGON;
 						triangle.updateBuffers();
 						newPolygons.push_back(triangle);
 					}
 				}
-				else {
+				else
+				{
 					newPolygons.push_back(poly);
 				}
 			}
 			// Remplace l'ancienne collection de polygones
-			polybuilder.SetFinishedPolygons(newPolygons);
+			polybuilder.setFinishedPolygons(newPolygons);
 		}
 
 		ImGui::EndPopup();
 	}
 }
 
-void GUI::PerformCyrusBeckClipping(PolyBuilder& polybuilder) {
+void GUI::performCyrusBeckClipping(PolyBuilder& polybuilder)
+{
 	Polygon windowPoly;
 	bool foundWindow = false;
-	for (auto& poly : polybuilder.GetFinishedPolygons()) {
-		if (poly.type == PolyType::WINDOW) {
+	for (auto& poly : polybuilder.getFinishedPolygons())
+	{
+		if (poly.type == PolyType::WINDOW)
+		{
 			windowPoly = poly;
 			foundWindow = true;
 			break;
 		}
 	}
-	if (!foundWindow) {
+	if (!foundWindow)
+	{
 		std::cout << "No window polygon to clip against!\n";
 		return;
 	}
 
 	// Clear any previous clipped results of the same type
-	polybuilder.RemoveAllPolygonsOfType(PolyType::CLIPPED_CYRUS_BECK);
+	polybuilder.removeAllPolygonsOfType(PolyType::CLIPPED_CYRUS_BECK);
 
 	// Add clipped versions of polygons
-	for (auto& poly : polybuilder.GetFinishedPolygons()) {
-		if (poly.type == PolyType::POLYGON) {
+	for (auto& poly : polybuilder.getFinishedPolygons())
+	{
+		if (poly.type == POLYGON || poly.type == BEZIER_CURVE)
+		{
+			if (poly.type == BEZIER_CURVE)
+				std::cout << "Clipping agaisnt a bézier poly " << std::endl;
 			// Clip the polygon and add as a new polygon
 			Polygon clipped = Clipper::clipPolygonCyrusBeck(poly, windowPoly);
 
 			// Only add non-empty clipped polygons
-			if (!clipped.getVertices().empty()) {
+			if (!clipped.getVertices().empty())
+			{
 				clipped.type = PolyType::CLIPPED_CYRUS_BECK;
 				clipped.updateBuffers();
-				polybuilder.AddFinishedPolygon(clipped);
+				polybuilder.addFinishedPolygon(clipped);
 			}
 		}
 	}
 }
 
-void GUI::PerformSutherlandHodgmanClipping(PolyBuilder& polybuilder) {
+void GUI::performSutherlandHodgmanClipping(PolyBuilder& polybuilder)
+{
 	Polygon windowPoly;
 	bool foundWindow = false;
-	for (auto& poly : polybuilder.GetFinishedPolygons()) {
-		if (poly.type == PolyType::WINDOW) {
+	for (auto& poly : polybuilder.getFinishedPolygons())
+	{
+		if (poly.type == PolyType::WINDOW)
+		{
 			windowPoly = poly;
 			foundWindow = true;
 			break;
 		}
 	}
-	if (!foundWindow) {
+	if (!foundWindow)
+	{
 		std::cout << "No window polygon to clip against!\n";
 		return;
 	}
 
 	// Clear any previous clipped results of the same type
-	polybuilder.RemoveAllPolygonsOfType(PolyType::CLIPPED_SUTHERLAND_HODGMAN);
+	polybuilder.removeAllPolygonsOfType(PolyType::CLIPPED_SUTHERLAND_HODGMAN);
 
 	// Add clipped versions of polygons
-	for (auto& poly : polybuilder.GetFinishedPolygons()) {
-		if (poly.type == PolyType::POLYGON) {
+	for (auto& poly : polybuilder.getFinishedPolygons())
+	{
+		if (poly.type == PolyType::POLYGON || poly.type == BEZIER_CURVE)
+		{
 			// Clip the polygon and add as a new polygon
 			Polygon clipped = Clipper::clipPolygonSutherlandHodgman(poly, windowPoly);
 
 			// Only add non-empty clipped polygons
-			if (!clipped.getVertices().empty()) {
+			if (!clipped.getVertices().empty())
+			{
 				clipped.type = PolyType::CLIPPED_SUTHERLAND_HODGMAN;
 				clipped.updateBuffers();
-				polybuilder.AddFinishedPolygon(clipped);
+				polybuilder.addFinishedPolygon(clipped);
 			}
 		}
 	}
 }
 
-void GUI::DrawHoverTooltip(GLFWwindow* window, PolyBuilder& polybuilder) {
+void GUI::drawHoverTooltip(GLFWwindow* window, PolyBuilder& polybuilder)
+{
 	ImVec2 mousePos = ImGui::GetMousePos();
 	int displayW, displayH;
 	glfwGetFramebufferSize(window, &displayW, &displayH);
@@ -290,23 +517,104 @@ void GUI::DrawHoverTooltip(GLFWwindow* window, PolyBuilder& polybuilder) {
 
 	// Check proximity to vertices
 	const float hoverRadius = 0.02f;
-	for (const auto& poly : polybuilder.GetFinishedPolygons()) {
-		for (const auto& vert : poly.getVertices()) {
+	for (const auto& poly : polybuilder.getFinishedPolygons())
+	{
+		bool foundMatch = false;
+		for (const auto& vert : poly.getVertices())
+		{
 			float dx = vert.x - ndcX;
 			float dy = vert.y - ndcY;
-			if (dx * dx + dy * dy < hoverRadius * hoverRadius) {
+			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+			{
 				ImGui::BeginTooltip();
 				ImGui::Text("Position: (%.2f, %.2f)", vert.x, vert.y);
 				ImGui::EndTooltip();
-				return; // Only show the first match
+				foundMatch = true;
+				break; // Only show the first match
 			}
 		}
+
+		if (foundMatch) break;
+	}
+
+	for (const auto& bezier : polybuilder.getFinishedBeziers())
+	{
+		bool foundMatch = false;
+		for (const auto& vert : bezier.getControlPoints())
+		{
+			float dx = vert.x - ndcX;
+			float dy = vert.y - ndcY;
+			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Position: (%.2f, %.2f)", vert.x, vert.y);
+				ImGui::EndTooltip();
+				foundMatch = true;
+				break; // Only show the first match
+			}
+		}
+
+		if (foundMatch) break;
+	}
+
+	for (const auto& bezierSeq : polybuilder.getFinishedBezierSequences())
+	{
+		bool foundMatch = false;
+		const std::vector<Bezier>& curves = bezierSeq.getCurves();
+
+		for (size_t curveIndex = 0; curveIndex < curves.size(); curveIndex++)
+		{
+			const auto& curve = curves[curveIndex];
+			const auto& controlPoints = curve.getControlPoints();
+
+			for (size_t pointIndex = 0; pointIndex < controlPoints.size(); pointIndex++)
+			{
+				const auto& vert = controlPoints[pointIndex];
+				float dx = vert.x - ndcX;
+				float dy = vert.y - ndcY;
+
+				if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+				{
+					ImGui::BeginTooltip();
+					ImGui::Text("Position: (%.2f, %.2f)", vert.x, vert.y);
+
+					// Show constraint information
+					if (bezierSeq.isConstrainedPoint(curveIndex, pointIndex))
+					{
+						ImGui::Text("Constrained by %s continuity",
+							bezierSeq.getContinuityType() == 1 ? "C1" :
+							bezierSeq.getContinuityType() == 2 ? "C2" : "C0");
+					}
+					else
+					{
+						ImGui::Text("Freely movable point");
+					}
+
+					ImGui::EndTooltip();
+					foundMatch = true;
+					break;
+				}
+			}
+
+			if (foundMatch) break;
+		}
+
+		if (foundMatch) break;
 	}
 }
 
-void GUI::HandleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder) {
+void GUI::handleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder)
+{
+	if (isDraggingShape && selectedShapeIndex != -1)
+		handleShapeDrag(window, polybuilder);
+	else if (isDraggingVertex && selectedShapeIndex != -1)
+		handleVertexDrag(window, polybuilder);
+}
+
+void GUI::handleShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder)
+{
 	// If we're not dragging, do nothing
-	if (!isDraggingWindow || selectedWindowIndex < 0)
+	if (!isDraggingShape || selectedShapeIndex < 0)
 		return;
 
 	// Get current mouse position
@@ -327,14 +635,47 @@ void GUI::HandleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder) {
 	lastMouseX = ndcX;
 	lastMouseY = ndcY;
 
-	// Apply movement to window polygon
-	polybuilder.MovePolygon(selectedWindowIndex, deltaX, deltaY);
+	switch (currentTransformationType)
+	{
+	case TRANSLATE:
+		polybuilder.translate(selectedShapeIndex, shapeType, deltaX, deltaY);
+		break;
+	case SCALE:
+	{ // Need braces because I declare variables in here
+		// Calculate total mouse delta
+		float totalMouseDeltaX = ndcX - initialScaleMouseX;
+		float totalMouseDeltaY = ndcY - initialScaleMouseY;
+
+		// Apply scale sensitivity directly to the mouse delta
+		float targetTotalScaleFactorX = 1.0f + totalMouseDeltaX;
+		float targetTotalScaleFactorY = 1.0f + totalMouseDeltaY;
+
+		polybuilder.applyScaleFromOriginal(selectedShapeIndex, shapeType,
+			targetTotalScaleFactorX, targetTotalScaleFactorY);
+		break;
+	}
+	case ROTATE:
+	{
+		float totalRotationAngle = ndcX - initialScaleMouseX;
+		polybuilder.applyRotationFromOriginal(selectedShapeIndex, shapeType, -totalRotationAngle);
+		break;
+	}		
+	case SHEAR:
+	{
+		float totalShearX = ndcX - initialScaleMouseX; // Maybe add sensitivity here as well
+		float totalShearY = ndcY - initialScaleMouseY;
+		polybuilder.applyShearFromOriginal(selectedShapeIndex, shapeType, totalShearX, totalShearY);
+		break;
+	}
+	}
 
 	// Update clipped polygons (based on current active clipping algorithm)
 	// Check if Sutherland-Hodgman clipped polygons exist
 	bool hasShClipped = false;
-	for (const auto& poly : polybuilder.GetFinishedPolygons()) {
-		if (poly.type == PolyType::CLIPPED_SUTHERLAND_HODGMAN) {
+	for (const auto& poly : polybuilder.getFinishedPolygons())
+	{
+		if (poly.type == PolyType::CLIPPED_SUTHERLAND_HODGMAN)
+		{
 			hasShClipped = true;
 			break;
 		}
@@ -342,33 +683,62 @@ void GUI::HandleMouseMove(GLFWwindow* window, PolyBuilder& polybuilder) {
 
 	// Check if Cyrus-Beck clipped polygons exist
 	bool hasCbClipped = false;
-	for (const auto& poly : polybuilder.GetFinishedPolygons()) {
-		if (poly.type == PolyType::CLIPPED_CYRUS_BECK) {
+	for (const auto& poly : polybuilder.getFinishedPolygons())
+	{
+		if (poly.type == PolyType::CLIPPED_CYRUS_BECK)
+		{
 			hasCbClipped = true;
 			break;
 		}
 	}
 
 	// Re-perform the active clipping algorithm(s)
-	if (hasShClipped) {
-		PerformSutherlandHodgmanClipping(polybuilder);
-	}
+	if (hasShClipped)
+		performSutherlandHodgmanClipping(polybuilder);
 
-	if (hasCbClipped) {
-		PerformCyrusBeckClipping(polybuilder);
-	}
+	if (hasCbClipped)
+		performCyrusBeckClipping(polybuilder);
 }
 
-bool GUI::StartWindowDrag(GLFWwindow* window, int mouseButton, PolyBuilder& polybuilder) {
-	// Only allow dragging with middle mouse button or Ctrl+Left mouse
-	bool isCtrlPressed = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
-		glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
+void GUI::handleVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder)
+{
+	// If we're not dragging, do nothing
+	if (!isDraggingVertex || selectedShapeIndex < 0 || selectedVertexIndex < 0)
+		return;
 
-	bool validDragStart = (mouseButton == GLFW_MOUSE_BUTTON_MIDDLE) ||
-		(mouseButton == GLFW_MOUSE_BUTTON_LEFT && isCtrlPressed);
+	// Get current mouse position
+	double xPos, yPos;
+	glfwGetCursorPos(window, &xPos, &yPos);
 
-	if (!validDragStart)
-		return false;
+	// Convert to normalized coordinates
+	int displayW, displayH;
+	glfwGetFramebufferSize(window, &displayW, &displayH);
+	float ndcX = (2.0f * xPos) / displayW - 1.0f;
+	float ndcY = 1.0f - (2.0f * yPos) / displayH;
+
+	// Calculate movement delta
+	float deltaX = ndcX - lastMouseX;
+	float deltaY = ndcY - lastMouseY;
+
+	// Update last position
+	lastMouseX = ndcX;
+	lastMouseY = ndcY;
+
+	polybuilder.translateVertex(selectedShapeIndex, selectedVertexIndex, shapeType, deltaX, deltaY);
+}
+
+bool GUI::tryStartShapeDrag(GLFWwindow* window, PolyBuilder& polybuilder, int mods)
+{
+	// Determine transformation type based on modifiers
+	// & is bitwise AND operator. If both bits are 1, result is true
+	if (mods & GLFW_MOD_CONTROL)
+		currentTransformationType = SCALE;
+	else if (mods & GLFW_MOD_SHIFT)
+		currentTransformationType = ROTATE;
+	else if (mods & GLFW_MOD_ALT)
+		currentTransformationType = SHEAR;
+	else
+		currentTransformationType = TRANSLATE;
 
 	// Check if we're hovering over a window polygon
 	double xPos, yPos;
@@ -376,55 +746,347 @@ bool GUI::StartWindowDrag(GLFWwindow* window, int mouseButton, PolyBuilder& poly
 
 	int displayW, displayH;
 	glfwGetFramebufferSize(window, &displayW, &displayH);
+	// ndc = normalized device coordinates (-1.0f - 1.0f)
 	float ndcX = (2.0f * xPos) / displayW - 1.0f;
 	float ndcY = 1.0f - (2.0f * yPos) / displayH;
 
-	auto finishedPolys = polybuilder.GetFinishedPolygons();
+	auto finishedPolys = polybuilder.getFinishedPolygons();
 
-	// Find a window polygon that contains the mouse position
-	for (size_t i = 0; i < finishedPolys.size(); i++) {
+	// Find a polygon that contains the mouse position
+	for (size_t i = 0; i < finishedPolys.size(); i++)
+	{
 		const auto& poly = finishedPolys[i];
-		if (poly.type == PolyType::WINDOW) {
-			// Simple point-in-polygon test (bounding box for now, can be enhanced)
-			const auto& verts = poly.getVertices();
-			if (verts.size() > 0) {
-				// Create a bounding box
-				float minX = verts[0].x;
-				float maxX = verts[0].x;
-				float minY = verts[0].y;
-				float maxY = verts[0].y;
+		// Create bounding box and check if mouse is in there
+		// TODO : Implement a better algorithm like ray tracing or Winding Number
+		const auto& verts = poly.getVertices();
 
-				for (const auto& vert : verts) {
-					minX = std::min(minX, vert.x);
-					maxX = std::max(maxX, vert.x);
-					minY = std::min(minY, vert.y);
-					maxY = std::max(maxY, vert.y);
-				}
+		if (verts.size() > 0)
+		{
+			// Create a bounding box
+			float minX = verts[0].x;
+			float maxX = verts[0].x;
+			float minY = verts[0].y;
+			float maxY = verts[0].y;
 
-				// Check if point is in bounding box
-				if (ndcX >= minX && ndcX <= maxX && ndcY >= minY && ndcY <= maxY) {
-					isDraggingWindow = true;
-					selectedWindowIndex = static_cast<int>(i);
-					lastMouseX = ndcX;
-					lastMouseY = ndcY;
-					return true;
-				}
+			for (const auto& vert : verts)
+			{
+				minX = std::min(minX, vert.x);
+				maxX = std::max(maxX, vert.x);
+				minY = std::min(minY, vert.y);
+				maxY = std::max(maxY, vert.y);
 			}
+
+			// Check if point is in bounding box
+			if (ndcX >= minX && ndcX <= maxX && ndcY >= minY && ndcY <= maxY)
+			{
+				isDraggingShape = true;
+				selectedShapeIndex = static_cast<int>(i);
+				shapeType = SHAPE_POLYGON;
+				lastMouseX = ndcX;
+				lastMouseY = ndcY;
+
+				if (currentTransformationType != TRANSLATE)
+				{
+					initialScaleMouseX = ndcX;
+					initialScaleMouseY = ndcY;
+					polybuilder.startTransformingShape(selectedShapeIndex, shapeType);
+					initialShapeWidth = maxX - minX;
+					initialShapeHeight = maxY - minY;
+				}
+
+				return true;
+			}
+		}
+	}
+
+	auto beziers = polybuilder.getFinishedBeziers();
+
+	for (size_t i = 0; i < beziers.size(); i++)
+	{
+		const auto& bezier = beziers[i];
+		const auto& verts = bezier.getControlPoints();
+
+		if (verts.size() > 0)
+		{
+			// Create a bounding box
+			float minX = verts[0].x;
+			float maxX = verts[0].x;
+			float minY = verts[0].y;
+			float maxY = verts[0].y;
+
+			for (const auto& vert : verts)
+			{
+				minX = std::min(minX, vert.x);
+				maxX = std::max(maxX, vert.x);
+				minY = std::min(minY, vert.y);
+				maxY = std::max(maxY, vert.y);
+			}
+
+			// Check if point is in bounding box
+			if (ndcX >= minX && ndcX <= maxX && ndcY >= minY && ndcY <= maxY)
+			{
+				isDraggingShape = true;
+				selectedShapeIndex = static_cast<int>(i);
+				shapeType = SHAPE_BEZIER;
+				lastMouseX = ndcX;
+				lastMouseY = ndcY;
+
+				if (currentTransformationType != TRANSLATE)
+				{
+					initialScaleMouseX = ndcX;
+					initialScaleMouseY = ndcY;
+					polybuilder.startTransformingShape(selectedShapeIndex, shapeType);
+					initialShapeWidth = maxX - minX;
+					initialShapeHeight = maxY - minY;
+				}
+
+				return true;
+			}
+		}
+	}
+
+	auto bezierSeqs = polybuilder.getFinishedBezierSequences();
+	for (size_t i = 0; i < bezierSeqs.size(); i++) {
+		// Calculate bounding box for the entire sequence
+		float minX = std::numeric_limits<float>::max();
+		float maxX = std::numeric_limits<float>::min();
+		float minY = std::numeric_limits<float>::max();
+		float maxY = std::numeric_limits<float>::min();
+
+		// Iterate through each curve in the sequence and update bounds
+		for (const auto& curve : bezierSeqs[i].getCurves()) {
+			for (const auto& point : curve.getControlPoints()) {
+				minX = std::min(minX, point.x);
+				maxX = std::max(maxX, point.x);
+				minY = std::min(minY, point.y);
+				maxY = std::max(maxY, point.y);
+			}
+		}
+
+		// Check if point is in bounding box
+		if (ndcX >= minX && ndcX <= maxX && ndcY >= minY && ndcY <= maxY) {
+			isDraggingShape = true;
+			selectedShapeIndex = static_cast<int>(i);
+			shapeType = SHAPE_BEZIER_SEQUENCE;
+			lastMouseX = ndcX;
+			lastMouseY = ndcY;
+
+			if (currentTransformationType != TRANSLATE) {
+				initialScaleMouseX = ndcX;
+				initialScaleMouseY = ndcY;
+				polybuilder.startTransformingShape(selectedShapeIndex, shapeType);
+				initialShapeWidth = maxX - minX;
+				initialShapeHeight = maxY - minY;
+			}
+
+			return true;
 		}
 	}
 
 	return false;
 }
 
-void GUI::EndWindowDrag() {
-	isDraggingWindow = false;
-	selectedWindowIndex = -1;
+void GUI::endDrag(PolyBuilder& polybuilder)
+{
+	isDraggingShape = false;
+	isDraggingVertex = false;
+	selectedShapeIndex = -1;
+	selectedVertexIndex = -1;
+	polybuilder.stopTransformingShape();
 }
 
-void GUI::HandleFillClick(GLFWwindow* window, PolyBuilder& polyBuilder, double xPos, double yPos) {
-	if (!awaitingFillSeed) {
-		return;
+void GUI::deleteVertex(GLFWwindow* window, PolyBuilder& polybuilder, double xPos, double yPos)
+{
+	int displayW, displayH;
+	glfwGetFramebufferSize(window, &displayW, &displayH);
+
+	// Convert mouse pos to NDC
+	float ndcX = (2.0f * xPos) / displayW - 1.0f;
+	float ndcY = 1.0f - (2.0f * yPos) / displayH;
+
+	auto finishedPolys = polybuilder.getFinishedPolygons();
+
+	// Check proximity to vertices
+	const float hoverRadius = 0.02f;
+
+	for (size_t i = 0; i < finishedPolys.size(); i++)
+	{
+		Polygon poly = finishedPolys[i];
+		auto vertices = poly.getVertices();
+
+
+		for (size_t j = 0; j < vertices.size(); j++)
+		{
+			Vertex vert = vertices[j];
+			float dx = vert.x - ndcX;
+			float dy = vert.y - ndcY;
+			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+			{
+				std::cout << "Deleting vertex" << std::endl;
+				shapeType = SHAPE_POLYGON;
+				polybuilder.deleteVertex(i, j, shapeType);
+				return;
+			}
+		}
 	}
+
+	auto finishedBeziers = polybuilder.getFinishedBeziers();
+
+	for (size_t i = 0; i < finishedBeziers.size(); i++)
+	{
+		Bezier bezier = finishedBeziers[i];
+		auto controlPoints = bezier.getControlPoints();
+
+		for (size_t j = 0; j < controlPoints.size(); j++)
+		{
+			Vertex vert = controlPoints[j];
+			float dx = vert.x - ndcX;
+			float dy = vert.y - ndcY;
+			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+			{
+				std::cout << "Deleting vertex" << std::endl;
+				shapeType = SHAPE_BEZIER;
+				polybuilder.deleteVertex(i, j, shapeType);
+				return;
+			}
+		}
+	}
+}
+
+bool GUI::tryStartVertexDrag(GLFWwindow* window, PolyBuilder& polybuilder, double xPos, double yPos)
+{
+	int displayW, displayH;
+	glfwGetFramebufferSize(window, &displayW, &displayH);
+
+	// Convert mouse pos to NDC
+	float ndcX = (2.0f * xPos) / displayW - 1.0f;
+	float ndcY = 1.0f - (2.0f * yPos) / displayH;
+
+	auto finishedPolys = polybuilder.getFinishedPolygons();	
+
+	// Check proximity to vertices
+	const float hoverRadius = 0.02f;
+	bool foundMatch = false;
+
+	for (size_t i = 0; i < finishedPolys.size(); i++)
+	{
+		Polygon poly = finishedPolys[i];
+		auto vertices = poly.getVertices();
+		
+
+		for (size_t j = 0; j < vertices.size(); j++)
+		{
+			Vertex vert = vertices[j];
+			float dx = vert.x - ndcX;
+			float dy = vert.y - ndcY;
+			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+			{
+				selectedShapeIndex = i;
+				selectedVertexIndex = j;
+				foundMatch = true;
+				shapeType = SHAPE_POLYGON;
+				isDraggingVertex = true;
+				lastMouseX = ndcX;
+				lastMouseY = ndcY;
+				break;
+			}
+		}
+
+		if (foundMatch) break;
+	}
+
+	if (foundMatch)
+		return true;
+
+	auto finishedBeziers = polybuilder.getFinishedBeziers();
+
+	for (size_t i = 0; i < finishedBeziers.size(); i++)
+	{
+		Bezier bezier = finishedBeziers[i];
+		auto controlPoints = bezier.getControlPoints();
+
+		for (size_t j = 0; j < controlPoints.size(); j++)
+		{
+			Vertex vert = controlPoints[j];
+			float dx = vert.x - ndcX;
+			float dy = vert.y - ndcY;
+			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+			{
+				selectedShapeIndex = i;
+				selectedVertexIndex = j;
+				foundMatch = true;
+				shapeType = SHAPE_BEZIER;
+				isDraggingVertex = true;
+				lastMouseX = ndcX;
+				lastMouseY = ndcY;
+				break;
+			}
+		}
+
+		if (foundMatch) break;
+	}
+
+	if (foundMatch)
+		return true;
+
+	auto finishedSequences = polybuilder.getFinishedBezierSequences();
+
+	for (size_t i = 0; i < finishedSequences.size(); i++)
+	{
+		CubicBezierSequence& sequence = finishedSequences[i];
+		const std::vector<Bezier>& curves = sequence.getCurves();
+
+		// Loop through each curve in the sequence
+		for (size_t curveIndex = 0; curveIndex < curves.size(); curveIndex++)
+		{
+			const Bezier& curve = curves[curveIndex];
+			std::vector<Vertex> controlPoints = curve.getControlPoints();
+
+			// Check each control point
+			for (size_t pointIndex = 0; pointIndex < controlPoints.size(); pointIndex++)
+			{
+				Vertex vert = controlPoints[pointIndex];
+				float dx = vert.x - ndcX;
+				float dy = vert.y - ndcY;
+
+				if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+				{
+					// Found a match in a Bézier sequence
+					// Calculate the global vertex index in the sequence
+					selectedShapeIndex = i;
+					selectedVertexIndex = curveIndex * 4 + pointIndex; // 4 points per cubic curve
+					foundMatch = true;
+					shapeType = SHAPE_BEZIER_SEQUENCE;
+					isDraggingVertex = true;
+					lastMouseX = ndcX;
+					lastMouseY = ndcY;
+
+					// Optional: Highlight whether this point is constrained
+					if (sequence.isConstrainedPoint(curveIndex, pointIndex))
+					{
+						std::cout << "Note: Selected point is constrained by continuity" << std::endl;
+					}
+
+					break;
+				}
+			}
+
+			if (foundMatch) break;
+		}
+
+		if (foundMatch) break;
+	}
+	
+	if (foundMatch)
+		return true;
+
+	return false;
+}
+
+void GUI::handleFillClick(GLFWwindow* window, PolyBuilder& polyBuilder, double xPos, double yPos)
+{
+	if (!awaitingFillSeed)
+		return;
 
 	// Convert window coordinates to NDC
 	int width, height;
@@ -433,28 +1095,33 @@ void GUI::HandleFillClick(GLFWwindow* window, PolyBuilder& polyBuilder, double x
 	float ndcY = 1.0f - (2.0f * yPos / height);
 
 	// First check: are we selecting a polygon?
-	if (selectedPolygonIndex == -1) {
+	if (selectedPolygonIndex == -1)
+	{
 		// Find a polygon that contains this point
-		const auto& polygons = polyBuilder.GetFinishedPolygons();
+		const auto& polygons = polyBuilder.getFinishedPolygons();
 
-		for (int i = 0; i < polygons.size(); i++) {
+		for (int i = 0; i < polygons.size(); i++)
+		{
 			const auto& poly = polygons[i];
-			if (poly.type == PolyType::POLYGON) {
+			if (poly.type == PolyType::POLYGON || poly.type == BEZIER_CURVE)
+			{
 				// Simple point-in-polygon test
 				const auto& vertices = poly.getVertices();
 
 				// Check if point is close to any vertex
-				for (const auto& vert : vertices) {
+				for (const auto& vert : vertices)
+				{
 					float dx = vert.x - ndcX;
 					float dy = vert.y - ndcY;
-					if (dx * dx + dy * dy < 0.1f) {  // Selection radius
+					if (dx * dx + dy * dy < 0.1f)
+					{  // Selection radius
 						selectedPolygonIndex = i;
 						std::cout << "Selected polygon at index " << i << " for filling" << std::endl;
 
 						// If not using seed fill, fill immediately
-						if (Filler::getSelectedAlgorithm() != Filler::FILL_SEED) {
+						if (Filler::getSelectedAlgorithm() != Filler::FILL_SEED)
 							handleNonSeedFill(polyBuilder);
-						}
+
 						return;
 					}
 				}
@@ -462,34 +1129,33 @@ void GUI::HandleFillClick(GLFWwindow* window, PolyBuilder& polyBuilder, double x
 		}
 	}
 	else if (Filler::getSelectedAlgorithm() == Filler::FILL_SEED ||
-			 Filler::getSelectedAlgorithm() == Filler::FILL_SEED_RECURSIVE) {
+		Filler::getSelectedAlgorithm() == Filler::FILL_SEED_RECURSIVE)
+	{
 		// We have a selected polygon index and we're using seed fill
 		handleSeedFill(polyBuilder, ndcX, ndcY);
-			 }
+	}
 }
 
 // Helper method for non-seed fill algorithms
-void GUI::handleNonSeedFill(PolyBuilder& polyBuilder) {
-	if (!polyBuilder.IsValidPolygonIndex(selectedPolygonIndex)) {
+void GUI::handleNonSeedFill(PolyBuilder& polyBuilder)
+{
+	if (!polyBuilder.isValidPolygonIndex(selectedPolygonIndex))
 		return;
-	}
 
-	Polygon& selectedPolygon = polyBuilder.GetPolygonAt(selectedPolygonIndex);
+	Polygon& selectedPolygon = polyBuilder.getPolygonAt(selectedPolygonIndex);
 	std::vector<Vertex> fillPoints;
 
-	if (Filler::getSelectedAlgorithm() == Filler::FILL_SCANLINE) {
+	if (Filler::getSelectedAlgorithm() == Filler::FILL_SCANLINE)
 		fillPoints = Filler::fillPolygon(selectedPolygon);
-	}
-	else {
+	else
 		fillPoints = Filler::fillPolygonLCA(selectedPolygon);
-	}
 
 	// Get fill color
 	float r, g, b, a;
 	Filler::getFillColor(r, g, b, a);
 
 	// Store the filled polygon
-	polyBuilder.AddFilledPolygon(selectedPolygon, fillPoints, r, g, b, a);
+	polyBuilder.addFilledPolygon(selectedPolygon, fillPoints, r, g, b, a);
 
 	// Reset state
 	selectedPolygonIndex = -1;
@@ -497,29 +1163,166 @@ void GUI::handleNonSeedFill(PolyBuilder& polyBuilder) {
 }
 
 // Helper method for seed fill algorithms
-void GUI::handleSeedFill(PolyBuilder& polyBuilder, float ndcX, float ndcY) {
-	if (!polyBuilder.IsValidPolygonIndex(selectedPolygonIndex)) {
+void GUI::handleSeedFill(PolyBuilder& polyBuilder, float ndcX, float ndcY)
+{
+	if (!polyBuilder.isValidPolygonIndex(selectedPolygonIndex))
 		return;
-	}
 
-	Polygon& selectedPolygon = polyBuilder.GetPolygonAt(selectedPolygonIndex);
+	Polygon& selectedPolygon = polyBuilder.getPolygonAt(selectedPolygonIndex);
 	std::vector<Vertex> fillPoints;
 
-	if (Filler::getSelectedAlgorithm() == Filler::FILL_SEED) {
+	if (Filler::getSelectedAlgorithm() == Filler::FILL_SEED)
 		fillPoints = Filler::fillFromSeed(selectedPolygon, ndcX, ndcY);
-	}
-	else {
+	else
 		fillPoints = Filler::fillFromSeedRecursive(selectedPolygon, ndcX, ndcY);
-	}
 
 	// Get fill color
 	float r, g, b, a;
 	Filler::getFillColor(r, g, b, a);
 
 	// Store the filled polygon
-	polyBuilder.AddFilledPolygon(selectedPolygon, fillPoints, r, g, b, a);
+	polyBuilder.addFilledPolygon(selectedPolygon, fillPoints, r, g, b, a);
 
 	// Reset state
 	selectedPolygonIndex = -1;
 	awaitingFillSeed = false;
+}
+
+void GUI::drawBuildingHelpTextbox(GLFWwindow* window, bool* open) // Added GLFWwindow if needed for viewport info, optional 'open' flag
+{
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImVec2 work_pos = viewport->WorkPos; // Top-left corner of the work area
+	ImVec2 work_size = viewport->WorkSize; // Size of the work area
+
+	// Define the properties of our anchored textbox window
+	float window_width = 350.0f;    // Adjust as needed
+	float window_padding = 10.0f;   // Padding from the very edge of the viewport
+
+	// --- Position the window ---
+	// We want to align the window's bottom-right corner with the viewport's bottom-right corner.
+	ImVec2 window_pivot = ImVec2(1.0f, 1.0f); // Pivot at the window's bottom-right
+	ImVec2 desired_window_pos = ImVec2(work_pos.x + work_size.x - window_padding,
+		work_pos.y + work_size.y - window_padding);
+
+	ImGui::SetNextWindowPos(desired_window_pos, ImGuiCond_Always, window_pivot);
+
+	// --- Size the window ---
+	// Set a fixed width and let the height auto-adjust to content.
+	// If you want a multi-line input, you might set a fixed height too.
+	ImGui::SetNextWindowSize(ImVec2(window_width, 0.0f), ImGuiCond_Always);
+
+	// --- Window Flags ---
+	// Minimal flags for a simple input box area
+	ImGuiWindowFlags window_flags =
+		ImGuiWindowFlags_NoTitleBar |
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoScrollbar |
+		ImGuiWindowFlags_NoCollapse |
+		ImGuiWindowFlags_NoSavedSettings | // Good for elements you always want in a fixed place
+		ImGuiWindowFlags_AlwaysAutoResize; // Let height fit the content
+
+	// --- Begin Window ---
+	if (ImGui::Begin("Help", open, window_flags)) // 'open' is optional
+	{
+		ImGui::TextWrapped("Building a shape. Press space to finalize or 'C' to cancel.");
+	}
+
+	ImGui::End();
+}
+
+void GUI::drawTransformationHelpTextbox(GLFWwindow* window, bool* open)
+{
+	// If we're not dragging, do nothing
+	if (!isDraggingShape || selectedShapeIndex < 0)
+		return;
+
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImVec2 work_pos = viewport->WorkPos; // Top-left corner of the work area
+	ImVec2 work_size = viewport->WorkSize; // Size of the work area
+
+	// Define the properties of our anchored textbox window
+	float window_width = 350.0f;    // Adjust as needed
+	float window_padding = 10.0f;   // Padding from the very edge of the viewport
+
+	// --- Position the window ---
+	// We want to align the window's bottom-right corner with the viewport's bottom-right corner.
+	ImVec2 window_pivot = ImVec2(1.0f, 1.0f); // Pivot at the window's bottom-right
+	ImVec2 desired_window_pos = ImVec2(work_pos.x + work_size.x - window_padding,
+		work_pos.y + work_size.y - window_padding);
+
+	ImGui::SetNextWindowPos(desired_window_pos, ImGuiCond_Always, window_pivot);
+
+	// --- Window Flags ---
+	// Minimal flags for a simple input box area
+	ImGuiWindowFlags window_flags =
+		ImGuiWindowFlags_NoTitleBar |
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoScrollbar |
+		ImGuiWindowFlags_NoCollapse |
+		ImGuiWindowFlags_NoSavedSettings | // Good for elements you always want in a fixed place
+		ImGuiWindowFlags_AlwaysAutoResize; // Let height fit the content
+
+	std::string infoString;
+
+	switch (currentTransformationType)
+	{
+	case TRANSLATE:
+		infoString = "Translating shape";
+		break;
+	case SCALE:
+		infoString = "Scaling shape";
+		break;
+	case ROTATE:
+		infoString = "Rotating shape";
+		break;
+	case SHEAR:
+		infoString = "Shearing shape";
+		break;
+	}
+
+	// --- Begin Window ---
+	if (ImGui::Begin("Transformation Information", open, window_flags)) // 'open' is optional
+	{
+		ImGui::Text(infoString.c_str());
+	}
+
+	ImGui::End();
+}
+
+void GUI::tryDuplicateVertex(GLFWwindow* window, PolyBuilder& polybuilder)
+{
+	double xPos, yPos;
+	glfwGetCursorPos(window, &xPos, &yPos);
+
+	int displayW, displayH;
+	glfwGetFramebufferSize(window, &displayW, &displayH);
+
+	// Convert mouse pos to NDC
+	float ndcX = (2.0f * xPos) / displayW - 1.0f;
+	float ndcY = 1.0f - (2.0f * yPos) / displayH;
+
+	// Check proximity to vertices
+	const float hoverRadius = 0.02f;
+
+	auto finishedBeziers = polybuilder.getFinishedBeziers();
+
+	for (size_t i = 0; i < finishedBeziers.size(); i++)
+	{
+		Bezier bezier = finishedBeziers[i];
+		auto controlPoints = bezier.getControlPoints();
+
+		for (size_t j = 0; j < controlPoints.size(); j++)
+		{
+			Vertex vert = controlPoints[j];
+			float dx = vert.x - ndcX;
+			float dy = vert.y - ndcY;
+			if (dx * dx + dy * dy < hoverRadius * hoverRadius)
+			{
+				polybuilder.duplicateControlPoint(static_cast<int>(i), static_cast<int>(j));
+				break;
+			}
+		}
+	}
 }

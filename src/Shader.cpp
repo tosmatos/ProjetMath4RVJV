@@ -5,28 +5,28 @@
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath)
 {
-    std::string vertexCode = LoadShaderFile(vertexPath);
-    std::string fragmentCode = LoadShaderFile(fragmentPath);
+    std::string vertexCode = loadShaderFile(vertexPath);
+    std::string fragmentCode = loadShaderFile(fragmentPath);
 
     // Compile shaders
     unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
     const char* vCode = vertexCode.c_str();
     glShaderSource(vertex, 1, &vCode, NULL);
     glCompileShader(vertex);
-    CheckCompileErrors(vertex, "VERTEX");
+    checkCompileErrors(vertex, "VERTEX");
 
     unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
     const char* fCode = fragmentCode.c_str();
     glShaderSource(fragment, 1, &fCode, NULL);
     glCompileShader(fragment);
-    CheckCompileErrors(fragment, "FRAGMENT");
+    checkCompileErrors(fragment, "FRAGMENT");
 
     // Create program
     id = glCreateProgram();
     glAttachShader(id, vertex);
     glAttachShader(id, fragment);
     glLinkProgram(id);
-    CheckCompileErrors(id, "PROGRAM");
+    checkCompileErrors(id, "PROGRAM");
 
     // Cleanup
     glDeleteShader(vertex);
@@ -38,17 +38,17 @@ Shader::~Shader()
 
 }
 
-void Shader::Use() const
+void Shader::use() const
 {
     glUseProgram(id);
 }
 
-void Shader::SetColor(const std::string name, float r, float g, float b, float a) const
+void Shader::setColor(const std::string name, float r, float g, float b, float a) const
 {
     glUniform4f(glGetUniformLocation(id, name.c_str()), r, g, b, a);
 }
 
-void Shader::CheckCompileErrors(unsigned int shader, const std::string type)
+void Shader::checkCompileErrors(unsigned int shader, const std::string type)
 {
     // check for shader compile errors
     int success;
@@ -81,7 +81,7 @@ void Shader::CheckCompileErrors(unsigned int shader, const std::string type)
     }    
 }
 
-std::string Shader::LoadShaderFile(const char* shaderPath)
+std::string Shader::loadShaderFile(const char* shaderPath)
 {
     std::ifstream file(shaderPath);
     if (!file.is_open()) {

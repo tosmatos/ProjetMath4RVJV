@@ -1,8 +1,11 @@
 #pragma once
 
 #include <vector>
+
 #include "Vertex.h"
-#include "PolyTypes.h"
+#include "CommonTypes.h"
+#include "Shader.h"
+#include "CubicBezierSequence.h"
 
 class Polygon
 {
@@ -22,7 +25,8 @@ public:
 	void addVertex(Vertex vertex);
 	void updateBuffers();
 	const void draw() const;
-	void drawPoints() const;
+	const void drawPoints() const;
+	const void drawPreview(Shader& shader) const;
 	const std::vector<Vertex>& getVertices() const;
 	void setVertices(std::vector<Vertex> vertexVector);
 	bool isClockwise() const;
