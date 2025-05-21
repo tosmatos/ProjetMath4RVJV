@@ -1103,7 +1103,7 @@ void GUI::handleFillClick(GLFWwindow* window, PolyBuilder& polyBuilder, double x
 		for (int i = 0; i < polygons.size(); i++)
 		{
 			const auto& poly = polygons[i];
-			if (poly.type == PolyType::POLYGON)
+			if (poly.type == PolyType::POLYGON || poly.type == BEZIER_CURVE)
 			{
 				// Simple point-in-polygon test
 				const auto& vertices = poly.getVertices();
