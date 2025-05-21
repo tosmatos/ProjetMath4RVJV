@@ -25,6 +25,7 @@ CubicBezierSequence& CubicBezierSequence::operator=(const CubicBezierSequence& o
         algorithm = other.algorithm;
         generationTime = other.generationTime;
         continuityType = other.continuityType;
+        isClosed = other.isClosed;
     }
     return *this;
 }
@@ -171,6 +172,92 @@ bool CubicBezierSequence::isConstrainedPoint(int curveIndex, int pointIndex) con
     if (pointIndex == 2 && continuityType >= 2) return true; // Q2 constrained in C2
 
     return false;
+}
+
+void CubicBezierSequence::makeClosed() {
+    if (curves.size() < 1) return;
+
+    // Get first and last curves
+    Bezier& firstCurve = curves[0];
+    Bezier& lastCurve = curves[curves.size() - 1];
+
+    // Get control points
+    std::vector<Vertex> lastControlPoints = lastCurve.getControlPoints();
+    std::vector<Vertex> firstControlPoints = firstCurve.getControlPoints();
+
+    // Enforce C0 continuity: Make last point match first point
+    lastControlPoints[3] = firstControlPoints[0];
+
+    // Constants to control curve shape - similar to your enforceConstraints method
+    const float percentage = 0.4f;      // Use 40% of previous segment length
+    const float maxDistance = 0.2f;     // Maximum control point distance
+
+    if (continuityType >= 1) {
+        // C1 continuity: Make incoming/outgoing tangents align
+        // Calculate tangent at the beginning of the first curve
+        Vertex tangent = firstControlPoints[1] - firstControlPoints[0];
+        float tangentLength = std::sqrt(tangent.x * tangent.x + tangent.y * tangent.y);
+
+        if (tangentLength > 0.001f) {
+            // Normalize the tangent
+            Vertex tangentDir = tangent * (1.0f / tangentLength);
+
+            // Calculate desired length with absolute cap
+            float desiredLength = std::min(tangentLength * percentage, maxDistance);
+
+            // Place the second-to-last control point to create the same tangent
+            // but in the opposite direction
+            lastControlPoints[2] = lastControlPoints[3] - tangentDir * desiredLength;
+
+            if (continuityType >= 2) {
+                // C2 continuity: Match curvature at the junction
+                // Get second derivatives
+                Vertex secondDerivFirst = firstControlPoints[2] - firstControlPoints[1] * 2.0f + firstControlPoints[0];
+
+                // Scale the second derivative by the squared ratio of the tangent lengths
+                float k1 = desiredLength / tangentLength;
+                float k1Squared = k1 * k1;
+
+                // Apply C2 formula (derived from matching second derivatives)
+                // Q1 = junction point (P3 or Q0)
+                // Q2 = lastControlPoints[2] (already set for C1)
+                // We need to set Q3 to maintain C2 continuity
+                lastControlPoints[1] = lastControlPoints[2] * 2.0f - lastControlPoints[3]
+                    + secondDerivFirst * k1Squared;
+
+                // Apply max distance constraint if needed
+                Vertex Q2Q1 = lastControlPoints[1] - lastControlPoints[2];
+                float Q2Q1Length = std::sqrt(Q2Q1.x * Q2Q1.x + Q2Q1.y * Q2Q1.y);
+
+                if (Q2Q1Length > maxDistance) {
+                    Q2Q1 = Q2Q1 * (maxDistance / Q2Q1Length);
+                    lastControlPoints[1] = lastControlPoints[2] + Q2Q1;
+                }
+            }
+        }
+    }
+
+    // Update the last curve with modified control points
+    lastCurve.setControlPoints(lastControlPoints);
+    lastCurve.generateCurve();
+    lastCurve.updateBuffers();
+    isClosed = true;
+}
+
+bool CubicBezierSequence::shouldBeClosed() const {
+    if (curves.size() < 1) return false;
+
+    const Vertex& firstPoint = curves.front().getControlPoints().front();
+    const Vertex& lastPoint = curves.back().getControlPoints().back();
+
+    // Calculate squared distance
+    float dx = firstPoint.x - lastPoint.x;
+    float dy = firstPoint.y - lastPoint.y;
+    float squaredDist = squaredDistance(dx, dy);
+
+    // Threshold for considering points identical
+    const float threshold = 0.001f;
+    return squaredDist < threshold;
 }
 
 void CubicBezierSequence::draw(Shader& shader) const

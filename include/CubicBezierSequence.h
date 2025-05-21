@@ -12,6 +12,7 @@ private:
     float stepSize = 0.01f;
     int algorithm = 0; // 0 for pascal, 1 for de casteljau
     double generationTime;
+    bool isClosed;
 
 public:
     CubicBezierSequence(int continuityType = 0, float stepSize = 0.01f, int algorithm = 0)
@@ -28,6 +29,7 @@ public:
     int getNumberOfCurves() const { return curves.size(); };
     float getStepSize() const { return stepSize; };
     int getAlgorithm() const { return algorithm; };
+    bool getIsClosed() const { return isClosed; };
 
     void incrementStepSize();
     void decrementStepSize();
@@ -48,6 +50,10 @@ public:
 
     // Returns false if the point can be moved, considering current continuity type
     bool isConstrainedPoint(int curveIndex, int pointIndex) const;
+
+    // Functions for making closed curves
+    void makeClosed();
+    bool shouldBeClosed() const;
 
     // Draw all curves
     void draw(Shader& shader) const;

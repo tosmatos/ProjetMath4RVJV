@@ -202,14 +202,11 @@ void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, ShapeType sha
 			std::cerr << "Error: Invalid sequence index " << shapeIndex << std::endl;
 			return;
 		}
-
 		// Create a complete copy of the sequence to work with
 		CubicBezierSequence transformedSequence = finishedSequences[shapeIndex];
-
 		// Determine which curve and which point within that curve
 		int curveIndex = vertexIndex / 4;  // Integer division to get curve index
 		int pointIndexInCurve = vertexIndex % 4;  // Remainder gives point index within curve
-
 		// Check if this point is constrained
 		if (transformedSequence.isConstrainedPoint(curveIndex, pointIndexInCurve))
 		{
@@ -224,7 +221,6 @@ void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, ShapeType sha
 		{
 			Bezier& curve = curves[curveIndex];
 			std::vector<Vertex> controlPoints = curve.getControlPoints();
-
 			if (pointIndexInCurve >= 0 && pointIndexInCurve < controlPoints.size())
 			{
 				// Apply translation to the specific point
@@ -235,6 +231,33 @@ void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, ShapeType sha
 
 				// Update the curve with the modified control points
 				curve.setControlPoints(controlPoints);
+
+				// Handle closed sequence synchronization
+				if (transformedSequence.getIsClosed())
+				{
+					// If we're moving the first point of the first curve
+					if (curveIndex == 0 && pointIndexInCurve == 0)
+					{
+						// Update the end point of the last curve to match
+						int lastCurveIndex = curves.size() - 1;
+						std::vector<Vertex> lastPoints = curves[lastCurveIndex].getControlPoints();
+						lastPoints[3] = point; // Direct assignment to ensure exact match
+						curves[lastCurveIndex].setControlPoints(lastPoints);
+						curves[lastCurveIndex].generateCurve();
+						curves[lastCurveIndex].updateBuffers();
+					}
+					// If we're moving the last point of the last curve
+					else if (curveIndex == curves.size() - 1 && pointIndexInCurve == 3)
+					{
+						// Update the first point of the first curve to match
+						std::vector<Vertex> firstPoints = curves[0].getControlPoints();
+						firstPoints[0] = point; // Direct assignment to ensure exact match
+						curves[0].setControlPoints(firstPoints);
+						curves[0].generateCurve();
+						curves[0].updateBuffers();
+					}
+				}
+
 				curve.generateCurve();
 				curve.updateBuffers();
 
@@ -867,6 +890,11 @@ void PolyBuilder::finishCubicSequence() {
 
 	// Add the completed sequence to our collection
 	if (!currentSequence.getCurves().empty()) {
+		if (currentSequence.shouldBeClosed())
+		{
+			currentSequence.makeClosed();
+			std::cout << "New sequence is closed !" << std::endl;
+		}
 		currentSequence.calculateGenerationTime();
 		finishedSequences.push_back(currentSequence);
 	}

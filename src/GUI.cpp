@@ -191,14 +191,16 @@ void GUI::drawBezierInfoPanel(PolyBuilder& polybuilder, bool* open)
 			std::string algoString = algorithm == 0 ? "Pascal" : "DeCasteljau";
 			std::string continuityTypeString = "C0";
 			double generationTime = bezierSequence.getGenerationTime();
+			bool isClosed = bezierSequence.getIsClosed();
 
 			if (continuityType == 1)
 				continuityTypeString = "C1";
 			else if (continuityType == 2)
 				continuityTypeString = "C2";
 
-			ImGui::Text("%d : Step Size = %.3f, Continuity Type : %s, Curves : %d, Algorithm : %s",
-				static_cast<int>(index), stepSize, continuityTypeString.c_str(), numberOfCurves, algoString.c_str());
+			ImGui::Text("%d : Step Size = %.3f, Continuity Type : %s, Curves : %d, Algorithm : %s %s",
+				static_cast<int>(index), stepSize, continuityTypeString.c_str(), numberOfCurves, algoString.c_str(),
+				isClosed ? "[CLOSED]" : "");
 
 			if (ImGui::Button(("<->##" + std::to_string(index)).c_str()))
 				polybuilder.swapSequenceAlgorithm(index);
