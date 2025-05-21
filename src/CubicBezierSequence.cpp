@@ -318,7 +318,7 @@ bool CubicBezierSequence::shouldBeClosed() const {
     std::cout << "Sqaured distance : " << squaredDist << std::endl;
 
     // Threshold for considering points identical
-    const float threshold = 0.001f;
+    const float threshold = 0.0001f;
     return squaredDist < threshold;
 }
 

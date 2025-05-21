@@ -235,6 +235,16 @@ void PolyBuilder::translateVertex(int shapeIndex, int vertexIndex, ShapeType sha
 				// Handle closed sequence synchronization
 				if (transformedSequence.getIsClosed())
 				{
+					if (pointIndexInCurve == 3 && curveIndex < curves.size() - 1)
+					{
+						// Update the first point of the next curve to match
+						std::vector<Vertex> nextPoints = curves[curveIndex + 1].getControlPoints();
+						nextPoints[0] = point; // Direct assignment to ensure exact match
+						curves[curveIndex + 1].setControlPoints(nextPoints);
+						curves[curveIndex + 1].generateCurve();
+						curves[curveIndex + 1].updateBuffers();
+					}
+
 					// If we're moving the first point of the first curve
 					if (curveIndex == 0 && pointIndexInCurve == 0)
 					{
