@@ -154,11 +154,6 @@ void CubicBezierSequence::setContinuityType(int type)
         continuityType = type;
 }
 
-void CubicBezierSequence::moveControlPoint(int curveIndex, int pointIndex, const Vertex& newPosition)
-{
-    // TODO : Figure out it this should be done in PolyBuilder instead
-}
-
 bool CubicBezierSequence::isConstrainedPoint(int curveIndex, int pointIndex) const
 {
     if (curveIndex == 0) {
@@ -250,10 +245,14 @@ bool CubicBezierSequence::shouldBeClosed() const {
     const Vertex& firstPoint = curves.front().getControlPoints().front();
     const Vertex& lastPoint = curves.back().getControlPoints().back();
 
+    std::cout << "First point and last point x,y : " << firstPoint.x << "," << firstPoint.y << " - " << lastPoint.x << lastPoint.y << std::endl;
+
     // Calculate squared distance
     float dx = firstPoint.x - lastPoint.x;
     float dy = firstPoint.y - lastPoint.y;
     float squaredDist = squaredDistance(dx, dy);
+
+    std::cout << "Sqaured distance : " << squaredDist << std::endl;
 
     // Threshold for considering points identical
     const float threshold = 0.001f;

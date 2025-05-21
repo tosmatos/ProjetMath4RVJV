@@ -12,7 +12,7 @@ private:
     float stepSize = 0.01f;
     int algorithm = 0; // 0 for pascal, 1 for de casteljau
     double generationTime;
-    bool isClosed;
+    bool isClosed = false;
 
 public:
     CubicBezierSequence(int continuityType = 0, float stepSize = 0.01f, int algorithm = 0)
@@ -44,9 +44,6 @@ public:
     int getContinuityType() const { return continuityType; };
     // Set the continuity type (0=C0, 1=C1, 2=C2)
     void setContinuityType(int type);
-
-    // Move a control point, maintaining continuity
-    void moveControlPoint(int curveIndex, int pointIndex, const Vertex& newPosition);
 
     // Returns false if the point can be moved, considering current continuity type
     bool isConstrainedPoint(int curveIndex, int pointIndex) const;
